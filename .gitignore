@@ -1,0 +1,13 @@
+# Plugins Obsidian
+.obsidian/
+
+# Trash interne d'Obsidian
+.obsidian/trash/
+
+# Cache de l'application
+.obsidian/workspace
+
+# Systèmes et fichiers temporaires
+.DS_Store
+Thumbs.db
+*.swp
