@@ -1,5 +1,6 @@
 # FireProject - Daily Note
 #DailyNote #Avancement #Problem #Solution #Idea #Python #ML #DL #Dataset
+[[Glossaire_Tags]]
 
 Date: {{date}}
 Durée: ___ h

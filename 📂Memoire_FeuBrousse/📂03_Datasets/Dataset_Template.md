@@ -1,5 +1,6 @@
 # FireProject - Dataset
 #Dataset #NASA #MODIS #VIIRS
+[[Glossaire_Tags]]
 
 Nom: FIRMS VIIRS NRT
 Zone: Madagascar
