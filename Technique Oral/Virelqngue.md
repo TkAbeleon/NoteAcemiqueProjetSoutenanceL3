@@ -1,0 +1,10 @@
+- Ça se casse ne en Saskatchewan
+- Angèle et Gilles en gilet, gêlent
+- La grosse cloche sonne
+- Suis-je chercher à changer son siège
+- Je suis juché sur sa chaise
+- La mouche rousse touche la mousse
+- Si sa saucisse sent, ses six  cent six saucisses
+- Bol blue, bulles, blêmes, balles blondes
+- Foie frit froid et fruits frais frits
+- Est-ce chic et chiche, ou chiche et sans chichis

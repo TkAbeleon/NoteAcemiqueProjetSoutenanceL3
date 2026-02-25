@@ -8,3 +8,13 @@
 - [[Résultats]]
 
 # 2. [[Notion de Rédaction de mémoire]]
+# 3. [[Rédaction d'un résumé]]
+# 4. [[Recherche d'informations]]
+# 5. [[Procédure de rédaction]]
+# 6. [[Pitch]]
+
+
+
+
+
+

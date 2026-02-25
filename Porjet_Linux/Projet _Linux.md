@@ -1,0 +1,5 @@
+ - [ ] # 1. Vérifier la taille de disque sauvegarde
+- [ ] # 2. Si oui, Compresser
+- [ ] # 3. Envoie de sauvegarde
+- [ ] # 4. Suppression si le disque plain
+- [ ] # 5. Notification par mail

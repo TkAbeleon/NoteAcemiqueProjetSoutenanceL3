@@ -1,0 +1,9 @@
+- **Respect les règle grammatical afin d'obtenir un style precis, cousis et dénuer de verbiage(abondance de parole: évité de blabla)**
+- **Il faut limité les utilisations des superlatif, adverbe redondants**
+- **Respecter la concordance de temps**
+- **Utiliser de phrase courte**
+- **Pour les phrases long: il faut de de l'enchainnement avec des connecteur logique**
+- **Adapter une style notre**
+- **Il faut pas abusé la troisième personne, titlist la voie passive**
+- **Rester toujours objectifs(pas de subjectivité)**
+- **Rigueur intellectuel (il faut precis avec des exploitation, démontré, citations, statistiques)l,  évité plagia(volé, copier les travailles des autres sans mentionné l'auteur: Il faut lire des livres, revus)*
