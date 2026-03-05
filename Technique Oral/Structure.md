@@ -2,7 +2,7 @@
 [[Technique oral]]
 ## Introduction:
 - Contexte
-- Problématique
+- Problématique<p align="right"></p>
 Capter les intention des auditeurs
 ## Le corps:
 - Méthodologie:

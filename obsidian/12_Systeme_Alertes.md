@@ -6,12 +6,12 @@
 
 ## Déclencheurs d'Alerte
 
-| Condition | Niveau | Action |
-|-----------|--------|--------|
-| `risk_score > 0.70` | 🟠 ÉLEVÉ | Email + WhatsApp |
-| `frp > 50 MW` | 🔴 CRITIQUE | Email + WhatsApp immédiat |
-| `cluster_size ≥ 10 points` | 🔴 CRITIQUE | Email + WhatsApp |
-| `risk_score > 0.50` | 🟡 MODÉRÉ | Email uniquement |
+| Condition                  | Niveau      | Action                    |
+| -------------------------- | ----------- | ------------------------- |
+| `risk_score > 0.70`        | 🟠 ÉLEVÉ    | Email + WhatsApp          |
+| `frp > 50 MW`              | 🔴 CRITIQUE | Email + WhatsApp immédiat |
+| `cluster_size ≥ 10 points` | 🔴 CRITIQUE | Email + WhatsApp          |
+| `risk_score > 0.50`        | 🟡 MODÉRÉ   | Email uniquement          |
 
 ---
 

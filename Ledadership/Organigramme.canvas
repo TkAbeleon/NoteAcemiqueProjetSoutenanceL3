@@ -27,5 +27,9 @@
 		{"id":"71020810bb0eca7a","fromNode":"7744ed8680ce0be9","fromSide":"left","toNode":"d0b14614fb86e2ee","toSide":"bottom"},
 		{"id":"d1fdbb5a215245f1","fromNode":"7744ed8680ce0be9","fromSide":"right","toNode":"209a5f770f2fa7fe","toSide":"bottom"},
 		{"id":"b7cb7fe028471086","fromNode":"209a5f770f2fa7fe","fromSide":"top","toNode":"a842ef6728dc3db9","toSide":"right","label":"Externe"}
-	]
+	],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{}
+	}
 }

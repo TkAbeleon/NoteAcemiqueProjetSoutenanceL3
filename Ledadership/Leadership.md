@@ -27,5 +27,6 @@ $$
 - [ ] Art de la table
 - [ ] Code vestimentaire(Gala, soiré, meting, dîné)
 - [ ] Art de communication(courtoisie): entre vers 2000 et 2000 à nos jours
+[[Art de la table]]
 
 
