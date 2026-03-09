@@ -1,0 +1,34 @@
+{
+	"nodes":[
+		{"id":"40c850557ba4def9","type":"group","ratio":1.7777777777777777,"x":-580,"y":-160,"width":1200,"height":675,"label":"Start Slide"},
+		{"id":"f81d1e5434282c3f","type":"group","x":-130,"y":420,"width":300,"height":300,"label":"Groupe sans titre"},
+		{
+			"id":"8482bced428d6834",
+			"type":"text",
+			"text":"",
+			"styleAttributes":{},
+			"x":280,
+			"y":-120,
+			"width":260,
+			"height":60
+		},
+		{
+			"id":"825777965a65ab7e",
+			"type":"text",
+			"text":"",
+			"styleAttributes":{},
+			"x":-340,
+			"y":40,
+			"width":260,
+			"height":60
+		}
+	],
+	"edges":[],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{
+			"tags":null
+		},
+		"startNode":"40c850557ba4def9"
+	}
+}

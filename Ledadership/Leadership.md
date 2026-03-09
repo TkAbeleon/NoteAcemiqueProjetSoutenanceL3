@@ -24,9 +24,15 @@ $$
 
 
 ## Autre exercice:
-- [ ] Art de la table
-- [ ] Code vestimentaire(Gala, soiré, meting, dîné)
-- [ ] Art de communication(courtoisie): entre vers 2000 et 2000 à nos jours
+- [x] Art de la table ✅ 2026-03-05
+- [x] Code vestimentaire(Gala, soiré, meting, dîné) ✅ 2026-03-05
+- [x] Art de communication(courtoisie): entre vers 2000 et 2000 à nos jours ✅ 2026-03-05
 [[Art de la table]]
+
+
+
+## [[Cahier de charges d'un manager]]
+##  [[4 Sens Manager]]
+
 
 

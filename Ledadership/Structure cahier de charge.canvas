@@ -1,0 +1,52 @@
+{
+	"nodes":[
+		{"id":"23a11ad03e35bba6","type":"group","ratio":1.7777777777777777,"x":-620,"y":60,"width":1200,"height":675,"color":"#ffffff","label":"Start Slide"},
+		{
+			"id":"808056971bb5eabb",
+			"type":"text",
+			"text":"<center>Expediteur(mangeur)</center>",
+			"styleAttributes":{},
+			"x":-560,
+			"y":100,
+			"width":260,
+			"height":140,
+			"color":"1"
+		},
+		{
+			"id":"c891a5a92c65d019",
+			"type":"text",
+			"text":"Destinataire",
+			"styleAttributes":{"textAlign":"center"},
+			"x":240,
+			"y":100,
+			"width":260,
+			"height":140
+		},
+		{
+			"id":"9ee21c05e34865b8",
+			"type":"text",
+			"text":"Date",
+			"styleAttributes":{},
+			"x":-560,
+			"y":260,
+			"width":260,
+			"height":60
+		},
+		{
+			"id":"ecc4d80c02f113fc",
+			"type":"text",
+			"text":"\n| Temps | Libellé | Nom responsable | Deadline |\n| ----- | ------- | --------------- | -------- |\n| Lundi | xxxx    | xxxxx           | Date     |\n",
+			"styleAttributes":{},
+			"x":-560,
+			"y":360,
+			"width":1060,
+			"height":360
+		}
+	],
+	"edges":[],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{},
+		"startNode":"23a11ad03e35bba6"
+	}
+}

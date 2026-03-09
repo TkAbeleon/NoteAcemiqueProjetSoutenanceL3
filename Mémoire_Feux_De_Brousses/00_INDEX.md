@@ -57,12 +57,12 @@
 
 ## 📈 Tableau de Bord Avancement
 
-| Phase | Période | Statut |
-|-------|---------|--------|
-| Phase 1 — Fondations | Mois 1 (S1–S4) | 🟡 En cours |
-| Phase 2 — Développement | Mois 2 (S5–S8) | ⬜ À venir |
-| Phase 3 — Finalisation | Mois 3 (S9–S12) | ⬜ À venir |
-| Soutenance | Fin mois 3 | ⬜ À venir |
+| Phase                   | Période         | Statut      |
+| ----------------------- | --------------- | ----------- |
+| Phase 1 — Fondations    | Mois 1 (S1–S4)  | 🟡 En cours |
+| Phase 2 — Développement | Mois 2 (S5–S8)  | ⬜ À venir   |
+| Phase 3 — Finalisation  | Mois 3 (S9–S12) | ⬜ À venir   |
+| Soutenance              | Fin mois 3      | ⬜ À venir   |
 
 ---
 
