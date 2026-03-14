@@ -1,188 +1,472 @@
 # Cahier des Charges — StreamMG
 
 **Document :** Cahier des Charges Fonctionnel et Technique  
-**Projet :** StreamMG — Plateforme de streaming audiovisuel malagasy  
-**Version :** 1.0  
+**Projet :** StreamMG — Plateforme de streaming audiovisuel et éducatif malagasy  
 **Date :** Février 2026  
-**Redige par :** Membre 3 — Chef de Projet Fonctionnel  
-**Valide par :** L'equipe StreamMG
+**Rédigé par :** Équipe StreamMG  
+**Niveau :** Licence 3 Génie Logiciel
 
 ---
 
-## 1. Presentation generale du projet
+## Table des matières
+
+1. Présentation générale du projet
+2. Contexte et problématique
+3. Acteurs du système
+4. Modèle économique et niveaux d'accès
+5. Description fonctionnelle par module
+6. Architecture technique
+7. Base de données
+8. Sécurité
+9. Design et interfaces
+10. Contraintes et exigences non fonctionnelles
+11. Répartition des rôles
+12. Planning prévisionnel
+13. Livrables attendus
+14. Références bibliographiques
+
+---
+
+## 1. Présentation générale du projet
 
 ### 1.1 Identification du projet
 
-StreamMG est une plateforme de streaming audiovisuel cross-platform (web et mobile) dediee a la diffusion et a la decouverte de contenus culturels malgaches. L'application permet aux utilisateurs de visionner des films, series et documentaires, d'ecouter de la musique traditionnelle et moderne malgache, et de consulter des podcasts et emissions culturelles, depuis un navigateur web ou depuis une application mobile iOS et Android.
+StreamMG est une plateforme numérique de streaming audiovisuel et éducatif dédiée aux contenus culturels et pédagogiques malgaches. Elle permet la diffusion de films, de musique traditionnelle (salegy, hira gasy, tsapiky, beko), de documentaires, de podcasts et de tutoriels organisés en séries de leçons.
 
-Le projet est realise dans le cadre de la Licence 3 Genie Logiciel. Il constitue un projet de groupe secondaire, mene en parallele des memoires de licence individuels de chaque membre de l'equipe. Le perimetre est volontairement delimite pour garantir la livraison d'un prototype fonctionnel et demontrable en soutenance.
+La plateforme se compose de trois composants techniques distincts développés par une équipe de trois membres spécialisés.
 
-### 1.2 Contexte et besoin
+**Application mobile** (Membre 1) : React Native + Expo SDK 52, iOS et Android, démonstration via Expo Go.
 
-Le besoin a l'origine du projet est double. D'un cote, les createurs et producteurs de contenus culturels malgaches disposent de peu de canaux de diffusion numerique structures et accessibles localement. De l'autre, les utilisateurs finaux malgaches n'ont pas acces a une plateforme de streaming centralisant les contenus de leur culture, adaptee a leurs contraintes de connectivite et a leur pouvoir d'achat.
+**Application web** (Membre 2) : React.js 18 + Vite 5, navigateurs modernes (Chrome, Firefox, Safari, Edge), installable comme PWA.
 
-StreamMG repond a ce besoin par une solution pragmatique : un MVP (Minimum Viable Product) academique qui pose les bases techniques et fonctionnelles d'une telle plateforme, sans pretendre a une mise en production immediate ou a une concurrence directe avec les acteurs etablis.
+**API REST backend** (Membre 3) : Node.js 20 LTS + Express.js 4, source unique de vérité partagée entre les deux clients.
 
-### 1.3 Parties prenantes
+### 1.2 Périmètre du projet
 
-L'equipe de developpement est composee du Membre 1 (developpeur full-stack, dominante backend), du Membre 2 (ingenieur donnees et tests), et du Membre 3 (chef de projet fonctionnel et redacteur). Le jury academique est la partie prenante principale pour la validation du projet. Les utilisateurs finaux types (etudiants, jeunes adultes malgaches) constituent la cible fonctionnelle pour la conception de l'experience utilisateur.
-
----
-
-## 2. Description fonctionnelle
-
-### 2.1 Acteurs du systeme
-
-Le systeme distingue trois types d'acteurs.
-
-L'**utilisateur non authentifie** est un visiteur qui accede a la page d'accueil de la plateforme. Il peut consulter le catalogue en mode apercu (titres et visuels visibles, lecture bloquee), effectuer une recherche basique, et acceder aux pages d'inscription et de connexion.
-
-L'**utilisateur authentifie** est un membre inscrit et connecte. Il peut lire les contenus video et audio en streaming, gerer son profil et son historique, creer des playlists personnelles, acceder au mode hors-ligne pour les contenus audio, et souscrire a un abonnement simule via le flux Stripe en mode test.
-
-Le **fournisseur de contenu** (role "provider") est un producteur ou detenteur de droits culturels malgaches (label musical, realisateur, association culturelle) disposant d'un compte propre sur la plateforme. Il peut uploader, modifier et depublier ses propres contenus uniquement. Il n'a pas acces au tableau de bord administrateur complet, aux statistiques globales, ni aux comptes des autres utilisateurs. Un administrateur doit approuver ses contenus avant leur publication visible dans le catalogue.
-
-L'**administrateur** est un utilisateur avec des droits eleves. Il accede a un tableau de bord dedie pour gerer le catalogue (upload, modification, suppression de contenus), consulter les statistiques d'utilisation, et gerer les comptes utilisateurs.
-
-### 2.2 Catalogue de contenus
-
-L'application organise ses contenus selon la hierarchie suivante. Les contenus sont regroupes par type principal (video ou audio), puis par genre ou categorie culturelle. Pour les contenus video, les categories sont : films malgaches, series televisees, documentaires (nature, societe, histoire), emissions culturelles filmees. Pour les contenus audio, les categories sont : hira gasy, salegy, tsapiky, beko, afrobeats malgasy, musique contemporaine, podcasts culturels.
-
-Chaque contenu dispose des attributs minimaux suivants : titre, description, annee de production, categorie principale, sous-categorie optionnelle, langue (malgache, francais, ou billingue), duree, vignette (image de couverture), fichier media (URL du fichier sur le serveur ou lien de streaming), compteur de vues ou d'ecoutes, et date d'ajout dans le systeme.
-
-Pour les contenus audio uniquement, les attributs supplementaires sont : artiste ou groupe, album d'appartenance, et pochette d'album (extraite automatiquement des metadonnees ID3 lors de l'upload).
-
-### 2.3 Fonctionnalites par module
-
-#### Module Authentification
-
-L'inscription requiert un nom d'utilisateur unique, une adresse email valide, et un mot de passe d'au moins 8 caracteres comportant au moins une majuscule et un chiffre. Le mot de passe est hache avec bcrypt (facteur de cout 12) avant stockage en base de donnees. La connexion genere un JWT avec une duree de validite de 15 minutes et un refresh token d'une duree de 7 jours stocke en cookie httpOnly. La deconnexion invalide le refresh token en base de donnees.
-
-#### Module Catalogue
-
-La page d'accueil presente une selection de contenus mis en avant (bandeau hero), les categories disponibles, les contenus les plus regardes ou ecoutes de la semaine, et les ajouts recents. La recherche est textuelle, porte sur les titres et les artistes, et retourne des resultats tries par pertinence. Le filtrage par categorie et par type (video ou audio) est disponible.
-
-#### Module Lecture
-
-Le lecteur video propose les controles standards : lecture/pause, avance/retour de 10 secondes, controle du volume, mode plein ecran, et affichage de la progression. Le lecteur audio propose les controles suivants : lecture/pause, controle du volume, barre de progression interactive, mode repetition (une chanson ou toute la playlist), et mode aleatoire. Le mini-player audio reste visible en bas de l'ecran lors de la navigation entre les pages ou ecrans de l'application, ce qui constitue un point de confort utilisateur essentiel pour une experience d'ecoute continue.
-
-L'historique de lecture enregistre la position de lecture (en secondes) pour chaque contenu et chaque utilisateur. Lorsqu'un utilisateur reprend un contenu, la lecture repart automatiquement a la position enregistree.
-
-#### Module Hors-ligne (Web uniquement)
-
-L'utilisateur peut selectionner des titres audio pour une ecoute hors-ligne. Le Service Worker met en cache les fichiers audio selectionnes dans l'API Cache du navigateur. L'interface indique clairement les titres disponibles hors-ligne avec un indicateur visuel. Le cache expire automatiquement apres 48 heures depuis le moment de la mise en cache. L'utilisateur peut supprimer manuellement des titres du cache hors-ligne.
-
-#### Module Abonnement et Paiement Simule
-
-La plateforme propose deux plans tarifaires fictifs : un plan Gratuit avec acces limite (5 contenus par jour, qualite standard) et un plan Premium avec acces illimite et qualite superieure. Le flux de souscription au plan Premium suit les etapes suivantes.
-
-L'utilisateur clique sur "Passer a Premium". Il est redirige vers la page de selection de plan. Il selectionne la periodicite (mensuelle ou annuelle fictive). Il saisit ses informations de carte via le formulaire Stripe Elements (iframe securise, donnees jamais envoyees directement au backend StreamMG). Il confirme le paiement. Le backend StreamMG cree un PaymentIntent Stripe en mode test et retourne le client_secret. Le frontend confirme le paiement avec Stripe.js en utilisant le client_secret. Stripe retourne le statut de confirmation. Le backend recoit la confirmation via webhook Stripe (simule avec stripe listen en developpement) et met a jour le statut Premium de l'utilisateur en base de donnees. L'utilisateur recoit une notification de confirmation a l'ecran.
-
-Les numeros de carte de test utilises pour les demonstrations sont ceux fournis officiellement par Stripe dans sa documentation : 4242 4242 4242 4242 pour un succes, 4000 0000 0000 9995 pour un echec.
-
-#### Module Administration
-
-Le tableau de bord administrateur est accessible depuis une route protegee (/admin) apres verification du role admin en base de donnees. Il propose les fonctionnalites suivantes : formulaire d'upload de contenus (fichier media, vignette, metadonnees manuelles), liste des contenus avec options de modification et de suppression, statistiques d'utilisation (nombre de lectures par contenu sur les 7 et 30 derniers jours, nombre d'utilisateurs inscrits, nombre d'utilisateurs actifs), et gestion basique des comptes utilisateurs (desactivation d'un compte).
+Projet académique de groupe mené en parallèle des mémoires de Licence individuels. Le périmètre est délibérément délimité pour garantir un prototype fonctionnel et démontrable en soutenance, sans sacrifier la qualité technique.
 
 ---
 
-## 3. Description technique
+## 2. Contexte et problématique
 
-### 3.1 Architecture generale
+### 2.1 Situation culturelle et numérique à Madagascar
 
-Le systeme adopte une architecture client-serveur a trois couches. La couche presentation est portee par l'application Expo/React Native Web, deployee comme Progressive Web App sur navigateur et comme application mobile via Expo Go. La couche applicative est portee par l'API REST Node.js/Express, qui centralise toutes les regles metier et la securite. La couche donnees est composee de MongoDB pour les donnees structurees et du systeme de fichiers local (repertoire /uploads) pour les fichiers medias.
+Madagascar possède un patrimoine audiovisuel exceptionnel : hira gasy, salegy, tsapiky, beko, documentaires, productions cinématographiques locales. Ce patrimoine reste absent des grandes plateformes internationales (Netflix, Spotify, YouTube Premium) dont les catalogues sont massivement occidentaux et les abonnements inaccessibles à une majorité de la population.
 
-### 3.2 Nouvelle repartition des roles techniques
+### 2.2 Contexte numérique malgache
 
-Le Membre 1 est responsable de l'integralite du frontend Expo/React Native Web. Le Membre 2 est responsable de l'integralite du backend Node.js/Express et de la base de donnees MongoDB. Le Membre 3 est responsable de la securite applicative transversale (frontend et backend), de la coordination du projet, et de la redaction de toute la documentation.
+Selon DataReportal (2025), Madagascar compte 18,2 millions de connexions mobiles actives (56,2 % de la population) mais seulement 6,6 millions d'internautes (20,4 %). Le mobile est le premier terminal numérique. La bande passante est inégale (4G coûteuse en ville, 3G/2G en zones rurales). Ces contraintes justifient : le mode hors-ligne avec téléchargement chiffré sur mobile, le streaming HLS adaptatif sur web, le dark mode par défaut (économie de batterie OLED), et le téléchargement par chunks pour les coupures réseau.
 
-### 3.3 Stack technologique detaillee
+### 2.3 Problématique
 
-**Frontend :** Expo SDK 52, React Native 0.76.x, React Native Web, expo-router v3.x, expo-av v14.x, zustand v4.x, TanStack Query v5.x, axios, nativewind v4.x, @stripe/stripe-react-native, @stripe/react-stripe-js.
-
-**Backend :** Node.js v20 LTS, Express.js v4.x, jsonwebtoken v9.x, bcryptjs v2.x, multer v1.x, music-metadata v10.x, fluent-ffmpeg, cors, express-rate-limit, dotenv, stripe v14.x, mongoose v8.x.
-
-**Base de donnees :** MongoDB v7.x, Mongoose v8.x.
-
-**Infrastructure :** Nginx (reverse proxy), Let's Encrypt (SSL), Railway ou Render (hebergement backend), Vercel ou Netlify (hebergement frontend web), MongoDB Atlas (base de donnees cloud pour la demo).
-
-**Outils de developpement :** Git, GitHub, Postman, Figma, Trello ou Notion, nodemon, stripe CLI (pour les webhooks en local).
-
-### 3.3 Modele de donnees
-
-Le modele de donnees comprend les collections MongoDB suivantes.
-
-La collection **users** contient les champs : _id (ObjectId), username (String, unique), email (String, unique), passwordHash (String), role (String, enum : user ou admin, defaut : user), isPremium (Boolean, defaut : false), premiumExpiry (Date, optionnel), createdAt (Date), updatedAt (Date).
-
-La collection **contents** contient les champs : _id (ObjectId), title (String), description (String), type (String, enum : video ou audio), category (String), subCategory (String, optionnel), language (String), duration (Number, en secondes), thumbnail (String, URL), filePath (String, chemin serveur), artist (String, optionnel, pour les audios), album (String, optionnel, pour les audios), coverArt (String, URL de la pochette, optionnel), viewCount (Number, defaut : 0), createdAt (Date), updatedAt (Date).
-
-La collection **watchHistory** contient les champs : _id (ObjectId), userId (ObjectId, reference users), contentId (ObjectId, reference contents), progressSeconds (Number), lastWatchedAt (Date).
-
-La collection **playlists** contient les champs : _id (ObjectId), userId (ObjectId, reference users), name (String), contentIds (Array d'ObjectId), createdAt (Date).
-
-La collection **refreshTokens** contient les champs : _id (ObjectId), userId (ObjectId), token (String, hache), expiresAt (Date).
-
-### 3.4 API REST — Principaux endpoints
-
-Les routes d'authentification sont : POST /api/auth/register (inscription), POST /api/auth/login (connexion, retourne JWT et refresh token), POST /api/auth/refresh (renouvellement du JWT via refresh token), POST /api/auth/logout (deconnexion et invalidation du refresh token).
-
-Les routes de catalogue sont : GET /api/contents (liste paginee avec filtres category, type, search), GET /api/contents/:id (detail d'un contenu), GET /api/contents/featured (contenus mis en avant), GET /api/contents/trending (contenus les plus vus/ecoutes).
-
-Les routes de lecture et d'historique sont : POST /api/history/:contentId (enregistrement ou mise a jour de la progression), GET /api/history (historique de l'utilisateur connecte), DELETE /api/history/:contentId (suppression d'une entree).
-
-Les routes d'administration sont protegees par le middleware requireAdmin et comprennent : POST /api/admin/contents (upload d'un contenu), PUT /api/admin/contents/:id (modification), DELETE /api/admin/contents/:id (suppression), GET /api/admin/stats (statistiques d'utilisation).
-
-Les routes de paiement simule sont : POST /api/payment/create-intent (creation d'un PaymentIntent Stripe), POST /api/payment/webhook (reception des evenements Stripe), GET /api/payment/status (statut de l'abonnement de l'utilisateur connecte).
-
-### 3.5 Securite
-
-Le hachage des mots de passe est assure par bcrypt avec un facteur de cout de 12. L'authentification repose sur des JWT a courte duree de vie (15 minutes) associes a des refresh tokens rotatifs stockes en cookie httpOnly pour prevenir les attaques XSS. Le rate limiting est configure a 100 requetes par IP par fenetre de 15 minutes sur les routes d'authentification, et a 200 requetes par IP par fenetre de 15 minutes sur les autres routes. Les en-tetes de securite HTTP sont configures via le middleware helmet. Le CORS est configure pour n'autoriser que les origines declarees (domaine de l'application web et localhost en developpement). Les uploads de fichiers sont valides cote serveur : type MIME verifie (video/mp4, audio/mpeg, audio/aac, image/jpeg, image/png), taille maximale de 500 Mo pour les videos et de 50 Mo pour les audios. Les routes d'administration sont protegees par un middleware de verification du role admin extrait du JWT.
+StreamMG répond à deux besoins simultanés : donner aux créateurs culturels malgaches un canal de diffusion numérique structuré avec valorisation de leurs œuvres, et donner aux utilisateurs un accès organisé à leur culture selon leurs contraintes financières et de connectivité. La protection des contenus contre les téléchargements non autorisés est une condition de viabilité économique intégrée dès la conception.
 
 ---
 
-## 4. Contraintes et exigences non fonctionnelles
+## 3. Acteurs du système
 
-### 4.1 Performance
+### 3.1 Visiteur
 
-Le temps de reponse de l'API pour les requetes de liste et de detail doit etre inferieur a 500 ms en conditions normales. Le temps de demarrage du lecteur video ou audio doit etre inferieur a 3 secondes sur une connexion 4G. La pagination de la liste des contenus est limitee a 20 elements par page.
+Accède sans compte. Consulte le catalogue (vignettes, titres, descriptions) et lit uniquement les contenus gratuits. Pour tout autre contenu, voit un écran d'invitation à s'inscrire.
 
-### 4.2 Compatibilite
+### 3.2 Utilisateur standard
 
-L'application web doit etre compatible avec les dernières versions de Chrome, Firefox, Safari et Edge. L'application mobile doit fonctionner sur iOS 14+ et Android 10+. La version web doit etre responsive et lisible sur des ecrans a partir de 360 pixels de largeur.
+Inscrit gratuitement (rôle "user"). Lit tous les contenus gratuits avec suivi de progression pour les tutoriels, crée des playlists, consulte son historique, écoute en hors-ligne (mobile : téléchargement AES-256 ; web : Service Worker audio), et achète des contenus payants à l'unité.
 
-### 4.3 Disponibilite
+### 3.3 Utilisateur premium
 
-Pour la demonstration de soutenance, une disponibilite de 99 % sur la duree de la presentation est exigee. Pour la periode de developpement, aucune contrainte de disponibilite n'est imposee.
+Abonnement Premium actif (rôle "premium"). Tous les droits standard plus l'accès illimité aux contenus premium. Pour les contenus payants, doit procéder à un achat unitaire — l'abonnement ne couvre jamais les contenus "paid".
 
-### 4.4 Accessibilite
+### 3.4 Fournisseur de contenu
 
-Les elements interactifs (boutons, liens, champs de formulaire) doivent etre accessibles au clavier. Les images doivent disposer d'attributs alt descriptifs. Le contraste des couleurs doit respecter les recommandations WCAG 2.1 niveau AA.
+Rôle "provider". Upload des contenus avec **vignette obligatoire**, définit le niveau d'accès et le prix, organise les tutoriels en séries de leçons. Ne peut accéder qu'à ses propres contenus. Toute soumission est validée par un administrateur avant publication.
 
----
+### 3.5 Administrateur
 
-## 5. Livrables attendus
-
-Les livrables du projet sont les suivants : le code source complet versionne sur GitHub, le prototype fonctionnel deployable (backend sur Railway ou Render, frontend web sur Vercel), l'application mobile demonstrable via Expo Go sur smartphone physique ou emulateur, la documentation technique de l'API (collection Postman exportee), les maquettes Figma (web et mobile), le cahier des charges (present document), le rapport de tests fonctionnels, et le memoire de licence accompagnant le projet.
+Accès complet. Valide ou rejette les soumissions (y compris la qualité des vignettes), modifie les niveaux d'accès et les prix, consulte les statistiques, gère les comptes.
 
 ---
 
-## 6. Planning previsionnel simplifie
+## 4. Modèle économique et niveaux d'accès
 
-La phase de conception, qui comprend la finalisation des maquettes Figma, la conception du schema de donnees et la definition des endpoints API, est prevue sur deux semaines. La phase de developpement du backend (API REST, authentification, upload, streaming, integration Stripe) est prevue sur quatre semaines. La phase de developpement du frontend (navigation, catalogue, lecteurs, formulaires, admin) est prevue en parallele sur quatre semaines. La phase de tests et de correction des anomalies est prevue sur deux semaines. La phase de preparation de la soutenance (memoire, slides, repetition) est prevue sur une semaine.
+### 4.1 Les quatre niveaux d'accès
+
+**Gratuit.** Accessible à tous sans inscription. Vitrine de la plateforme.
+
+**Premium.** Accessible aux abonnés Premium (forfait mensuel 5 000 Ar fictif ou annuel 50 000 Ar fictif). Accès illimité pendant la durée de l'abonnement.
+
+**Payant (achat unitaire).** Achat permanent indépendant de tout abonnement. Même un utilisateur Premium doit payer séparément. Une fois acheté, l'accès est permanent.
+
+**Tutoriel.** Suit le niveau d'accès choisi par le fournisseur (gratuit, premium ou payant), avec en plus le suivi de progression en séries de leçons ordonnées.
+
+### 4.2 Tableau des droits
+
+| Type de contenu | Visiteur | Standard | Premium | Remarque |
+|---|---|---|---|---|
+| Gratuit | OUI | OUI | OUI | Sans restriction |
+| Premium | NON | NON | OUI | Abonnement requis |
+| Payant | NON | ACHAT | ACHAT | Indépendant de l'abonnement |
+| Tutoriel gratuit | OUI | OUI | OUI | + progression trackée |
+| Tutoriel premium | NON | NON | OUI | + progression trackée |
+| Tutoriel payant | NON | ACHAT | ACHAT | + progression trackée |
+
+### 4.3 Simulation des paiements
+
+Stripe mode test exclusivement. Cartes : 4242 4242 4242 4242 (succès), 4000 0000 0000 9995 (refus).
 
 ---
 
-## 7. References bibliographiques
+## 5. Description fonctionnelle par module
 
-Stripe Inc. (2026). *Stripe Developer Documentation — PaymentIntents API*. https://stripe.com/docs/api/payment_intents
+### 5.1 Module Authentification
 
-Expo. (2025). *Expo AV — Audio and Video*. https://docs.expo.dev/versions/latest/sdk/av
+Inscription : nom d'utilisateur unique (3–30 caractères), email valide, mot de passe ≥ 8 caractères avec majuscule et chiffre. Validation en temps réel côté client. Backend : bcrypt coût 12, rôle "user", isPremium false.
 
-Mozilla Developer Network. (2025). *Service Worker API*. https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API
+JWT 15 min stocké en mémoire vive uniquement (zustand). Refresh token 7 jours avec rotation systématique : cookie httpOnly (web) ou expo-secure-store (mobile, même espace que la clé AES de chiffrement). Intercepteur axios : renouvellement automatique transparent sur erreur 401.
 
-OWASP Foundation. (2023). *OWASP Top Ten 2023*. https://owasp.org/www-project-top-ten/
+### 5.2 Module Catalogue
 
-Fielding, R. T. (2000). *Architectural Styles and the Design of Network-based Software Architectures* (These de doctorat). University of California, Irvine.
+Page d'accueil : héro, tendances, derniers ajouts, catégories. **Chaque contenu est affiché avec sa vignette obligatoire** dans les cartes du catalogue. Les cartes affichent aussi : titre, badge de niveau d'accès (aucun badge = gratuit, badge or "★ Premium" = premium, badge teal avec prix = payant). Recherche textuelle sur titres et artistes. Filtres par catégorie, type (vidéo/audio), niveau d'accès.
+
+Lors d'une tentative de lecture protégée, l'API retourne 403 avec `reason`. Le frontend affiche l'écran approprié : invitation à s'abonner (`subscription_required`) ou écran d'achat avec prix (`purchase_required`).
+
+### 5.3 Module Lecture et protection des contenus
+
+**Sur web — streaming HLS sécurisé :**
+
+Les vidéos sont servies en HLS (segments `.ts` de 10 secondes), jamais sous forme de fichier `.mp4` complet. Avant chaque lecture, le backend génère un token signé temporaire (10 min) contenant un fingerprint de session calculé comme le hachage du User-Agent, de l'IP et du cookie httpOnly `sessionId`. Ce token est vérifié à chaque requête de segment `.ts` par le middleware `hlsTokenizer`. Tout changement de navigateur, copie d'URL ou ouverture dans un nouvel onglet invalide le fingerprint et provoque un rejet 403. hls.js (intégré dans react-player) assure la lecture des segments.
+
+Les contenus audio sont servis normalement (fichiers `.mp3` ou `.aac`) — ils sont protégés par authentification JWT mais ne nécessitent pas HLS. En mode hors-ligne, le Service Worker met en cache les fichiers audio (stratégie Cache First, expiration 48h).
+
+**Sur mobile — lecture native et téléchargement chiffré AES-256-GCM :**
+
+La lecture en ligne se fait via expo-av (vidéo en mode paysage automatique via expo-screen-orientation, audio avec mini-player persistant). Pour le téléchargement hors-ligne, le backend génère une clé AES-256 et un IV uniques ainsi qu'une URL signée temporaire (15 min). Le frontend télécharge par chunks de 4–8 Mo via expo-file-system (reprise sur coupure réseau), chiffre immédiatement chaque chunk avec react-native-quick-crypto (AES-256-GCM), et sauvegarde le fichier `.enc` dans le sandbox privé. La clé et l'IV sont stockés dans expo-secure-store. La lecture hors-ligne déchiffre en mémoire vive uniquement — aucun fichier en clair n'est écrit sur le disque.
+
+La progression (position en secondes) est enregistrée toutes les 10 s via POST /api/history/:contentId. À 90 % de la durée, le contenu est marqué terminé.
+
+### 5.4 Module Tutoriels
+
+Tutoriels organisés en séries de leçons ordonnées. Chaque leçon est un fichier média indépendant. Exemples : "Apprendre le salegy — 8 leçons vidéo" (premium), "Cuisiner le romazava — 5 leçons" (gratuit), "Initiation à la programmation en malgache — 15 leçons" (payant, 10 000 Ar).
+
+Suivi de progression : dernière leçon consultée (index), leçons terminées (tableau d'indices), pourcentage de complétion. Section "Mes tutoriels en cours" dans le profil. Bouton "Continuer" ramène à la dernière leçon non terminée.
+
+### 5.5 Module Abonnement Premium
+
+Sélection du plan → POST /api/payment/subscribe → PaymentIntent Stripe → client_secret → formulaire carte (Stripe Elements web / CardField mobile) → webhook Stripe → isPremium: true, role: "premium", premiumExpiry.
+
+### 5.6 Module Achat Unitaire
+
+Bouton "Acheter — [prix] Ar" → POST /api/payment/purchase avec contentId → backend vérifie absence de doublon (collection purchases) → PaymentIntent avec `metadata: { type: "purchase", userId, contentId }` → même flux carte que l'abonnement → webhook distingue par `metadata.type` → document créé dans purchases → accès permanent débloqué.
+
+### 5.7 Module Hors-ligne
+
+**Web (PWA) :** Service Worker Cache First pour les audios (expiration 48h). Les vidéos ne sont pas téléchargeables sur web — elles sont protégées par HLS + tokens signés.
+
+**Mobile :** Téléchargement AES-256-GCM pour les vidéos et les audios. Fichiers `.enc` dans le sandbox privé. Clé dans expo-secure-store. Lecture par déchiffrement en mémoire vive.
+
+### 5.8 Module Fournisseur de contenu
+
+Formulaire d'upload : titre, description, type, catégorie, langue, métadonnées audio/vidéo, **vignette obligatoire** (JPEG ou PNG, ≤ 5 Mo, aperçu avant soumission), niveau d'accès, prix si payant. Pour les tutoriels : gestionnaire de séries de leçons (ajout, réordonnancement, suppression). Multer extrait les métadonnées ID3 automatiquement via music-metadata. Contenu créé avec isPublished: false.
+
+### 5.9 Module Administration
+
+Validation des soumissions (y compris contrôle qualité des vignettes), modification des niveaux d'accès et prix, statistiques d'utilisation et de revenus simulés (7 et 30 jours), gestion des comptes.
+
+---
+
+## 6. Architecture technique
+
+### 6.1 Pattern multi-client avec backend partagé
+
+```
+[App Mobile — React Native/Expo]     [App Web — React.js/Vite]
+    + AES-256-GCM (hors-ligne)           + HLS + tokens signés
+    + expo-file-system (chunks)          + hls.js + react-player
+    + react-native-quick-crypto          + Service Worker PWA (audio)
+              \                                    /
+               ————————[ HTTPS / REST JSON + JWT ]————————
+                                    |
+                      [API REST — Node.js/Express]
+                      + checkAccess + hlsTokenizer
+                      + ffmpeg (HLS) + AES keygen
+                      + Multer (thumbnail OBLIGATOIRE)
+                             /          \
+                       [MongoDB]    [/uploads : thumbnails + HLS + audio]
+                                          |
+                                [Stripe API — mode test]
+```
+
+### 6.2 Stack technologique
+
+**Application mobile — Membre 1**
+
+| Composant | Technologie | Version |
+|---|---|---|
+| Framework | React Native + Expo SDK | 52 |
+| Navigation | expo-router | v3.x |
+| Lecture média | expo-av | v14.x |
+| Chiffrement hors-ligne | react-native-quick-crypto | latest |
+| Stockage local | expo-file-system | latest |
+| Stockage sécurisé | expo-secure-store | latest |
+| Paiement | @stripe/stripe-react-native | latest |
+| État global | zustand | v4.x |
+| Requêtes API | TanStack Query | v5.x |
+| Client HTTP | axios | latest |
+| Styling | NativeWind | v4.x |
+
+**Application web — Membre 2**
+
+| Composant | Technologie | Version |
+|---|---|---|
+| Bibliothèque UI | React.js | 18.x |
+| Build tool | Vite | 5.x |
+| Navigation | react-router-dom | v6.x |
+| Lecteur HLS | hls.js (via react-player) | latest |
+| Hors-ligne audio | Service Worker (Workbox) | latest |
+| Paiement | @stripe/react-stripe-js | latest |
+| État global | zustand | v4.x |
+| Requêtes API | TanStack Query | v5.x |
+| Styling | Tailwind CSS | v3.x |
+
+**Backend — Membre 3**
+
+| Composant | Technologie | Version |
+|---|---|---|
+| Environnement | Node.js LTS | 20.x |
+| Framework | Express.js | v4.x |
+| ODM | Mongoose | v8.x |
+| Auth | jsonwebtoken + bcryptjs | v9.x / v2.x |
+| Upload | Multer (thumbnail obligatoire) | v1.x |
+| Métadonnées audio | music-metadata | v10.x |
+| Transcoding HLS | fluent-ffmpeg | latest |
+| Crypto (tokens + AES) | Node.js crypto (natif) | built-in |
+| Paiement | stripe SDK | v14.x |
+| Sécurité | helmet + cors + express-rate-limit | latest |
+| Validation | express-validator | latest |
+
+### 6.3 Nouveaux endpoints liés à la protection et aux téléchargements
+
+| Méthode | Route | Accès | Description |
+|---|---|---|---|
+| GET | /api/hls/:id/token | JWT + checkAccess | Génération token HLS signé + URL manifest |
+| GET | /hls/:id/index.m3u8 | Token HLS | Manifest HLS signé |
+| GET | /hls/:id/:segment.ts | Token HLS + fingerprint | Segment vidéo (vérifié à chaque requête) |
+| POST | /api/download/:id | JWT + checkAccess | Génération clé AES-256 + IV + URL signée |
+
+---
+
+## 7. Base de données
+
+### 7.1 Choix de MongoDB
+
+MongoDB (v7.x) est retenu pour la flexibilité du modèle document face aux métadonnées hétérogènes des contenus audiovisuels (attributs différents pour films, audios, tutoriels).
+
+### 7.2 Schéma de la collection contents (résumé)
+
+```
+_id          : ObjectId
+title        : String, obligatoire
+description  : String, obligatoire
+type         : String, enum "video" | "audio"
+category     : String
+language     : String, enum "mg" | "fr" | "bilingual"
+
+thumbnail    : String, OBLIGATOIRE
+               Chemin /uploads/thumbnails/<uuid>.jpg
+               Affiché dans tout le catalogue, la page de détail,
+               les miniatures, les résultats de recherche.
+               Rejet backend (400) si absent à l'upload.
+
+filePath     : String, chemin source privé (non exposé)
+hlsPath      : String, dossier HLS "/uploads/hls/<id>/" (vidéos uniquement)
+fileSize     : Number, en octets
+mimeType     : String
+duration     : Number, en secondes (absent si isTutorial)
+viewCount    : Number, défaut 0
+isPublished  : Boolean, défaut false
+uploadedBy   : ObjectId → users
+
+accessType   : String, enum "free" | "premium" | "paid", défaut "free"
+price        : Number, centimes Stripe, null si non payant
+
+artist, album, coverArt, trackNumber (audio uniquement)
+resolution, director, cast, subtitles (vidéo uniquement)
+
+isTutorial   : Boolean, défaut false
+lessons      : [{ order, title, description, thumbnail?,
+                  filePath, hlsPath, duration }]
+               La vignette de leçon est optionnelle ;
+               si absente, le frontend affiche la vignette du tutoriel.
+
+createdAt, updatedAt : Date
+```
+
+Les huit collections complètes sont décrites dans le document 08 (Conception de la base de données).
+
+---
+
+## 8. Sécurité
+
+### 8.1 Authentification JWT + rotation des refresh tokens
+
+JWT 15 min HS256 en mémoire vive. Refresh token 7 jours avec rotation systématique (invalidation de l'ancien en base à chaque renouvellement). Stockage : cookie httpOnly (web) ou expo-secure-store (mobile).
+
+### 8.2 Middleware checkAccess
+
+Vérifie les droits d'accès sur toutes les routes de streaming et de téléchargement. Règles : free → tous, premium → JWT rôle "premium" ou "admin", paid → document dans la collection purchases ou rôle "admin". Retourne 403 avec `reason` (subscription_required, purchase_required, login_required) pour permettre au frontend d'afficher le bon écran.
+
+### 8.3 Protection HLS — middleware hlsTokenizer
+
+Génère un token signé contenant videoId, userId, fingerprint (sha256 du User-Agent + IP + cookie sessionId) et une expiration de 10 minutes. Vérifie ce token à chaque requête de segment `.ts`. Rejet 403 si token expiré, fingerprint non correspondant, ou token réutilisé dans un contexte différent.
+
+### 8.4 Chiffrement AES-256-GCM (mobile)
+
+Clé et IV générés par le backend (Node.js crypto) pour chaque téléchargement. Jamais stockés en base de données. Transmis en HTTPS une seule fois. Le frontend chiffre le fichier localement avec react-native-quick-crypto et stocke la clé dans expo-secure-store.
+
+### 8.5 Hachage des mots de passe
+
+bcrypt, facteur de coût 12 (4 096 itérations). Jamais stockés en clair.
+
+### 8.6 Sécurité Multer — validation des uploads
+
+Types MIME autorisés : image/jpeg, image/png (thumbnail) ; video/mp4, video/quicktime (vidéo) ; audio/mpeg, audio/aac, audio/wav (audio). Tailles maximales : thumbnail 5 Mo, vidéo 500 Mo, audio 50 Mo. Noms de fichiers générés par UUID (jamais le nom d'origine).
+
+### 8.7 Headers HTTP et rate limiting
+
+Helmet : HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, CSP. Rate limiting : 10 req/15min sur les routes d'authentification, 200 req/15min sur les autres.
+
+### 8.8 Validation CORS
+
+Origines autorisées : domaine Vercel (production) et localhost (développement). `credentials: true` pour les cookies httpOnly.
+
+---
+
+## 9. Design et interfaces
+
+### 9.1 Direction artistique
+
+Raffinement sombre et chaleureux, dark mode par défaut (économie de batterie OLED), identité culturelle malgache. Tokens partagés entre mobile et web.
+
+### 9.2 Palette de couleurs
+
+| Rôle | Hexadécimal | Usage |
+|---|---|---|
+| Bleu cobalt principal | #3584e4 | Boutons primaires, liens |
+| Or accent | #e8c547 | Badge Premium, étoiles |
+| Teal accent | #2ec27e | Badge payant, bouton achat |
+| Fond base | #0d1018 | Fond application |
+| Fond surface | #171b26 | Cartes, modales |
+| Texte principal | #eef0f6 | Titres |
+| Texte secondaire | #8d96a8 | Métadonnées |
+
+### 9.3 Vignettes dans l'interface
+
+Les vignettes (obligatoires) sont affichées dans : les cartes du catalogue (ratio 5:7), les résultats de recherche, la page de détail du contenu, le mini-player (pochette audio), la section "Continuer à regarder", les listes "Mes achats" et "Mes tutoriels en cours", et les tableaux de bord administrateur. Une image de substitution (placeholder) est affichée uniquement pendant le chargement.
+
+### 9.4 Composants principaux
+
+**ContentCard :** vignette ratio 5:7, badge niveau d'accès, titre Sora, métadonnées DM Sans.
+**Écrans intermédiaires :** bienveillants (non punitifs), deux variantes (abonnement / achat) avec prix affiché.
+**Mini-player audio :** pochette (coverArt ou thumbnail), titre, artiste, contrôles.
+**Indicateur de protection :** petite icône HLS visible sur les cartes de vidéos protégées.
+
+---
+
+## 10. Contraintes et exigences non fonctionnelles
+
+**Performance.** Réponse API liste/détail < 500 ms. Middleware `checkAccess` < 100 ms. Premier segment HLS délivré < 2 s après clic "Lire".
+
+**Vignette obligatoire.** Tout contenu publié sans vignette est rejeté par le backend (400) et bloqué côté frontend avant soumission. L'admin peut rejeter une vignette non conforme.
+
+**Protection HLS.** Tout fichier vidéo est servi exclusivement via HLS. Aucune route directe vers un fichier `.mp4` complet n'est exposée publiquement.
+
+**Idempotence des achats.** Double-clic ou retour arrière → 409 sans double débit Stripe.
+
+**Compatibilité.** Mobile : iOS 14+, Android 10+. Web : Chrome, Firefox, Safari, Edge (versions récentes), responsive dès 360 px.
+
+**Chiffrement mobile.** Les fichiers hors-ligne sont toujours chiffrés AES-256-GCM. La lecture en clair en mémoire ne dépasse jamais la durée d'un segment.
+
+---
+
+## 11. Répartition des rôles
+
+| Membre | Domaine | Charge | Responsabilités clés |
+|---|---|---|---|
+| Membre 1 | Frontend Mobile | 38 % | App React Native/Expo complète, affichage vignettes, AES-256-GCM hors-ligne, Stripe mobile, tutoriels |
+| Membre 2 | Frontend Web | 32 % | App React.js/Vite complète, affichage vignettes, lecteur HLS hls.js, tokens HLS, Stripe Elements, tutoriels |
+| Membre 3 | Backend + Coordination | 30 % | API REST, ffmpeg → HLS, middleware hlsTokenizer, génération AES-256, Multer (thumbnail obligatoire), MongoDB 8 collections, Stripe, coordination |
+
+---
+
+## 12. Planning prévisionnel — 10 semaines
+
+| Semaine | Membre 1 — Mobile | Membre 2 — Web | Membre 3 — Backend |
+|---|---|---|---|
+| S1 | Init Expo, maquettes Figma (vignettes partout) | Init Vite, maquettes Figma (vignettes partout) | Contrat d'API, schémas MongoDB (thumbnail required), init Express |
+| S2 | ContentCard avec vignette, navigation | ContentCard avec vignette, navigation SPA | Auth JWT, Multer (thumbnail obligatoire + vidéo/audio) |
+| S3 | Écrans auth, zustand authStore | Pages auth, zustand authStore | Routes /contents, pipeline ffmpeg → segments HLS |
+| S4 | Catalogue + badges niveaux, recherche, filtres | Catalogue + badges niveaux, recherche, filtres | Middleware hlsTokenizer + fingerprint, checkAccess |
+| S5 | expo-av (vidéo + audio), mini-player, intégration tokens HLS | hls.js + react-player, mini-player App.tsx, tokens HLS | Routes /history, /tutorial/progress, staging Railway |
+| S6 | Téléchargement AES-256-GCM (react-native-quick-crypto + expo-file-system) | Service Worker PWA (audio Cache First 48h) | Endpoint /download (clé AES-256 + IV + URL signée) |
+| S7 | Lecture hors-ligne déchiffrement mémoire, expo-secure-store | Stripe Elements, écrans intermédiaires premium/payant | Stripe subscribe + purchase, webhook metadata.type |
+| S8 | Stripe CardField, écrans intermédiaires, tutoriels | Upload fournisseur (vignette obligatoire), tutoriels, admin | Routes admin + provider (validation thumbnail), statistiques |
+| S9 | Tests mobile (vignettes, HLS, AES, Stripe), corrections | Tests web (vignettes, HLS, PWA, Stripe, 360px), corrections | Tests sécurité (tokens HLS, fingerprint, AES, webhook), Postman |
+| S10 | Démonstration mobile | Démonstration web | Mémoire, slides soutenance, production final |
+
+---
+
+## 13. Livrables attendus
+
+**Code source.** Trois dépôts GitHub distincts avec README d'installation.
+
+**Applications déployées.** Backend Railway + Nginx SSL. Frontend web Vercel. Mobile via Expo Go QR code.
+
+**Documentation API.** Collection Postman exportée incluant les routes HLS, download, purchase, avec exemples de requêtes et tests automatisés.
+
+**Maquettes.** Figma haute fidélité (mobile + web) : catalogue avec vignettes, lecteur vidéo HLS, écran de téléchargement, progression tutoriels, écrans intermédiaires, espace fournisseur (formulaire avec upload vignette), tableau de bord admin.
+
+**Document de sécurité.** Description des mécanismes HLS + tokens signés et AES-256-GCM, avec présentation des limites connues (screen recording) pour la soutenance.
+
+**Documentation technique.** Ce cahier des charges, le document d'architecture, la conception BDD, les scénarios d'utilisation, le plan de tests, le design system.
+
+---
+
+## 14. Références bibliographiques
+
+Anderson, C. (2009). *Free: The Future of a Radical Price*. Hyperion. ISBN 978-1401322908.
+
+Apple Inc. (2019). *HTTP Live Streaming — RFC 8216*. https://datatracker.ietf.org/doc/html/rfc8216
+
+Apple Inc. (2025). *Human Interface Guidelines — iOS and iPadOS*. https://developer.apple.com/design/human-interface-guidelines
+
+Chodorow, K. (2019). *MongoDB: The Definitive Guide* (3e éd.). O'Reilly Media. ISBN 978-1491954461.
+
+DataReportal. (2025). *Digital 2025 : Madagascar*. Kepios Analysis. https://datareportal.com/reports/digital-2025-madagascar
+
+Expo. (2025). *Expo Documentation — SDK 52*. https://docs.expo.dev
+
+Fielding, R. T. (2000). *Architectural Styles and the Design of Network-based Software Architectures* (Thèse de doctorat). University of California, Irvine.
+
+Kumar, V. (2014). Making "Freemium" Work. *Harvard Business Review*, 92(5), 27–29.
+
+Martin, R. C. (2017). *Clean Architecture*. Prentice Hall. ISBN 978-0134494166.
 
 Mongoose. (2025). *Mongoose v8.x Documentation*. https://mongoosejs.com/docs
 
-Pressman, R. S., & Maxim, B. R. (2019). *Software Engineering: A Practitioner's Approach* (9e ed.). McGraw-Hill Education. ISBN 978-1259872976.
+Newman, S. (2021). *Building Microservices* (2e éd.). O'Reilly Media. ISBN 978-1492034025.
+
+OWASP Foundation. (2023). *OWASP Top Ten 2023*. https://owasp.org/www-project-top-ten/
+
+Pressman, R. S., & Maxim, B. R. (2019). *Software Engineering: A Practitioner's Approach* (9e éd.). McGraw-Hill Education. ISBN 978-1259872976.
+
+Stripe Inc. (2026). *Stripe API Reference — PaymentIntents*. https://stripe.com/docs/api/payment_intents
+
+Stripe Inc. (2026). *Testing Stripe integrations*. https://stripe.com/docs/testing
+
+Tailwind CSS. (2025). *Tailwind CSS v3 Documentation*. https://tailwindcss.com/docs
+
+UNESCO. (2023). *Culture numérique et diversité culturelle dans les pays en développement*. UNESCO Publishing.
+
+Vite. (2025). *Vite — Documentation officielle*. https://vitejs.dev/guide
+
+W3C. (2018). *Web Content Accessibility Guidelines (WCAG) 2.1*. https://www.w3.org/TR/WCAG21

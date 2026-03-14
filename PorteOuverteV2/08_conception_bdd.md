@@ -1,367 +1,497 @@
-# Conception de la Base de Donnees — StreamMG
+# Conception de la Base de Données — StreamMG
 
-**Document :** Modelisation et schema de la base de donnees  
-**Projet :** StreamMG — Plateforme de streaming audiovisuel malagasy  
-**Version :** 1.0  
-**Date :** Fevrier 2026  
-**Responsable :** Membre 2 — Developpeur Backend
-
----
-
-## 1. Choix du systeme de gestion de base de donnees
-
-StreamMG utilise MongoDB (v7.x), un systeme de gestion de base de donnees oriente documents (NoSQL). Ce choix repond a plusieurs contraintes specifiques du projet.
-
-La premiere contrainte est la nature heterogene des donnees de contenus. Un film possede des attributs specifiques (resolution, sous-titres disponibles, annee de production) qui different de ceux d'un titre musical (artiste, album, pochette, paroles optionnelles) ou d'un podcast (animateur, episode, transcription). Dans un schema relationnel classique, cela imposerait soit une table unique avec de nombreuses colonnes nulles, soit une hierarchie de tables liees par des jointures complexes. MongoDB resout ce probleme en permettant des documents de structure variable au sein d'une meme collection.
-
-La deuxieme contrainte est la flexibilite des metadonnees. Les contenus culturels malgaches sont tres varies et il est difficile d'anticiper a l'avance tous les champs qui pourraient etre utiles. MongoDB permet d'ajouter des attributs a un document existant sans migration de schema.
-
-La troisieme contrainte est la vitesse de developpement dans le contexte d'un projet academique avec des delais courts. Mongoose, l'ODM (Object Document Mapper) utilise par dessus MongoDB, permet de definir des schemas de validation flexibles en JavaScript, ce qui est coherent avec l'ecosysteme Node.js du backend.
+**Document :** Modélisation et schéma de la base de données  
+**Projet :** StreamMG — Plateforme de streaming audiovisuel et éducatif malagasy  
+**Date :** Février 2026  
+**Responsable :** Membre 3 — Développeur Backend
 
 ---
 
-## 2. Vue d'ensemble des collections
+## 1. Choix de MongoDB
 
-La base de donnees StreamMG comprend six collections principales. Chaque collection correspond a un agregat logique de donnees et est concue pour minimiser les jointures tout en preservant la coherence des donnees.
+StreamMG utilise MongoDB (v7.x). Ce choix est justifié par la nature hétérogène des contenus : un film possède des attributs (résolution, réalisateur, distribution) différents d'un titre audio (artiste, album, numéro de piste). Un tutoriel possède un tableau de leçons imbriquées. Le modèle document JSON accueille cette flexibilité sans colonnes nullable ni jointures complexes. L'ajout de nouveaux champs se fait sans migration.
+
+---
+
+## 2. Vue d'ensemble des huit collections
 
 ```
-Base de donnees : streamMG
-|
-|-- users               (comptes utilisateurs, roles, statut premium)
-|-- contents            (catalogue video et audio)
-|-- watchHistory        (progression de lecture par utilisateur et par contenu)
-|-- playlists           (playlists personnelles des utilisateurs)
-|-- refreshTokens       (tokens de renouvellement de session)
-|-- transactions        (enregistrement des paiements simules Stripe)
+Base de données : streamMG
+│
+├── users              — Comptes, rôles, statut premium
+├── contents           — Catalogue complet (films, chants, docs, tutoriels)
+│                        → thumbnail OBLIGATOIRE sur tout document
+│                        → hlsPath (segments .ts) pour les vidéos
+├── watchHistory       — Progression de lecture (position en secondes)
+├── playlists          — Listes de lecture personnelles
+├── refreshTokens      — Tokens de renouvellement de session (hachés bcrypt)
+├── transactions       — Registre des paiements Stripe (abonnements)
+├── purchases          — Achats unitaires permanents (contenus payants)
+└── tutorialProgress   — Progression dans les séries de leçons
 ```
 
 ---
 
-## 3. Schema detaille de chaque collection
+## 3. Schémas détaillés
 
-### 3.1 Collection : users
+### 3.1 Collection users
 
-La collection users centralise toutes les informations relatives aux comptes de la plateforme. Elle distingue quatre roles : "user" (utilisateur standard), "premium" (utilisateur ayant souscrit au plan Premium simule), "provider" (fournisseur de contenu avec droits d'upload limites a ses propres contenus), et "admin" (administrateur avec acces complet).
-
-```
-users {
-  _id          : ObjectId          -- Identifiant unique genere par MongoDB
-  username     : String            -- Nom d'utilisateur unique, 3-30 caracteres
-  email        : String            -- Adresse email unique, validee par regex
-  passwordHash : String            -- Hachage bcrypt du mot de passe (prefixe $2b$)
-  role         : String            -- Enum : "user" | "premium" | "provider" | "admin"
-  isPremium    : Boolean           -- Acces premium actif (defaut : false)
-  premiumExpiry: Date              -- Date d'expiration du premium (null si non premium)
-  avatar       : String            -- URL de l'image de profil (optionnel)
-  bio          : String            -- Biographie courte (optionnel, pour les providers)
-  isActive     : Boolean           -- Compte actif ou desactive par admin (defaut : true)
-  createdAt    : Date              -- Date de creation automatique (Mongoose timestamps)
-  updatedAt    : Date              -- Date de derniere modification automatique
+```javascript
+{
+  _id           : ObjectId,
+  username      : String,   // Unique, 3–30 caractères, obligatoire
+  email         : String,   // Unique, format email validé, obligatoire
+  passwordHash  : String,   // Hachage bcrypt préfixe $2b$, coût 12
+  role          : String,   // Enum : "user" | "premium" | "provider" | "admin"
+  isPremium     : Boolean,  // Défaut false
+  premiumExpiry : Date,     // null si non premium, J+30 ou J+365 selon plan
+  avatar        : String,   // URL optionnelle (photo de profil)
+  isActive      : Boolean,  // Défaut true — désactivation admin sans suppression
+  createdAt     : Date,     // Mongoose timestamps
+  updatedAt     : Date,
 }
 
 Index :
-  email   : unique index
-  username: unique index
-  role    : index simple (pour les requetes admin filtrant par role)
-```
-
-Le champ `role` merite une attention particuliere dans la conception. Un utilisateur peut avoir le role "premium" qui est distinct du simple booleen `isPremium`. Cette duplication apparente est intentionnelle : le role "premium" permet des verifications rapides du type d'acteur via le JWT (qui embarque le role), tandis que `isPremium` et `premiumExpiry` permettent une gestion fine de l'expiration de l'abonnement, independamment du role stocke dans le token (qui peut etre expire).
-
-### 3.2 Collection : contents
-
-La collection contents est le coeur du catalogue. Elle regroupe les contenus video et audio dans une seule collection, differencies par le champ `type`. Les champs communs a tous les types sont definis directement, tandis que les champs specifiques a un type (audio ou video) sont optionnels.
-
-```
-contents {
-  _id          : ObjectId          -- Identifiant unique
-  title        : String            -- Titre du contenu, obligatoire
-  description  : String            -- Description longue, obligatoire
-  type         : String            -- Enum : "video" | "audio"
-  category     : String            -- Categorie principale (ex : "film", "salegy", "podcast")
-  subCategory  : String            -- Sous-categorie optionnelle (ex : "traditionnel", "moderne")
-  language     : String            -- Enum : "mg" | "fr" | "bilingual"
-  duration     : Number            -- Duree en secondes (extrait automatiquement pour l'audio)
-  thumbnail    : String            -- URL de la vignette principale
-  filePath     : String            -- Chemin du fichier media sur le serveur
-  fileSize     : Number            -- Taille du fichier en octets
-  mimeType     : String            -- Type MIME du fichier (video/mp4, audio/mpeg, etc.)
-  viewCount    : Number            -- Nombre total de lectures (defaut : 0)
-  isPublished  : Boolean           -- Contenu visible dans le catalogue (defaut : false)
-  isPremiumOnly: Boolean           -- Reserve aux abonnes premium (defaut : false)
-  uploadedBy   : ObjectId          -- Reference vers users._id (admin ou provider)
-
-  -- Champs specifiques aux contenus audio (optionnels pour les videos) --
-  artist       : String            -- Artiste ou groupe
-  album        : String            -- Album d'appartenance
-  coverArt     : String            -- URL de la pochette d'album (extraite des ID3)
-  trackNumber  : Number            -- Numero de piste dans l'album (optionnel)
-
-  -- Champs specifiques aux contenus video (optionnels pour les audios) --
-  resolution   : String            -- Ex : "1080p", "720p", "480p"
-  subtitles    : Array of Object   -- [{ language: "fr", filePath: "..." }, ...]
-  director     : String            -- Realisateur (optionnel)
-  cast         : Array of String   -- Liste des acteurs principaux (optionnel)
-
-  createdAt    : Date
-  updatedAt    : Date
-}
-
-Index :
-  title + artist  : index texte composite (pour la recherche full-text)
-  category        : index simple (pour les filtres de catalogue)
-  type            : index simple (pour le filtre video/audio)
-  viewCount       : index decroissant (pour les requetes "tendances")
-  uploadedBy      : index simple (pour les requetes "mes contenus" du provider)
-  isPublished     : index simple (pour filtrer les contenus visibles)
-```
-
-### 3.3 Collection : watchHistory
-
-La collection watchHistory enregistre la progression de lecture de chaque utilisateur pour chaque contenu. Elle permet la fonctionnalite "Continuer a regarder/ecouter" qui est un element central de l'experience utilisateur de toute plateforme de streaming.
-
-```
-watchHistory {
-  _id             : ObjectId     -- Identifiant unique
-  userId          : ObjectId     -- Reference vers users._id
-  contentId       : ObjectId     -- Reference vers contents._id
-  progressSeconds : Number       -- Position de lecture en secondes
-  isCompleted     : Boolean      -- true si l'utilisateur a atteint la fin (defaut : false)
-  lastWatchedAt   : Date         -- Date de derniere mise a jour de la progression
-}
-
-Index :
-  { userId, contentId } : index compose unique (un seul document par paire utilisateur/contenu)
-  { userId, lastWatchedAt } : index compose decroissant (pour la section "Continuer a regarder")
-  contentId : index simple (pour les agregations de statistiques par contenu)
-```
-
-Le choix d'un index compose unique sur `{userId, contentId}` est fondamental. Il garantit qu'il n'existera jamais qu'un seul document d'historique pour une paire utilisateur/contenu donnee. Les mises a jour de progression utilisent l'operation `findOneAndUpdate` avec l'option `{ upsert: true }`, qui cree le document s'il n'existe pas, ou le met a jour s'il existe, en une seule operation atomique. Cette approche evite les doublons et les problemes de concurrence lors de mises a jour frequentes (toutes les 10 secondes pendant la lecture).
-
-### 3.4 Collection : playlists
-
-La collection playlists permet aux utilisateurs authentifies de creer des listes de lecture personnalisees melant contenus audio et video. Un utilisateur peut posseder plusieurs playlists.
-
-```
-playlists {
-  _id        : ObjectId          -- Identifiant unique
-  userId     : ObjectId          -- Reference vers users._id (proprietaire)
-  name       : String            -- Nom de la playlist, obligatoire
-  description: String            -- Description courte (optionnel)
-  contentIds : Array of ObjectId -- Liste ordonnee de references vers contents._id
-  isPublic   : Boolean           -- Playlist visible publiquement (defaut : false)
-  createdAt  : Date
-  updatedAt  : Date
-}
-
-Index :
-  userId : index simple (pour retrouver toutes les playlists d'un utilisateur)
-```
-
-### 3.5 Collection : refreshTokens
-
-La collection refreshTokens stocke les refresh tokens actifs, qui permettent aux utilisateurs de renouveler leur JWT (access token) sans se reconnecter. Le stockage en base de donnees (plutot qu'en memoire) permet l'invalidation explicite d'un token lors de la deconnexion, meme si le token n'est pas encore expire.
-
-```
-refreshTokens {
-  _id       : ObjectId   -- Identifiant unique
-  userId    : ObjectId   -- Reference vers users._id
-  tokenHash : String     -- Hash bcrypt du refresh token (jamais le token en clair)
-  expiresAt : Date       -- Date d'expiration (7 jours apres creation)
-  createdAt : Date
-}
-
-Index :
-  tokenHash  : index unique (pour la verification rapide lors du renouvellement)
-  expiresAt  : index TTL avec expireAfterSeconds: 0 (MongoDB supprime automatiquement
-               les documents expires, nettoyage automatique sans tache cron)
-  userId     : index simple (pour la deconnexion de tous les appareils d'un utilisateur)
-```
-
-L'index TTL (Time To Live) sur `expiresAt` est une fonctionnalite specifique de MongoDB qui supprime automatiquement les documents dont la valeur du champ indexe est dans le passe. Cela elimine le besoin d'une tache de nettoyage periodique.
-
-### 3.6 Collection : transactions
-
-La collection transactions enregistre chaque tentative de paiement simule, qu'elle ait reussi ou echoue. Elle constitue un historique des abonnements qui peut etre consulte par l'administrateur et, en version reduite, par l'utilisateur dans son profil.
-
-```
-transactions {
-  _id             : ObjectId   -- Identifiant unique
-  userId          : ObjectId   -- Reference vers users._id
-  stripePaymentId : String     -- Identifiant du PaymentIntent Stripe (commence par "pi_")
-  plan            : String     -- Enum : "premium_monthly" | "premium_yearly"
-  amount          : Number     -- Montant en centimes (ex : 500000 pour 5000 Ar)
-  currency        : String     -- Code devise (ex : "mga" pour ariary malgache)
-  status          : String     -- Enum : "pending" | "succeeded" | "failed" | "canceled"
-  stripeEvent     : Object     -- Copie de l'evenement webhook Stripe recu (pour audit)
-  createdAt       : Date
-  updatedAt       : Date
-}
-
-Index :
-  userId          : index simple (pour l'historique des paiements d'un utilisateur)
-  stripePaymentId : index unique (pour la verification des webhooks, evite le traitement double)
-  status          : index simple (pour les statistiques admin)
+  email    UNIQUE   — Login et vérification unicité inscription
+  username UNIQUE   — Vérification unicité inscription
+  role     simple   — Requêtes admin "liste des fournisseurs"
 ```
 
 ---
 
-## 4. Diagramme de relations entre collections
+### 3.2 Collection contents
 
-Bien que MongoDB soit une base de donnees non relationnelle, les relations entre collections existent via des references (ObjectId). Le diagramme suivant illustre ces relations.
+Règle absolue : **tout document de la collection `contents` doit avoir un champ `thumbnail` renseigné** (chemin vers l'image de couverture). Cette contrainte est appliquée à trois niveaux : validation Mongoose (`required: true`), validation Multer côté backend (rejet si fichier image absent), et validation côté client avant soumission du formulaire d'upload.
 
+```javascript
+{
+  _id         : ObjectId,
+
+  // ── Champs communs à TOUS les types de contenu ──────────────────────────
+  title       : String,    // Obligatoire
+  description : String,    // Obligatoire
+  type        : String,    // Enum : "video" | "audio"  — obligatoire
+  category    : String,    // film | salegy | hira-gasy | tsapiky | beko |
+                           // documentaire | podcast | tutoriel | ...  — obligatoire
+  subCategory : String,    // Optionnel
+  language    : String,    // Enum : "mg" | "fr" | "bilingual"  — obligatoire
+
+  thumbnail   : String,    // ★ OBLIGATOIRE — chemin vers l'image de couverture
+                           // Format : "/uploads/thumbnails/<uuid>.jpg"
+                           // Dimensions minimales recommandées : 320×180 px
+                           // Format accepté : JPEG ou PNG, taille ≤ 5 Mo
+                           // Affiché dans toutes les cartes du catalogue,
+                           // dans la page de détail, dans les miniatures du lecteur,
+                           // dans les notifications et dans les résultats de recherche.
+                           // Le backend rejette (400) tout upload sans fichier image.
+                           // L'admin peut rejeter une soumission dont la vignette
+                           // est floue, pixelisée ou non représentative du contenu.
+
+  viewCount   : Number,    // Défaut 0 — incrémenté via $inc atomique
+  isPublished : Boolean,   // Défaut false — passe à true après validation admin
+  uploadedBy  : ObjectId,  // Référence users._id
+
+  // ── Modèle économique — niveau d'accès ─────────────────────────────────
+  accessType  : String,    // Enum : "free" | "premium" | "paid"  — défaut "free"
+                           // Pilier du modèle économique.
+                           // Lu par le middleware checkAccess sur chaque requête.
+  price       : Number,    // Montant en centimes Stripe — null si accessType !== "paid"
+                           // Ex : 800000 = 8 000 Ar
+                           // Obligatoire et > 0 si accessType === "paid" (validation Mongoose)
+
+  // ── Streaming vidéo — protection HLS ────────────────────────────────────
+  // Applicable uniquement aux contenus de type "video" (isTutorial: false)
+  filePath    : String,    // Chemin du fichier source original (stockage privé, non exposé)
+  hlsPath     : String,    // Chemin du dossier HLS : "/uploads/hls/<contentId>/"
+                           // Contient : index.m3u8 + segments seg001.ts, seg002.ts...
+                           // Les URLs HLS sont signées par token temporaire (10 min)
+                           // + fingerprint (User-Agent + IP + cookie sessionId)
+                           // Jamais de fichier .mp4 servi directement au client web.
+  fileSize    : Number,    // Taille du fichier source en octets
+  mimeType    : String,    // Ex : "video/mp4" (source), "audio/mpeg", "audio/aac"
+  duration    : Number,    // Durée en secondes — absent si isTutorial: true
+
+  // ── Champs spécifiques AUDIO (null pour les vidéos) ──────────────────────
+  artist      : String,    // Nom de l'artiste ou du groupe
+  album       : String,    // Nom de l'album
+  coverArt    : String,    // URL de la pochette extraite via music-metadata (ID3)
+                           // Peut différer de thumbnail (pochette ≠ vignette catalogue)
+  trackNumber : Number,    // Numéro de piste dans l'album
+
+  // ── Champs spécifiques VIDEO (null pour les audios) ──────────────────────
+  resolution  : String,    // Ex : "720p", "1080p"
+  director    : String,
+  cast        : [String],
+  subtitles   : [{ language: String, filePath: String }],
+
+  // ── Tutoriels ─────────────────────────────────────────────────────────────
+  isTutorial  : Boolean,   // Défaut false
+  lessons     : [          // Présent et non vide uniquement si isTutorial: true
+    {
+      order       : Number,  // Position dans la série (commence à 1), obligatoire
+      title       : String,  // Obligatoire
+      description : String,
+      thumbnail   : String,  // Vignette de la leçon — optionnelle
+                             // Si absente, le frontend affiche la vignette du tutoriel
+      filePath    : String,  // Fichier source de la leçon (non exposé)
+      hlsPath     : String,  // Dossier HLS de la leçon (si type === "video")
+      duration    : Number,  // Durée en secondes — obligatoire
+    }
+  ],
+
+  createdAt   : Date,
+  updatedAt   : Date,
+}
+
+Index :
+  { title, artist, description }  TEXTE   — Recherche full-text dans le catalogue
+  category                        simple   — Filtre par catégorie
+  type                            simple   — Filtre vidéo / audio
+  accessType                      simple   — Filtre admin par niveau d'accès
+  viewCount                       desc     — Requêtes "Tendances" (top 10)
+  uploadedBy                      simple   — Requêtes "Mes contenus" du fournisseur
+  isPublished                     simple   — Exclusion des contenus non publiés
+  isTutorial                      simple   — Filtre section Tutoriels du catalogue
 ```
-users (1) ----< watchHistory (N)  [un utilisateur, plusieurs entrees d'historique]
-users (1) ----< playlists (N)     [un utilisateur, plusieurs playlists]
-users (1) ----< refreshTokens (N) [un utilisateur, plusieurs tokens actifs (multi-appareils)]
-users (1) ----< transactions (N)  [un utilisateur, plusieurs tentatives de paiement]
-users (1) ----< contents (N)      [un provider/admin peut uploader plusieurs contenus]
 
-contents (1) ----< watchHistory (N) [un contenu, plusieurs entrees d'historique]
-contents (N) ----< playlists (N)   [relation N-N : un contenu dans plusieurs playlists,
-                                    une playlist contient plusieurs contenus]
-```
+**Décision de conception — thumbnail séparée de coverArt.**
+Pour les contenus audio, deux champs image coexistent : `thumbnail` (vignette catalogue, obligatoire, uploadée manuellement par le fournisseur) et `coverArt` (pochette extraite automatiquement des métadonnées ID3 du fichier audio par music-metadata). Ces deux images servent des usages distincts : `thumbnail` est optimisée pour l'affichage dans les grilles du catalogue (format paysage ou portrait), tandis que `coverArt` est la pochette d'album carrée affichée dans le mini-player.
 
-La relation entre `contents` et `playlists` est de type N-N. Elle est implementee par un tableau d'ObjectId (`contentIds`) stocke directement dans le document playlist, evitant une collection de liaison supplementaire. Ce choix est valide car le nombre de contenus par playlist est limite (moins de 1000 dans le contexte du MVP) et les playlists sont toujours chargees avec leurs contenus dans les requetes applicatives.
+**Décision de conception — embedding des leçons.**
+Les leçons sont des sous-documents imbriqués dans le document parent (embedding) plutôt qu'une collection séparée, car elles n'ont pas d'existence indépendante de leur tutoriel et sont toujours chargées avec lui. L'embedding évite un $lookup sur chaque requête de catalogue.
+
+**Décision de conception — hlsPath et filePath.**
+`filePath` est le chemin du fichier source brut, stocké dans un répertoire privé non accessible directement par le client. `hlsPath` est le dossier contenant les segments HLS générés par ffmpeg après l'upload. Les URLs de ces segments sont toujours signées côté backend avant d'être transmises au frontend.
 
 ---
 
-## 5. Exemple de documents MongoDB
+### 3.3 Collection watchHistory
 
-L'exemple suivant illustre deux documents de la collection `contents` pour illustrer la flexibilite du schema : un document de type "video" et un document de type "audio".
+```javascript
+{
+  _id             : ObjectId,
+  userId          : ObjectId,  // Référence users._id
+  contentId       : ObjectId,  // Référence contents._id
+  progressSeconds : Number,    // Position de lecture en secondes
+  isCompleted     : Boolean,   // Défaut false — true quand ≥ 90 % de la durée
+  lastWatchedAt   : Date,
+}
 
-### Document video (film malgache)
+Index :
+  { userId, contentId } UNIQUE  — Un seul document par paire utilisateur/contenu
+  { userId, lastWatchedAt } desc — Section "Continuer à regarder"
+```
+
+---
+
+### 3.4 Collection playlists
+
+```javascript
+{
+  _id        : ObjectId,
+  userId     : ObjectId,
+  name       : String,
+  description: String,     // Optionnel
+  contentIds : [ObjectId], // Liste ordonnée de références vers contents._id
+  isPublic   : Boolean,    // Défaut false
+  createdAt  : Date,
+  updatedAt  : Date,
+}
+
+Index : userId simple
+```
+
+---
+
+### 3.5 Collection refreshTokens
+
+```javascript
+{
+  _id       : ObjectId,
+  userId    : ObjectId,
+  tokenHash : String,  // Hash bcrypt du refresh token (jamais le token en clair)
+  expiresAt : Date,    // J+7 depuis la création
+}
+
+Index :
+  tokenHash  UNIQUE               — Recherche rapide à la vérification
+  expiresAt  TTL expireAfterSeconds:0  — Suppression automatique
+  userId     simple               — Invalidation de toutes les sessions d'un utilisateur
+```
+
+---
+
+### 3.6 Collection transactions
+
+```javascript
+{
+  _id             : ObjectId,
+  userId          : ObjectId,
+  stripePaymentId : String,  // "pi_..."
+  plan            : String,  // Enum : "premium_monthly" | "premium_yearly"
+  amount          : Number,  // En centimes
+  currency        : String,  // "mga"
+  status          : String,  // Enum : "pending" | "succeeded" | "failed" | "canceled"
+  stripeEvent     : Object,  // Copie du webhook Stripe complet (audit)
+  createdAt       : Date,
+  updatedAt       : Date,
+}
+
+Index :
+  userId          simple  — Historique de paiements utilisateur
+  stripePaymentId UNIQUE  — Prévient le traitement double d'un événement
+  status          simple  — Statistiques par statut
+```
+
+---
+
+### 3.7 Collection purchases
+
+La présence d'un document pour une paire `(userId, contentId)` constitue le titre d'accès permanent au contenu payant. C'est cette collection que le middleware `checkAccess` interroge pour les contenus `accessType: "paid"`.
+
+```javascript
+{
+  _id             : ObjectId,
+  userId          : ObjectId,  // Référence users._id
+  contentId       : ObjectId,  // Référence contents._id
+  stripePaymentId : String,    // "pi_..." — traçabilité avec Stripe
+  amount          : Number,    // Montant payé en centimes au moment de l'achat
+                               // (conservé même si le prix change ultérieurement)
+  purchasedAt     : Date,      // Horodatage de confirmation par webhook Stripe
+}
+
+Index :
+  { userId, contentId } UNIQUE
+    Garantit l'idempotence : impossible de posséder deux fois le même contenu.
+    En cas de double-clic ou de retour arrière, l'insertion dupliquée échoue
+    en base et le backend retourne 409.
+
+  stripePaymentId UNIQUE
+    Prévient le traitement double si le webhook Stripe est délivré plusieurs fois.
+
+  userId    simple  — Requête "Mes achats" dans le profil
+  contentId simple  — Statistiques admin par contenu
+```
+
+---
+
+### 3.8 Collection tutorialProgress
+
+```javascript
+{
+  _id              : ObjectId,
+  userId           : ObjectId,  // Référence users._id
+  contentId        : ObjectId,  // Référence contents._id (isTutorial: true)
+  lastLessonIndex  : Number,    // Index (base 0) de la dernière leçon consultée
+                                // Utilisé par le bouton "Continuer" pour reprendre
+                                // directement à la bonne leçon
+  completedLessons : [Number],  // Indices des leçons terminées (≥ 90 % de leur durée)
+  percentComplete  : Number,    // completedLessons.length / lessons.length × 100
+                                // Stocké en base pour éviter de recalculer sur chaque requête
+  startedAt        : Date,      // Date du premier accès au tutoriel
+  lastUpdatedAt    : Date,      // Mis à jour à chaque progression
+}
+
+Index :
+  { userId, contentId } UNIQUE  — Un seul document par paire utilisateur/tutoriel
+  userId         simple         — Requête "Mes tutoriels en cours"
+  lastUpdatedAt  desc           — Tri par activité récente
+```
+
+---
+
+## 4. Diagramme de relations
+
+```
+users (1) ────< watchHistory (N)
+users (1) ────< playlists (N)
+users (1) ────< refreshTokens (N)
+users (1) ────< transactions (N)
+users (1) ────< purchases (N)
+users (1) ────< tutorialProgress (N)
+users (1) ────< contents (N)           [via uploadedBy — fournisseur]
+
+contents (1) ────< watchHistory (N)
+contents (1) ────< purchases (N)
+contents (1) ────< tutorialProgress (N)
+contents (N) >────< playlists (N)      [relation N-N via tableau contentIds]
+```
+
+---
+
+## 5. Exemples de documents JSON
+
+### Tutoriel avec vignettes (collection contents)
+
+```json
+{
+  "_id": "65f3a2b4c8e9d1234567890c",
+  "title": "Apprendre le salegy de Diego-Suarez — 8 leçons",
+  "description": "Une série complète pour apprendre les bases du salegy.",
+  "type": "video",
+  "category": "tutoriel",
+  "subCategory": "musique-traditionnelle",
+  "language": "mg",
+  "thumbnail": "/uploads/thumbnails/tuto_salegy_cover_a3f9b.jpg",
+  "viewCount": 412,
+  "isPublished": true,
+  "uploadedBy": "65f3a1c4c8e9d1234567891c",
+  "accessType": "premium",
+  "price": null,
+  "isTutorial": true,
+  "lessons": [
+    {
+      "order": 1,
+      "title": "Introduction : origines du salegy",
+      "description": "Histoire et contexte culturel.",
+      "thumbnail": "/uploads/thumbnails/salegy_lecon1_thumb.jpg",
+      "filePath": "/uploads/private/salegy_lecon1_src.mp4",
+      "hlsPath": "/uploads/hls/salegy_lecon1/",
+      "duration": 480
+    },
+    {
+      "order": 2,
+      "title": "Les rythmes de base",
+      "description": "Patterns rythmiques fondamentaux à la guitare.",
+      "thumbnail": null,
+      "filePath": "/uploads/private/salegy_lecon2_src.mp4",
+      "hlsPath": "/uploads/hls/salegy_lecon2/",
+      "duration": 720
+    }
+  ],
+  "createdAt": "2026-01-20T09:00:00.000Z",
+  "updatedAt": "2026-02-01T14:30:00.000Z"
+}
+```
+
+### Film payant avec HLS (collection contents)
+
+```json
+{
+  "_id": "65f3a2b4c8e9d1234567890d",
+  "title": "Avant-première : Ny Fitiavana",
+  "description": "Film romantique malgache, exclusivité de la plateforme.",
+  "type": "video",
+  "category": "film",
+  "language": "mg",
+  "thumbnail": "/uploads/thumbnails/ny_fitiavana_cover_b7c2d.jpg",
+  "duration": 6240,
+  "filePath": "/uploads/private/ny_fitiavana_src.mp4",
+  "hlsPath": "/uploads/hls/ny_fitiavana/",
+  "fileSize": 2147483648,
+  "mimeType": "video/mp4",
+  "viewCount": 89,
+  "isPublished": true,
+  "uploadedBy": "65f3a1c4c8e9d1234567891d",
+  "accessType": "paid",
+  "price": 800000,
+  "isTutorial": false,
+  "resolution": "720p",
+  "director": "Haja Rakoto"
+}
+```
+
+### Titre audio avec vignette (collection contents)
 
 ```json
 {
   "_id": "65f3a2b4c8e9d1234567890a",
-  "title": "Ambiaty",
-  "description": "Un film dramatique malgache racontant l'histoire d'une famille de pecheurs...",
-  "type": "video",
-  "category": "film",
-  "subCategory": "drame",
+  "title": "Mora Mora",
+  "description": "Titre emblématique du salegy moderne.",
+  "type": "audio",
+  "category": "salegy",
   "language": "mg",
-  "duration": 5820,
-  "thumbnail": "/uploads/thumbnails/ambiaty_thumb.jpg",
-  "filePath": "/uploads/video/ambiaty_720p.mp4",
-  "fileSize": 1258291200,
-  "mimeType": "video/mp4",
-  "viewCount": 347,
+  "thumbnail": "/uploads/thumbnails/mora_mora_cover_e1f4a.jpg",
+  "filePath": "/uploads/audio/mora_mora.mp3",
+  "fileSize": 8421376,
+  "mimeType": "audio/mpeg",
+  "duration": 243,
+  "viewCount": 1842,
   "isPublished": true,
-  "isPremiumOnly": false,
-  "uploadedBy": "65f3a1c4c8e9d1234567891b",
-  "resolution": "720p",
-  "subtitles": [{ "language": "fr", "filePath": "/uploads/subtitles/ambiaty_fr.vtt" }],
-  "director": "Razanajatovo Henri",
-  "cast": ["Rakotondrabe Solo", "Randriamanantena Voahangy"],
-  "createdAt": "2026-01-15T10:30:00.000Z",
-  "updatedAt": "2026-02-10T08:15:00.000Z"
+  "uploadedBy": "65f3a1c4c8e9d1234567891a",
+  "accessType": "free",
+  "price": null,
+  "isTutorial": false,
+  "artist": "Tarika Sammy",
+  "album": "Mora Mora — Best Of",
+  "coverArt": "/uploads/thumbnails/mora_mora_pochette_id3.jpg",
+  "trackNumber": 1
 }
 ```
 
-### Document audio (titre musical salegy)
+### Achat unitaire (collection purchases)
 
 ```json
 {
-  "_id": "65f3a2b4c8e9d1234567890b",
-  "title": "Mora Mora",
-  "description": "Un titre salegy emblematique du nord de Madagascar...",
-  "type": "audio",
-  "category": "salegy",
-  "subCategory": "traditionnel",
-  "language": "mg",
-  "duration": 243,
-  "thumbnail": "/uploads/thumbnails/mora_mora_cover.jpg",
-  "filePath": "/uploads/audio/mora_mora.mp3",
-  "fileSize": 9720000,
-  "mimeType": "audio/mpeg",
-  "viewCount": 1284,
-  "isPublished": true,
-  "isPremiumOnly": false,
-  "uploadedBy": "65f3a1c4c8e9d1234567891c",
-  "artist": "Tarika Sammy",
-  "album": "Salegy Classics Vol.1",
-  "coverArt": "/uploads/thumbnails/salegy_classics_cover.jpg",
-  "trackNumber": 3,
-  "createdAt": "2026-01-20T14:00:00.000Z",
-  "updatedAt": "2026-01-20T14:00:00.000Z"
+  "_id": "65f3a2b4c8e9d1234567890e",
+  "userId": "65f3a2b4c8e9d12345678901",
+  "contentId": "65f3a2b4c8e9d1234567890d",
+  "stripePaymentId": "pi_3OqXkT2eZvKYlo2C1aB2cD3e",
+  "amount": 800000,
+  "purchasedAt": "2026-02-15T16:22:10.000Z"
+}
+```
+
+### Progression tutoriel (collection tutorialProgress)
+
+```json
+{
+  "_id": "65f3a2b4c8e9d1234567890f",
+  "userId": "65f3a2b4c8e9d12345678901",
+  "contentId": "65f3a2b4c8e9d1234567890c",
+  "lastLessonIndex": 1,
+  "completedLessons": [0, 1],
+  "percentComplete": 25,
+  "startedAt": "2026-02-10T20:00:00.000Z",
+  "lastUpdatedAt": "2026-02-12T21:30:00.000Z"
 }
 ```
 
 ---
 
-## 6. Agregations MongoDB pour les fonctionnalites cles
+## 6. Agrégations MongoDB
 
-### Recuperer la section "Continuer a regarder" d'un utilisateur
+### Tutoriels en cours d'un utilisateur
 
 ```javascript
-// Cette agregation joint watchHistory avec contents pour retourner
-// les 10 derniers contenus non termines de l'utilisateur, avec leurs details.
-db.watchHistory.aggregate([
-  {
-    $match: {
-      userId: ObjectId("..."),   // ID de l'utilisateur connecte
-      isCompleted: false         // Exclure les contenus termines
-    }
-  },
-  { $sort: { lastWatchedAt: -1 } },   // Les plus recents d'abord
+db.tutorialProgress.aggregate([
+  { $match: { userId: ObjectId("..."), percentComplete: { $lt: 100 } } },
+  { $sort: { lastUpdatedAt: -1 } },
   { $limit: 10 },
   {
     $lookup: {
-      from: "contents",
-      localField: "contentId",
-      foreignField: "_id",
-      as: "content"
+      from: "contents", localField: "contentId",
+      foreignField: "_id", as: "tutorial"
     }
   },
-  { $unwind: "$content" },
+  { $unwind: "$tutorial" },
   {
     $project: {
-      progressSeconds: 1,
-      lastWatchedAt: 1,
-      "content.title": 1,
-      "content.thumbnail": 1,
-      "content.duration": 1,
-      "content.type": 1
+      percentComplete: 1, lastLessonIndex: 1, lastUpdatedAt: 1,
+      "tutorial.title": 1,
+      "tutorial.thumbnail": 1,    // Vignette obligatoire — toujours présente
+      totalLessons: { $size: "$tutorial.lessons" }
     }
   }
 ])
 ```
 
-### Recuperer le top 10 des contenus les plus vus (7 derniers jours)
+### Statistiques de ventes simulées (admin — 30 jours)
 
 ```javascript
-// Cette agregation joint watchHistory avec contents pour retourner
-// les 10 contenus les plus lus depuis 7 jours, avec leur nombre de lectures.
-db.watchHistory.aggregate([
-  {
-    $match: {
-      lastWatchedAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
-    }
-  },
-  {
-    $group: {
-      _id: "$contentId",
-      playCount: { $sum: 1 }
-    }
-  },
-  { $sort: { playCount: -1 } },
+db.purchases.aggregate([
+  { $match: { purchasedAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
+  { $group: { _id: "$contentId", totalSales: { $sum: 1 }, totalRevenue: { $sum: "$amount" } } },
+  { $sort: { totalRevenue: -1 } },
   { $limit: 10 },
-  {
-    $lookup: {
-      from: "contents",
-      localField: "_id",
-      foreignField: "_id",
-      as: "content"
-    }
-  },
+  { $lookup: { from: "contents", localField: "_id", foreignField: "_id", as: "content" } },
   { $unwind: "$content" },
   {
     $project: {
-      playCount: 1,
+      totalSales: 1, totalRevenue: 1,
       "content.title": 1,
-      "content.thumbnail": 1,
-      "content.type": 1,
-      "content.category": 1
+      "content.thumbnail": 1,     // Vignette pour l'affichage dans le dashboard admin
+      "content.uploadedBy": 1
     }
   }
 ])
@@ -369,14 +499,71 @@ db.watchHistory.aggregate([
 
 ---
 
-## 7. References bibliographiques
+## 7. Règles de validation Multer pour les uploads
 
-Chodorow, K. (2019). *MongoDB: The Definitive Guide* (3e ed.). O'Reilly Media. ISBN 978-1491954461.
+```javascript
+// Configuration Multer — backend Membre 3
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (file.fieldname === 'thumbnail') cb(null, 'uploads/thumbnails/');
+    else if (file.mimetype.startsWith('video/')) cb(null, 'uploads/private/');
+    else if (file.mimetype.startsWith('audio/')) cb(null, 'uploads/audio/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${uuidv4()}${path.extname(file.originalname)}`);
+  }
+});
 
-MongoDB Inc. (2025). *MongoDB v7.x Manual — Data Modeling*. https://www.mongodb.com/docs/manual/core/data-modeling-introduction
+const fileFilter = (req, file, cb) => {
+  const allowed = {
+    thumbnail: ['image/jpeg', 'image/png'],
+    video: ['video/mp4', 'video/quicktime'],
+    audio: ['audio/mpeg', 'audio/aac', 'audio/wav'],
+  };
+  if (file.fieldname === 'thumbnail' && allowed.thumbnail.includes(file.mimetype)) cb(null, true);
+  else if (file.fieldname === 'media' && [...allowed.video, ...allowed.audio].includes(file.mimetype)) cb(null, true);
+  else cb(new Error(`Type MIME non autorisé : ${file.mimetype}`), false);
+};
+
+// thumbnail : obligatoire, ≤ 5 Mo
+// media (vidéo ou audio) : obligatoire, ≤ 500 Mo pour vidéo, ≤ 50 Mo pour audio
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 500 * 1024 * 1024 }
+});
+
+// Route upload fournisseur — thumbnail est obligatoire
+router.post('/provider/contents',
+  auth, isProvider,
+  upload.fields([
+    { name: 'thumbnail', maxCount: 1 },   // ★ OBLIGATOIRE
+    { name: 'media', maxCount: 1 }         // Fichier vidéo ou audio
+  ]),
+  (req, res, next) => {
+    if (!req.files?.thumbnail) {
+      return res.status(400).json({ message: 'La vignette est obligatoire.' });
+    }
+    next();
+  },
+  providerController.uploadContent
+);
+```
+
+---
+
+## 8. Références bibliographiques
+
+Chodorow, K. (2019). *MongoDB: The Definitive Guide* (3e éd.). O'Reilly Media. ISBN 978-1491954461.
+
+MongoDB Inc. (2025). *MongoDB v7.x Manual — Embedded Documents*. https://www.mongodb.com/docs/manual/core/data-modeling-embedded-data
 
 MongoDB Inc. (2025). *MongoDB Aggregation Pipeline*. https://www.mongodb.com/docs/manual/core/aggregation-pipeline
 
 Mongoose. (2025). *Mongoose v8.x — Schema Guide*. https://mongoosejs.com/docs/guide.html
 
-Elmasri, R., & Navathe, S. B. (2015). *Fundamentals of Database Systems* (7e ed.). Pearson. ISBN 978-0133970777.
+Elmasri, R., & Navathe, S. B. (2015). *Fundamentals of Database Systems* (7e éd.). Pearson. ISBN 978-0133970777.
+
+Stripe Inc. (2026). *Stripe API — PaymentIntent metadata*. https://stripe.com/docs/api/payment_intents/object#payment_intent_object-metadata
+
+Apple Inc. (2019). *HTTP Live Streaming — RFC 8216*. https://datatracker.ietf.org/doc/html/rfc8216

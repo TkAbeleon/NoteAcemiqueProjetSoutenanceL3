@@ -46,3 +46,4 @@ Elle comporte les élément suivant:
 3. Compte rendu
 4. Rapport 
 5. PV
+[[Exercice_Lettre_administrative]]

@@ -1,102 +1,96 @@
-# Repartition des Roles et Planning — StreamMG
+# Répartition des Rôles et Planning — StreamMG
 
-**Document :** Organisation de l'equipe, responsabilites et planning previsionnel  
-**Projet :** StreamMG — Plateforme de streaming audiovisuel malagasy  
-**Version :** 2.0 (mise a jour)  
-**Date :** Fevrier 2026
-
----
-
-## 1. Contexte de la repartition
-
-Le projet StreamMG est realise par une equipe de trois etudiants, chacun menant simultanement un memoire de licence individuel de grande envergure. La nouvelle repartition des roles, revisee par rapport a la version initiale, affecte chaque membre a un domaine technique dominant : le frontend pour le Membre 1, le backend pour le Membre 2, et la securite transversale combinee a la coordination fonctionnelle pour le Membre 3. Cette specialisation par domaine presente un double avantage : elle reduit les zones d'interference entre les membres et permet a chacun de produire un travail plus approfondi sur son perimetre, tout en maintenant des points d'integration collectifs reguliers.
-
-La repartition a ete construite autour de trois principes. Le premier est l'alignement competences-role : chaque membre est place dans le domaine ou ses competences sont les plus solides ou les plus facilement mobilisables. Le second est la protection des memoires principaux : la charge de travail sur StreamMG est calibree pour ne pas empieter de maniere critique sur les delais des memoires individuels. Le troisieme est la complementarite : les roles se recoupent sur les aspects transversaux (securite, integration, revue de code) pour garantir la coherence de l'ensemble.
+**Document :** Organisation de l'équipe, responsabilités et planning  
+**Projet :** StreamMG — Plateforme de streaming audiovisuel et éducatif malagasy  
+**Date :** Février 2026
 
 ---
 
-## 2. Profils des membres de l'equipe
+## 1. Principe d'organisation
 
-### Membre 1 — Developpeur Frontend
-
-**Memoire individuel principal :** Conception d'une plateforme collaborative de creation et de valorisation des idees de projets innovants, integrant des mecanismes de collaboration, de suivi d'avancement et de gestion de l'investissement.
-
-**Domaine dans StreamMG :** Frontend — Application Expo/React Native Web (web et mobile depuis une base de code unique).
-
-**Competences mobilisees :** React, React Native, Expo, expo-router, expo-av, zustand, TanStack Query, axios, nativewind, Stripe Elements (formulaire de paiement cote client), Figma (validation des maquettes en implementation).
-
-**Charge estimee sur StreamMG :** 40 % de la charge globale du projet.
-
-### Membre 2 — Developpeur Backend
-
-**Memoire individuel principal :** Systeme de diagnostic medical assiste, avec version web et mobile classique.
-
-**Domaine dans StreamMG :** Backend — API REST Node.js/Express, base de donnees MongoDB, gestion de l'upload des fichiers medias, integration Stripe cote serveur.
-
-**Competences mobilisees :** Node.js, Express.js, MongoDB, Mongoose, Multer, music-metadata, fluent-ffmpeg, jsonwebtoken, bcryptjs, stripe SDK, Postman.
-
-**Charge estimee sur StreamMG :** 35 % de la charge globale du projet.
-
-### Membre 3 — Responsable Securite et Chef de Projet Fonctionnel
-
-**Memoire individuel principal :** Plateforme intelligente de suivi des feux de brousse et de la deforestation a Madagascar, integrant les donnees satellitaires NASA MODIS et VIIRS, de l'IA classique, de l'IA generative et de l'automatisation.
-
-**Domaine dans StreamMG :** Securite applicative transversale (frontend et backend), coordination fonctionnelle, documentation, et preparation de la soutenance.
-
-**Competences mobilisees :** OWASP, JWT security, bcrypt, CORS, rate limiting, helmet, validation des entrees, tests de securite via Postman, redaction technique, UML, Figma, Trello/Notion.
-
-**Charge estimee sur StreamMG :** 25 % de la charge globale du projet.
+L'équipe de trois membres adopte une spécialisation par couche technique, reproduisant le modèle des équipes de développement professionnelles. Le **Membre 3** produit en semaine 1 le contrat d'API complet — signature de tous les endpoints, formats de requête/réponse, codes d'erreur, schémas MongoDB (avec `thumbnail` obligatoire et `hlsPath`) — permettant aux Membres 1 et 2 de développer en parallèle avec des réponses mockées.
 
 ---
 
-## 3. Tableau detaille des responsabilites
+## 2. Responsabilités détaillées
 
-### Domaine Frontend (Membre 1, responsable)
+### Membre 1 — Développeur Frontend Mobile (38 %)
 
-Le Membre 1 est responsable de l'integralite de l'application Expo/React Native Web. Il developpe la navigation par expo-router, la page d'accueil avec la section hero et les contenus mis en avant, le catalogue avec filtres et recherche, les pages de detail des contenus, le lecteur video (expo-av), le lecteur audio avec mini-player persistant (expo-av, zustand pour l'etat global du player), les formulaires d'inscription et de connexion (en lien avec les endpoints backend definis par le Membre 2), la page de profil et d'historique, le tableau de bord administrateur (upload, liste des contenus, statistiques), et le formulaire de paiement simule via Stripe Elements.
+**Domaine :** Application React Native + Expo SDK 52
 
-Le Membre 1 est egalement responsable de la gestion de l'etat global via zustand (authStore et playerStore), de la configuration du client axios avec les intercepteurs de renouvellement automatique du JWT, et de la mise en place du Service Worker pour le mode hors-ligne via expo-PWA.
+Le Membre 1 est responsable de l'intégralité de l'application mobile. Navigation (expo-router), écrans d'authentification avec session persistante (expo-secure-store), catalogue avec affichage des vignettes obligatoires dans les ContentCards (FlatList optimisée, lazy loading, placeholder pendant le chargement), lecteurs vidéo (expo-av en portrait et paysage automatique) et audio (expo-av avec mini-player persistant au-dessus de la tab bar, affichant la pochette/coverArt ou la vignette), playlists, historique, profil.
 
-Le Membre 2 fournit au Membre 1 la documentation des endpoints de l'API (collection Postman) afin que l'integration frontend-backend soit possible de maniere independante, en parallele du developpement. Le Membre 3 fournit les maquettes Figma et les specifications fonctionnelles de chaque ecran avant le debut du developpement.
+**Protection des contenus — AES-256-GCM.** Le Membre 1 implémente l'intégralité du flux de téléchargement sécurisé : appel à POST /api/download/:contentId pour récupérer la clé AES-256, l'IV et l'URL signée ; téléchargement du fichier par chunks (4–8 Mo) via expo-file-system avec indicateur de progression et reprise automatique sur coupure réseau ; chiffrement immédiat de chaque chunk avec react-native-quick-crypto (AES-256-GCM) ; sauvegarde du fichier `.enc` dans le sandbox privé ; stockage sécurisé de la clé et de l'IV dans expo-secure-store. Lecture hors-ligne : déchiffrement en mémoire vive chunk par chunk, flux envoyé à expo-av sans écriture de fichier en clair.
 
-### Domaine Backend (Membre 2, responsable)
+**Modèle économique.** Écrans intermédiaires d'accès (subscription_required, purchase_required, login_required), flux d'achat Stripe mobile (CardField natif @stripe/stripe-react-native), interfaces de tutoriels avec progression.
 
-Le Membre 2 est responsable de l'integralite du serveur Node.js/Express : initialisation du projet, configuration d'Express, definition des routes et des controllers pour tous les modules (authentification, catalogue, historique, administration, paiement simule). Il est responsable de la conception et de l'implementation des modeles Mongoose, de la gestion de l'upload des fichiers medias via Multer, de l'extraction automatique des metadonnees audio via music-metadata, de l'integration du SDK Stripe pour la creation des PaymentIntents et la reception des webhooks, et de la configuration de la base de donnees MongoDB (index, schemas, population de donnees de demonstration).
+**Espace fournisseur mobile.** Formulaire d'upload avec sélecteur d'image obligatoire (expo-image-picker), aperçu de la vignette avant soumission, bouton "Soumettre" désactivé sans image.
 
-Le Membre 2 est egalement responsable de la redaction de la documentation technique de l'API (collection Postman exportee, README du backend) et du rapport de tests fonctionnels des endpoints. Il travaille en etroite collaboration avec le Membre 3 pour integrer les mecanismes de securite dans chaque route et chaque controller.
+### Membre 2 — Développeur Frontend Web (32 %)
 
-### Domaine Securite Transversale (Membre 3, responsable)
+**Domaine :** Application React.js 18 + Vite 5
 
-Le Membre 3 est responsable de la definition et de la mise en oeuvre de la strategie de securite globale de l'application. Ce role est qualifie de transversal car la securite traverse a la fois le frontend (gestion des tokens en memoire, protection contre XSS) et le backend (authentification JWT, hachage des mots de passe, rate limiting, validation des entrees, CORS, en-tetes HTTP).
+Le Membre 2 est responsable de l'intégralité de l'application web. Navigation SPA (react-router-dom), écrans d'authentification avec cookie httpOnly, catalogue avec vignettes obligatoires dans les ContentCards (affichage en grille responsive, lazy loading natif HTML), lecteurs, mini-player persistant (App.tsx hors RouterProvider), playlists, historique, profil.
 
-Concretement, le Membre 3 definit les specifications de securite dans le cahier des charges et verifie que le Membre 1 (frontend) et le Membre 2 (backend) les implementent correctement. Il redige les tests de securite (TF-SEC-01 a TF-SEC-04) et les execute lui-meme sur les environnements de developpement et de staging. Il est responsable de la configuration finale de Nginx (en-tetes Strict-Transport-Security, X-Content-Type-Options, X-Frame-Options, Content-Security-Policy) et de la mise en place du certificat SSL Let's Encrypt pour le deploiement de soutenance.
+**Protection des contenus — HLS + tokens signés.** Le Membre 2 intègre hls.js dans react-player pour la lecture vidéo. Avant chaque lecture, il appelle GET /api/hls/:contentId/token pour récupérer l'URL du manifest signé, puis configure hls.js avec cette URL. hls.js gère automatiquement les requêtes de segments `.ts` avec le token dans l'URL. Si hls.js rapporte une erreur 403 sur un segment, le frontend redemande un nouveau token et relance la lecture. Les contenus audio restent servis en fichiers directs (pas de HLS) — le Service Worker met en cache les audios (Cache First, expiration 48h).
 
-Le Membre 3 est aussi responsable de la coordination generale du projet : suivi de l'avancement via Trello, organisation des points de synchronisation hebdomadaires, gestion des dependances entre les taches du Membre 1 et du Membre 2, redaction de l'ensemble des documents du projet (present document, cahier des charges, analyse, scenarios utilisateur, architecture), et preparation de la soutenance (memoire, slides, repetition de la demonstration).
+**Modèle économique.** Mêmes écrans intermédiaires que le mobile, flux Stripe Elements, pages de tutoriels avec barre de progression globale.
 
-### Domaine Commun — Fournisseur de Contenu (acteur externe)
+**Espace fournisseur web.** Formulaire d'upload complet : sélecteur d'image (champ `<input type="file" accept="image/jpeg,image/png">`), aperçu avant soumission, champ `thumbnail` obligatoire avec validation côté client, champ de prix conditionnel (si "Payant"), gestionnaire de leçons pour les tutoriels (ajout, réordonnancement glisser-déposer, suppression).
 
-L'utilisateur de type Fournisseur de Contenu est un nouvel acteur integre dans la version 2.0 du projet. Il dispose d'un compte specifique (role "provider") qui lui donne acces a une interface d'upload de contenus simplifiee, distincte du tableau de bord administrateur complet. Le Membre 2 cree le role et les routes backend associees. Le Membre 1 developpe l'interface frontend. Le Membre 3 s'assure que les permissions du role "provider" sont correctement restreintes par rapport au role "admin" (un provider peut uploader et gerer ses propres contenus uniquement, pas ceux des autres providers ni les comptes utilisateurs).
+### Membre 3 — Développeur Backend + Coordination (30 %)
+
+**Domaine :** API REST Node.js/Express + MongoDB + Sécurité + Infrastructure
+
+Le Membre 3 produit en semaine 1 le contrat d'API complet. Il est responsable de l'intégralité du backend.
+
+**Pipeline de protection vidéo — HLS.** Après chaque upload vidéo (Multer), un pipeline ffmpeg (fluent-ffmpeg) découpe le fichier source en segments HLS de 10 secondes et génère le manifest `index.m3u8` dans `/uploads/hls/<contentId>/`. Le fichier source est déplacé dans `/uploads/private/` (non accessible publiquement). Le middleware `hlsTokenizer` génère les tokens signés avec fingerprint et les vérifie à chaque requête de segment.
+
+**Pipeline de protection mobile — AES-256-GCM.** L'endpoint POST /api/download/:contentId génère une clé AES-256 et un IV via `crypto.randomBytes` (Node.js natif), signe une URL temporaire (15 min) vers le fichier source, et retourne `{ aesKeyHex, ivHex, signedUrl }`. La clé n'est jamais stockée en base de données.
+
+**Multer — vignette obligatoire.** Configuration `upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'media', maxCount: 1 }])`. Middleware intermédiaire vérifiant `req.files?.thumbnail` avec rejet 400 si absent. Types MIME autorisés : image/jpeg, image/png (≤ 5 Mo). music-metadata extrait automatiquement les métadonnées ID3 des audios (titre, artiste, durée, `coverArt`) — distinct de la vignette catalogue.
+
+**Collections MongoDB.** 8 collections avec schémas Mongoose (thumbnail `required: true` dans `contents`, hlsPath, champs AES), index optimisés, contraintes d'unicité (purchases, refreshTokens).
+
+**Stripe.** Routes /api/payment/subscribe et /api/payment/purchase, webhook distinguant `metadata.type === "purchase"` de `metadata.type === "subscription"`, idempotence via index unique `{ userId, contentId }` dans `purchases`.
+
+**Sécurité.** JWT HS256 15 min, rotation refresh tokens, bcrypt coût 12, helmet, CORS (2 origines), rate-limit (10 req/15min auth, 200 req/15min autres), express-validator.
+
+**Infrastructure.** MongoDB Atlas, Railway (backend), Nginx (reverse proxy + SSL Let's Encrypt), Vercel (frontend web + rewrite SPA), Postman (collection exportée).
 
 ---
 
-## 4. Planning previsionnel simplifie
+## 3. Planning prévisionnel — 10 semaines
 
-Le planning est organise en semaines relatives au debut du projet, avec les responsabilites clairement attribuees par membre.
+| Semaine | Membre 1 — Mobile | Membre 2 — Web | Membre 3 — Backend |
+|---|---|---|---|
+| **S1** | Init Expo, structure expo-router, maquettes Figma (vignettes partout) | Init Vite + Tailwind, structure SPA, maquettes Figma (vignettes partout) | **Contrat d'API complet** (thumbnail obligatoire, hlsPath, endpoints HLS + download), schémas Mongoose, init Express |
+| **S2** | ContentCard avec vignette (FlatList lazy loading), navigation tab bar | ContentCard avec vignette (grille responsive), navigation SPA | Auth JWT + refresh token, Multer (thumbnail OBLIGATOIRE + vidéo/audio), validation MIME/taille |
+| **S3** | Écrans auth, zustand authStore, session expo-secure-store | Pages auth, zustand authStore, session cookie httpOnly | Routes /contents, pipeline ffmpeg → HLS (fluent-ffmpeg), indexation MongoDB |
+| **S4** | Catalogue + badges niveaux d'accès, recherche, filtres | Catalogue + badges niveaux d'accès, recherche, filtres | Middleware `hlsTokenizer` (génération + vérification token + fingerprint), `checkAccess` |
+| **S5** | expo-av (vidéo + audio), paysage, mini-player (vignette dans pochette), tokens HLS | hls.js + react-player, mini-player App.tsx (vignette pochette), tokens HLS | Routes /history, /tutorial/progress, déploiement staging Railway + Nginx |
+| **S6** | **Téléchargement AES-256-GCM** (react-native-quick-crypto + expo-file-system chunks + reprise) | Service Worker PWA (audio Cache First 48h), installation PWA | **Endpoint /download** (crypto.randomBytes clé AES-256 + IV, URL signée 15 min) |
+| **S7** | **Lecture hors-ligne** (déchiffrement mémoire, expo-secure-store), Stripe CardField | Stripe Elements, écrans intermédiaires (premium / payant / login) | Stripe subscribe + purchase (PaymentIntent + metadata.type), webhook handler |
+| **S8** | Écrans intermédiaires, tutoriels (progression, vignettes), formulaire fournisseur (expo-image-picker) | Formulaire fournisseur (upload vignette obligatoire, gestionnaire leçons), admin web | Routes admin + provider (validation thumbnail), statistiques, Postman collection |
+| **S9** | Tests mobile (vignettes, AES, HLS, Stripe, tutoriels), corrections | Tests web (vignettes, HLS, fingerprint, PWA, Stripe, 360 px), corrections | Tests sécurité (tokens HLS, fingerprint, AES endpoint, webhook, rate-limit), corrections |
+| **S10** | Préparation démonstration mobile, contribution mémoire | Préparation démonstration web, contribution mémoire | Finalisation mémoire + slides, déploiement production final |
 
-Durant les semaines 1 et 2, qui constituent la phase de conception, le Membre 3 finalise les maquettes Figma pour toutes les vues principales sur web et mobile, et redige les specifications fonctionnelles detaillees de chaque ecran et de chaque endpoint. Le Membre 2 livre la conception complete du schema MongoDB et la liste des endpoints de l'API avec leurs signatures (URL, methode, body attendu, reponse). Le Membre 1 initialise la structure du projet Expo sur GitHub et valide la faisabilite de chaque ecran par rapport aux maquettes.
+### Dépendances critiques
 
-Durant les semaines 3 a 6, qui constituent la phase de developpement, le Membre 2 developpe le backend module par module dans cet ordre : authentification (semaine 3), catalogue et historique (semaine 4), administration et upload (semaine 5), paiement Stripe et role fournisseur (semaine 6). En parallele, le Membre 1 developpe le frontend en commencant par la navigation et l'authentification (semaine 3), puis le catalogue et la recherche (semaine 4), puis les lecteurs video/audio et le mini-player (semaine 5), puis l'administration, le formulaire de paiement et l'interface fournisseur (semaine 6). Le Membre 3, en parallele, configure les mecanismes de securite au fur et a mesure que les modules backend sont livres, et maintient la documentation a jour.
+Le **contrat d'API complet (S1, Membre 3)** est le prérequis absolu. Les Membres 1 et 2 mockent les réponses pendant S2–S4.
 
-Durant les semaines 7 et 8, qui constituent la phase de tests, le Membre 3 execute le plan de tests fonctionnels et de securite complet sur l'environnement de staging. Le Membre 2 corrige les anomalies backend detectees. Le Membre 1 corrige les anomalies frontend.
+Le **middleware `hlsTokenizer` (S4, Membre 3)** est requis par les Membres 1 et 2 pour intégrer la lecture vidéo (S5). En attendant, ils utilisent des vidéos mockées servies normalement en test.
 
-La semaine 9 est dediee a la preparation de la soutenance. Le Membre 3 finalise le memoire et les slides. Le Membre 2 prepare le jeu de donnees de demonstration. Le Membre 1 valide le deploiement final et la fluidite de la demonstration sur les deux plateformes.
+L'**endpoint /download (S6, Membre 3)** est requis par le Membre 1 pour le chiffrement AES mobile (S6–S7).
 
 ---
 
-## 5. References bibliographiques
+## 4. Références bibliographiques
 
 Brooks, F. P. (1975). *The Mythical Man-Month: Essays on Software Engineering*. Addison-Wesley. ISBN 978-0201835953.
 
-Schwaber, K., & Sutherland, J. (2020). *The Scrum Guide*. Scrum.org. https://scrumguides.org/docs/scrumguide/v2020/2020-Scrum-Guide-US.pdf
+Schwaber, K., & Sutherland, J. (2020). *The Scrum Guide*. Scrum.org. https://scrumguides.org
 
-Highsmith, J. (2009). *Agile Project Management: Creating Innovative Products* (2e ed.). Addison-Wesley Professional. ISBN 978-0321658395.
+Apple Inc. (2019). *HTTP Live Streaming — RFC 8216*. https://datatracker.ietf.org/doc/html/rfc8216
+
+Expo. (2025). *react-native-quick-crypto*. https://github.com/margelo/react-native-quick-crypto

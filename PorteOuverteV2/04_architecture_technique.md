@@ -1,232 +1,313 @@
 # Architecture Technique — StreamMG
 
-**Document :** Description de l'architecture logicielle et des choix techniques  
-**Projet :** StreamMG — Plateforme de streaming audiovisuel malagasy  
-**Version :** 1.0  
-**Date :** Fevrier 2026
+**Document :** Architecture logicielle détaillée  
+**Projet :** StreamMG — Plateforme de streaming audiovisuel et éducatif malagasy  
+**Date :** Février 2026
 
 ---
 
-## 1. Vue d'ensemble de l'architecture
+## 1. Vue d'ensemble
 
-StreamMG adopte une architecture client-serveur classique a trois couches, eprouvee et facilement defendable en soutenance academique. La separation claire entre le frontend, le backend et la couche donnees garantit la maintenabilite, la testabilite et la scalabilite future du systeme.
+StreamMG adopte le pattern multi-client avec backend partagé. Deux clients frontend distincts consomment la même API REST Node.js/Express. La base de données MongoDB est partagée et gérée exclusivement par le backend.
 
 ```
-+---------------------------+     +---------------------------+
-|   CLIENT WEB (Expo Web)   |     |  CLIENT MOBILE (Expo Go)  |
-|   Progressive Web App     |     |  iOS / Android            |
-+-------------+-------------+     +-------------+-------------+
-              |                                 |
-              +----------------+----------------+
-                               |
-                    [ HTTPS - REST JSON ]
-                               |
-              +----------------+----------------+
-              |                                 |
-+-------------+-------------+                  |
-|    API REST Node.js        |                  |
-|    Express.js v4.x         |                  |
-|    Port 3000 (dev)         |                  |
-|    Reverse proxy Nginx     |                  |
-+------+----------+----------+                  |
-       |          |          |                  |
-  [MongoDB]  [/uploads]  [Stripe API]           |
-  v7.x       fichiers    mode test              |
-             medias                             |
-+-------------------------------------------+  |
-|     NGINX — Reverse Proxy + Static Files  +--+
-|     Let's Encrypt SSL                     |
-+-------------------------------------------+
++---------------------------+        +------------------------------+
+|  APPLICATION MOBILE        |        |  APPLICATION WEB             |
+|  React Native + Expo 52    |        |  React.js 18 + Vite 5        |
+|  Membre 1                  |        |  Membre 2                    |
+|                            |        |                              |
+|  expo-av (lecture native)  |        |  hls.js + react-player       |
+|  expo-file-system          |        |  Service Worker PWA          |
+|  react-native-quick-crypto |        |  Stripe Elements             |
+|  expo-secure-store (AES)   |        |  Cookie httpOnly             |
+|  @stripe/stripe-rn         |        |  @stripe/react-stripe-js     |
+|  NativeWind + zustand      |        |  Tailwind CSS + zustand      |
++------------+---------------+        +--------------+---------------+
+             |                                       |
+             +-------------------+-------------------+
+                                 |
+               [ HTTPS / REST JSON + JWT ]
+                                 |
++-----------------------------------+-----------------------------------+
+|  API REST — Node.js v20 + Express.js v4                              |
+|  Membre 3                                                             |
+|                                                                       |
+|  Middleware checkAccess — vérification niveau d'accès (free/prem/paid)|
+|  Middleware hlsTokenizer — génération + vérification tokens signés    |
+|  JWT (15min) + Refresh Token (7j, rotation) + bcrypt (coût 12)       |
+|  Multer — upload thumbnail (OBLIGATOIRE) + vidéo/audio                |
+|  music-metadata — extraction ID3 (titre, artiste, durée, coverArt)   |
+|  ffmpeg — transcoding vidéo → segments HLS .ts                       |
+|  Génération clé AES-256 + IV pour téléchargements mobiles            |
+|  Helmet headers + CORS + Rate limiting + express-validator            |
+|  Stripe SDK mode test (abonnement + achat unitaire + webhook)         |
+|                                                                       |
+|  Routes : auth / contents / hls / download / history / tutorial      |
+|           provider / admin / payment                                  |
++-------+-----------------------------+---------------------------------+
+        |                             |
++-------+-------+    +----------------+-----------------------------------+
+|  MongoDB v7   |    |  Stockage fichiers                                |
+|  users        |    |  /uploads/thumbnails/   ← vignettes (OBLIGATOIRE) |
+|  contents     |    |  /uploads/hls/<id>/     ← segments .ts (vidéos)   |
+|  watchHistory |    |  /uploads/audio/        ← fichiers audio .mp3     |
+|  playlists    |    |  /uploads/private/      ← sources brutes (privées)|
+|  refreshTokens|    +----------------------------------------------------+
+|  transactions |             |
+|  purchases    |    [Stripe API — mode test]
+|  tutorialProg.|
++---------------+
 ```
 
 ---
 
-## 2. Couche presentation : Expo et React Native Web
+## 2. Stack technologique complète
 
-### 2.1 Principe du code partage
+### 2.1 Application mobile — Membre 1
 
-La decision la plus importante de l'architecture frontend est d'utiliser un unique code source pour produire simultanement l'application web et l'application mobile. Ce principe est rendu possible par React Native Web, une librairie qui traduit les primitives React Native (View, Text, Image, ScrollView, TouchableOpacity) en leurs equivalents HTML (div, span, img, div avec overflow:scroll, button) lors du rendu dans un navigateur web.
+| Composant | Technologie | Rôle |
+|---|---|---|
+| Framework | React Native 0.76 + Expo SDK 52 | Application native iOS/Android |
+| Navigation | expo-router v3 | File-based routing |
+| Lecture média | expo-av v14 | Lecteur vidéo et audio natif |
+| Mode paysage | expo-screen-orientation | Rotation automatique vidéo |
+| Stockage local | expo-file-system | Téléchargement hors-ligne (chunks) |
+| **Chiffrement** | **react-native-quick-crypto** | **AES-256-GCM chiffrement local** |
+| Token sécurisé | expo-secure-store | Refresh token + clé AES (iOS Keychain / Android Keystore) |
+| Paiement | @stripe/stripe-react-native | CardField natif (abonnement + achat) |
+| État global | zustand v4 | authStore, playerStore, cartStore |
+| Requêtes API | TanStack Query v5 | Cache, invalidation, états de chargement |
+| Client HTTP | axios | Intercepteur 401 → renouvellement JWT |
+| Styling | NativeWind v4 | Classes Tailwind en React Native |
 
-Expo sert de couche d'unification au-dessus de React Native et React Native Web. Il fournit un toolchain unifie (Metro Bundler pour le JavaScript, webpack configure par Expo pour le web), une gestion centralisee des assets (images, polices), et un acces harmonise aux API natives des appareils (permissions, stockage, capteurs) via ses propres modules (expo-camera, expo-file-system, etc.). L'instruction `npx expo start` lance simultanement les serveurs de developpement pour toutes les plateformes cibles.
+### 2.2 Application web — Membre 2
 
-### 2.2 Structure des fichiers du frontend
+| Composant | Technologie | Rôle |
+|---|---|---|
+| Bibliothèque UI | React.js 18 | Interface utilisateur |
+| Build tool | Vite 5 | Bundler, HMR, optimisation |
+| Navigation | react-router-dom v6 | SPA routing |
+| **Lecteur vidéo HLS** | **hls.js (via react-player)** | **Lecture segments .ts, tokens HLS** |
+| Lecture audio | react-player | Audio HTML5 |
+| Mode hors-ligne | Service Worker (Workbox) | Cache First audio, expiration 48h |
+| Paiement | @stripe/react-stripe-js | Stripe Elements iframe |
+| État global | zustand v4 | Structure identique au mobile |
+| Requêtes API | TanStack Query v5 | Cache, invalidation |
+| Client HTTP | axios | Intercepteur 401 → renouvellement JWT |
+| Styling | Tailwind CSS v3 | Utility-first CSS |
 
-L'organisation du code frontend suit la convention de expo-router, qui utilise le systeme de fichiers comme definition de la navigation. Chaque fichier dans le repertoire `app/` correspond a un ecran ou a une route de l'application.
+### 2.3 Backend — Membre 3
+
+| Composant | Technologie | Rôle |
+|---|---|---|
+| Environnement | Node.js v20 LTS | Runtime serveur |
+| Framework | Express.js v4 | Routage, middleware |
+| ODM | Mongoose v8 | Schémas MongoDB, validation |
+| Auth tokens | jsonwebtoken v9 | JWT HS256, 15 min |
+| Hachage | bcryptjs | Mots de passe + hash refresh tokens |
+| Upload | Multer v1 | Thumbnail obligatoire + vidéo/audio |
+| Métadonnées audio | music-metadata v10 | Extraction ID3 automatique |
+| **Transcoding vidéo** | **fluent-ffmpeg** | **MP4 → segments HLS .ts** |
+| **Crypto** | **Node.js crypto (natif)** | **Génération clé AES-256 + IV, tokens signés** |
+| Paiement | stripe SDK v14 | PaymentIntent, webhook |
+| Headers sécurité | helmet | HSTS, X-Frame, CSP, X-Content-Type |
+| CORS | cors | 2 origines autorisées |
+| Rate limiting | express-rate-limit | 10 req/15min auth, 200 req/15min autres |
+| Validation | express-validator | Validation et sanitisation |
+
+### 2.4 Infrastructure
+
+| Composant | Solution |
+|---|---|
+| Base de données | MongoDB Atlas (cluster M0 gratuit) |
+| Hébergement backend | Railway |
+| Hébergement frontend web | Vercel (SPA rewrite) |
+| Démonstration mobile | Expo Go (QR code) |
+| Reverse proxy | Nginx + Let's Encrypt SSL |
+| Versioning | Git / GitHub |
+
+---
+
+## 3. Protection contre les téléchargements non autorisés
+
+### 3.1 Streaming vidéo web — HLS avec tokens signés et fingerprint
+
+Les vidéos ne sont jamais servies sous forme de fichier `.mp4` téléchargeable. Après chaque upload, ffmpeg (fluent-ffmpeg) transcrit la vidéo source en segments HLS de 10 secondes (fichiers `.ts`) et génère un manifest `index.m3u8`.
+
+**Flux de lecture vidéo web :**
 
 ```
-project-root/
-├── app/
-│   ├── (auth)/
-│   │   ├── login.tsx
-│   │   └── register.tsx
-│   ├── (tabs)/
-│   │   ├── _layout.tsx          -- Navigation par onglets
-│   │   ├── index.tsx            -- Page d'accueil
-│   │   ├── explore.tsx          -- Catalogue complet
-│   │   ├── search.tsx           -- Recherche
-│   │   └── profile.tsx          -- Profil utilisateur
-│   ├── content/
-│   │   └── [id].tsx             -- Page de detail d'un contenu
-│   ├── admin/
-│   │   ├── _layout.tsx          -- Layout admin protege
-│   │   ├── index.tsx            -- Tableau de bord
-│   │   ├── upload.tsx           -- Formulaire d'upload
-│   │   └── stats.tsx            -- Statistiques
-│   ├── payment/
-│   │   └── subscribe.tsx        -- Flux abonnement Stripe
-│   └── _layout.tsx              -- Layout racine
-├── components/
-│   ├── VideoPlayer.tsx          -- Lecteur video (expo-av)
-│   ├── AudioPlayer.tsx          -- Lecteur audio (expo-av)
-│   ├── MiniPlayer.tsx           -- Mini-player persistant
-│   ├── ContentCard.tsx          -- Carte de contenu dans le catalogue
-│   └── StripePaymentForm.tsx    -- Formulaire Stripe Elements
-├── stores/
-│   ├── authStore.ts             -- Etat d'authentification (zustand)
-│   └── playerStore.ts           -- Etat du lecteur audio (zustand)
-├── services/
-│   └── api.ts                   -- Client axios configure
-└── hooks/
-    └── useContents.ts           -- Hooks TanStack Query
+1. Utilisateur clique "Lire"
+2. GET /api/hls/:contentId/token  (JWT requis + checkAccess)
+   → Backend génère un token HLS signé :
+     {
+       contentId, userId,
+       fingerprint: sha256(User-Agent + IP + cookie sessionId),
+       exp: now + 10min
+     }
+   → Retourne l'URL du manifest signée :
+     /hls/:contentId/index.m3u8?token=eyJ...
+
+3. hls.js (frontend) charge le manifest
+4. Pour chaque segment .ts :
+   GET /hls/:contentId/seg001.ts?token=eyJ...
+   → Middleware hlsTokenizer vérifie :
+     a. Token valide et non expiré
+     b. fingerprint === sha256(req.headers['user-agent'] + req.ip + req.cookies.sessionId)
+     c. Si échec → 403 Forbidden (IDM/JDownloader s'arrête après 1-3 segments)
+5. Segment .ts déchiffré et joué par hls.js
 ```
 
-### 2.3 Gestion de l'etat global
+**Ce que ça bloque :** IDM, JDownloader, Video DownloadHelper, copie d'URL dans un nouvel onglet, partage de lien HLS, ouverture dans un autre navigateur.
 
-L'etat global de l'application est gere par **zustand**, une librairie minimaliste qui evite la complexite de Redux. Deux stores sont definis.
+**Limite assumée :** le screen recording reste possible. Cela est mentionné explicitement en soutenance et est le cas de toutes les plateformes sans DRM (Netflix, Spotify utilisent Widevine/FairPlay qui est hors périmètre académique).
 
-Le `authStore` contient l'utilisateur connecte (objet avec id, username, email, role, isPremium), le JWT en memoire (non dans localStorage pour des raisons de securite), et les actions de connexion et de deconnexion. Le JWT est stocke en memoire JavaScript (variable du store) et non dans le localStorage ou le sessionStorage, ce qui le protege contre les attaques XSS. Le renouvellement automatique du JWT (via le refresh token en cookie httpOnly) est gere par un intercepteur axios.
+### 3.2 Téléchargement hors-ligne mobile — chiffrement AES-256-GCM
 
-Le `playerStore` contient le contenu audio en cours de lecture (objet contenu complet), l'etat de lecture (en cours, pause, chargement), la position de lecture en secondes, et les actions de lecture, pause, et navigation dans la playlist.
+Sur mobile, le téléchargement est autorisé mais le fichier est chiffré localement et inutilisable hors de l'application.
 
-### 2.4 Requetes API et mise en cache
-
-Les requetes vers l'API backend sont gerees par **TanStack Query** (anciennement React Query). Cette librairie apporte plusieurs avantages concrets : la mise en cache automatique des reponses API (evite de refaire la meme requete si les donnees sont recentes), la gestion des etats de chargement et d'erreur, la revalidation automatique des donnees au focus de la fenetre ou au retour de l'utilisateur sur l'ecran, et la pagination infinie pour le catalogue.
-
-Le client **axios** est configure avec un intercepteur de requete qui ajoute automatiquement le header `Authorization: Bearer <jwt>` a chaque requete protegee, et un intercepteur de reponse qui detecte les erreurs 401 (JWT expire) et declenche automatiquement un appel a POST /api/auth/refresh pour renouveler le JWT avant de rejouer la requete initiale.
-
-### 2.5 Lecteur audio et video
-
-La librairie **expo-av** est utilisee pour la lecture audio et video sur toutes les plateformes. Elle expose une API JavaScript unifiee qui s'appuie sur les lecteurs natifs de chaque plateforme : AVPlayer sur iOS, ExoPlayer sur Android, et l'element HTML5 `<video>` ou `<audio>` sur le web.
-
-Le composant `AudioPlayer` charge le fichier audio via une URI (URL complete du fichier sur le serveur), configure les options de lecture (loop, volume initial), et expose les controles a l'interface. La position de lecture est lue toutes les 500 millisecondes via le callback `onPlaybackStatusUpdate` d'expo-av, et enregistree en base de donnees toutes les 10 secondes.
-
-Le mini-player est rendu via un composant flottant (`position: 'absolute', bottom: 0`) dans le layout racine de l'application, ce qui le rend persistent lors des navigations entre ecrans.
-
----
-
-## 3. Couche applicative : API REST Node.js / Express.js
-
-### 3.1 Structure du backend
+**Flux de téléchargement mobile :**
 
 ```
-backend/
-├── src/
-│   ├── routes/
-│   │   ├── auth.routes.js
-│   │   ├── content.routes.js
-│   │   ├── history.routes.js
-│   │   ├── admin.routes.js
-│   │   └── payment.routes.js
-│   ├── controllers/
-│   │   ├── auth.controller.js
-│   │   ├── content.controller.js
-│   │   ├── history.controller.js
-│   │   ├── admin.controller.js
-│   │   └── payment.controller.js
-│   ├── middleware/
-│   │   ├── auth.middleware.js    -- Verification JWT
-│   │   ├── admin.middleware.js   -- Verification role admin
-│   │   └── upload.middleware.js  -- Configuration Multer
-│   ├── models/
-│   │   ├── User.model.js
-│   │   ├── Content.model.js
-│   │   ├── WatchHistory.model.js
-│   │   ├── Playlist.model.js
-│   │   └── RefreshToken.model.js
-│   ├── services/
-│   │   ├── stripe.service.js
-│   │   └── metadata.service.js  -- Extraction metadonnees audio
-│   └── app.js
-├── uploads/
-│   ├── video/
-│   ├── audio/
-│   └── thumbnails/
-├── .env
-└── server.js
+1. Utilisateur clique "Télécharger" (contenu accessible)
+2. POST /api/download/:contentId  (JWT requis + checkAccess)
+   → Backend génère :
+     - clé AES-256 (32 octets aléatoires)
+     - IV (16 octets aléatoires)
+     - URL signée temporaire (15 min) vers le fichier source
+   → Retourne { aesKeyHex, ivHex, signedUrl }
+
+3. Frontend React Native (Membre 1) :
+   a. Télécharge le fichier par chunks de 4-8 Mo via expo-file-system
+      (support de reprise sur coupure réseau)
+   b. Chiffre chaque chunk avec react-native-quick-crypto (AES-256-GCM)
+   c. Sauvegarde le fichier chiffré :
+      FileSystem.documentDirectory + "offline/" + contentId + ".enc"
+   d. Stocke clé AES + IV dans expo-secure-store (iOS Keychain / Android Keystore)
+   e. Enregistre { contentId, encUri, thumbnail } dans AsyncStorage
+
+4. Lecture hors-ligne :
+   a. Charge le fichier .enc par chunks depuis le sandbox privé
+   b. Déchiffre en mémoire vive uniquement (react-native-quick-crypto)
+   c. Envoie le flux déchiffré directement à expo-av
+   d. Aucune vidéo en clair n'est jamais écrite sur le disque
 ```
 
-### 3.2 Middleware d'authentification
-
-Le middleware `auth.middleware.js` est applique a toutes les routes necessitant une authentification. Il extrait le JWT de l'en-tete `Authorization: Bearer <token>`, le verifie avec `jsonwebtoken.verify()` en utilisant la cle secrete stockee dans les variables d'environnement, et injecte le payload decode (userId, role) dans l'objet `req` pour que les controllers puissent l'utiliser. Si le JWT est absent ou invalide, il retourne une reponse 401 Unauthorized.
-
-### 3.3 Gestion de l'upload et extraction des metadonnees
-
-Le middleware Multer est configure pour accepter les fichiers audio (audio/mpeg, audio/aac) et video (video/mp4) avec des limites de taille distinctes. Apres le stockage du fichier sur le disque, le controller admin passe le chemin du fichier a la fonction `parseFile()` de la librairie `music-metadata`. Cette fonction lit les metadonnees ID3 embarquees dans le fichier audio et retourne un objet contenant le titre, l'artiste, l'album, la duree en secondes, et la pochette d'album sous forme de buffer binaire. La pochette est convertie en base64 et stockee dans le document MongoDB du contenu, ou enregistree comme fichier image separe dans `/uploads/thumbnails/` selon la taille.
-
-### 3.4 Integration Stripe en mode test
-
-Le fichier `stripe.service.js` encapsule toutes les interactions avec l'API Stripe. La fonction `createPaymentIntent(amount, currency, userId)` cree un PaymentIntent Stripe avec les metadonnees de l'utilisateur, et retourne le `client_secret` au controller. Le controller le transmet au frontend via la reponse HTTP.
-
-La route POST /api/payment/webhook recoit les evenements Stripe. En developpement, la CLI Stripe (commande `stripe listen --forward-to localhost:3000/api/payment/webhook`) intercepte les evenements Stripe de test et les transmet au backend local. En production simulee (pour la soutenance), un endpoint webhook reel est configure dans le tableau de bord Stripe test. La signature de chaque evenement est verifiee avec `stripe.webhooks.constructEvent()` pour s'assurer que l'evenement provient bien de Stripe. L'evenement `payment_intent.succeeded` declenche la mise a jour du statut Premium de l'utilisateur.
+**Résultat :** le fichier `.enc` est totalement illisible hors de l'application, même avec Xender, Bluetooth, explorateur de fichiers ou VLC. Même en cas de vol ou de root du téléphone, la clé reste protégée par l'OS (iOS Keychain / Android Keystore).
 
 ---
 
-## 4. Couche donnees : MongoDB et Mongoose
+## 4. Middleware checkAccess
 
-### 4.1 Schemas Mongoose
+```javascript
+async function checkAccess(req, res, next) {
+  const content = await Content.findById(req.params.id || req.params.contentId)
+    .select('accessType price');
+  if (!content) return res.status(404).json({ message: 'Contenu introuvable' });
 
-Le schema `User` definit les champs avec leurs types, validations et valeurs par defaut. Les champs email et username ont la contrainte `unique: true`. Le champ role est un enum valant soit "user" soit "admin". Les timestamps (createdAt, updatedAt) sont actives automatiquement via l'option `{ timestamps: true }`.
+  switch (content.accessType) {
+    case 'free':
+      return next();
 
-Le schema `Content` inclut un champ `type` (enum : "video" ou "audio") qui permet de filtrer facilement les contenus par nature. Les champs specifiques aux audios (artist, album, coverArt) sont optionnels pour ne pas contraindre les documents video. Le champ `viewCount` est incremente via une operation atomique MongoDB `$inc` a chaque lecture, evitant les problemes de concurrence.
+    case 'premium':
+      if (!req.user)
+        return res.status(403).json({ reason: 'login_required' });
+      if (req.user.role !== 'premium' && req.user.role !== 'admin')
+        return res.status(403).json({ reason: 'subscription_required' });
+      return next();
 
-Le schema `WatchHistory` utilise une combinaison unique sur les champs `userId` et `contentId` (index compose unique) pour s'assurer qu'un seul document d'historique existe par paire utilisateur/contenu. La mise a jour de la progression utilise `findOneAndUpdate()` avec l'option `upsert: true`, qui cree le document s'il n'existe pas ou le met a jour s'il existe, en une seule operation atomique.
+    case 'paid':
+      if (!req.user)
+        return res.status(403).json({ reason: 'login_required' });
+      if (req.user.role === 'admin') return next();
+      const purchase = await Purchase.findOne({
+        userId: req.user.id, contentId: content._id
+      });
+      if (!purchase)
+        return res.status(403).json({ reason: 'purchase_required', price: content.price });
+      return next();
 
-### 4.2 Indexation
-
-Les index MongoDB suivants sont crees pour optimiser les performances des requetes les plus frequentes. Un index texte composite sur les champs `title` et `artist` de la collection `contents` supporte les recherches textuelles. Un index simple sur le champ `category` supporte les filtres par categorie. Un index compose sur `userId` et `lastWatchedAt` dans la collection `watchHistory` supporte les requetes de l'historique utilisateur triees par date. Un index sur `viewCount` decroissant supporte les requetes de tendances (contenus les plus vus).
+    default:
+      return res.status(403).json({ reason: 'access_denied' });
+  }
+}
+```
 
 ---
 
-## 5. Securite de l'application
+## 5. Gestion de l'authentification
 
-### 5.1 Authentification et gestion des tokens
+### 5.1 JWT et refresh token avec rotation
 
-Le schema de securite repose sur deux tokens complementaires. Le JWT (Access Token) a une duree de vie courte de 15 minutes. Il est signe avec une cle secrete HS256 de 256 bits minimum stockee dans les variables d'environnement. Il contient uniquement le strict necessaire : l'identifiant de l'utilisateur et son role. Il est stocke en memoire JavaScript cote frontend (pas dans localStorage) pour le proteger contre les attaques XSS.
+Le JWT (15 min, HS256) est transmis dans `Authorization: Bearer` et stocké en mémoire vive (zustand) uniquement — jamais dans localStorage. Le refresh token (7 jours) est soumis à rotation systématique : à chaque renouvellement, l'ancien token est invalidé en base et un nouveau est émis. Il est stocké dans cookie httpOnly (web) ou expo-secure-store (mobile, même espace que la clé AES).
 
-Le Refresh Token a une duree de vie de 7 jours. Il est un token opaque (chaine aleatoire) stocke en base de donnees sous forme hachee (bcrypt). Il est transmis au client dans un cookie httpOnly, Secure, SameSite=Strict, ce qui le protege contre les attaques XSS et CSRF. Lors de chaque utilisation du refresh token pour renouveler un JWT, l'ancien refresh token est invalide et un nouveau est emis (rotation des refresh tokens), ce qui limite la fenetre d'exploitation en cas de vol.
+### 5.2 Intercepteur axios (mobile et web)
 
-### 5.2 Validation des entrees
-
-Toutes les donnees recues par l'API sont validees avant traitement. Les schemas de validation sont definis avec la librairie `express-validator` ou directement via les schemas Mongoose. Les champs requis, les types, les longueurs minimales et maximales, et les formats (email, URL) sont verifies. Les erreurs de validation retournent une reponse 400 Bad Request avec une liste des erreurs detaillees, sans exposer d'information sensible sur la structure interne du systeme.
+```javascript
+axiosInstance.interceptors.response.use(
+  response => response,
+  async error => {
+    if (error.response?.status === 401) {
+      try {
+        const { data } = await axiosInstance.post('/auth/refresh');
+        tokenStore.setToken(data.token);
+        error.config.headers['Authorization'] = `Bearer ${data.token}`;
+        return axiosInstance.request(error.config);
+      } catch { tokenStore.logout(); navigate('/login'); }
+    }
+    if (error.response?.status === 403) {
+      const { reason, price } = error.response.data;
+      accessGateStore.show({ reason, price });
+    }
+    return Promise.reject(error);
+  }
+);
+```
 
 ---
 
-## 6. Infrastructure de deploiement pour la soutenance
+## 6. Vignettes — règles techniques
 
-Le backend est deploye sur Railway (platform-as-a-service) avec les variables d'environnement injectees via l'interface Railway (MONGODB_URI, JWT_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET). Le frontend web est exporte avec `npx expo export --platform web` et deploye sur Vercel avec une configuration de rewrite pour gerer le routage cote client. La base de donnees MongoDB est hebergee sur MongoDB Atlas (cluster M0 gratuit suffisant pour la demonstration). Les fichiers medias de demonstration sont stockes directement sur Railway (volume persistent configure).
+**Obligation :** tout contenu publié doit avoir une vignette. Cette règle est appliquée à trois niveaux :
 
-Nginx est configure sur le serveur Railway (ou en local pour la demonstration hors-ligne) comme reverse proxy avec les en-tetes de securite HTTP suivants : Strict-Transport-Security, X-Content-Type-Options: nosniff, X-Frame-Options: DENY, et Content-Security-Policy.
+**Backend (Membre 3) :** Multer est configuré avec `upload.fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'media', maxCount: 1 }])`. Un middleware intermédiaire vérifie `req.files?.thumbnail` et retourne 400 si absent. Le champ `thumbnail` est `required: true` dans le schéma Mongoose.
+
+**Frontend (Membres 1 et 2) :** le formulaire d'upload déclenche une validation côté client : le champ de sélection d'image est marqué obligatoire, un aperçu de la vignette est affiché avant soumission, et le bouton "Soumettre" est désactivé tant qu'aucune image n'est sélectionnée.
+
+**Administration (Membres 1 et 2 pour l'interface, Membre 3 pour l'API) :** l'administrateur peut rejeter une soumission dont la vignette est de mauvaise qualité, floue, ou non représentative du contenu.
 
 ---
 
-## 7. References bibliographiques
+## 7. Différences d'implémentation mobile vs web
 
-Tilkov, S., & Vinoski, S. (2010). Node.js: Using JavaScript to Build High-Performance Network Programs. *IEEE Internet Computing*, 14(6), 80-83. https://doi.org/10.1109/MIC.2010.145
+| Fonctionnalité | Mobile (Membre 1) | Web (Membre 2) |
+|---|---|---|
+| Refresh token | expo-secure-store (natif chiffré) | Cookie httpOnly (navigateur) |
+| Lecture vidéo | expo-av → AVPlayer / ExoPlayer | hls.js + react-player → `<video>` HTML5 |
+| Protection vidéo | Token HLS (même middleware) | Token HLS + fingerprint |
+| Lecture audio | expo-av | react-player → `<audio>` HTML5 |
+| Hors-ligne vidéo | AES-256-GCM → fichier .enc + expo-secure-store pour la clé | Non disponible (screen recording hors périmètre) |
+| Hors-ligne audio | expo-file-system (non chiffré pour les audios) | Service Worker Cache First 48h |
+| Paiement | @stripe/stripe-react-native (CardField natif) | @stripe/react-stripe-js (Elements iframe) |
+| Orientation vidéo | expo-screen-orientation (paysage auto) | CSS Fullscreen API |
+| Mini-player | Layout racine expo-router (absolu) | App.tsx hors RouterProvider |
 
-Chodorow, K. (2019). *MongoDB: The Definitive Guide* (3e ed.). O'Reilly Media. ISBN 978-1491954461.
+---
 
-Vieira, M. (2023). *Full-Stack React, TypeScript, and Node*. Packt Publishing. ISBN 978-1839219931.
+## 8. Références bibliographiques
 
-OWASP Foundation. (2023). *JSON Web Token Cheat Sheet for Java*. https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html
+Apple Inc. (2019). *HTTP Live Streaming — RFC 8216*. https://datatracker.ietf.org/doc/html/rfc8216
 
-Meta Open Source. (2025). *React Native Web*. https://necolas.github.io/react-native-web
+Martin, R. C. (2017). *Clean Architecture*. Prentice Hall. ISBN 978-0134494166.
 
-Expo. (2025). *Expo Router — File-based routing for React Native*. https://docs.expo.dev/router/introduction
+MongoDB Inc. (2025). *MongoDB — Unique Indexes*. https://www.mongodb.com/docs/manual/core/index-unique
 
-TanStack. (2025). *TanStack Query v5 — Documentation*. https://tanstack.com/query/latest
+OWASP Foundation. (2023). *OWASP Top Ten 2023*. https://owasp.org/www-project-top-ten/
 
-Stripe Inc. (2026). *Stripe API Reference — PaymentIntents*. https://stripe.com/docs/api/payment_intents
+Expo. (2025). *expo-secure-store Documentation*. https://docs.expo.dev/versions/latest/sdk/securestore
 
-MongoDB Inc. (2025). *MongoDB Atlas Documentation*. https://www.mongodb.com/docs/atlas
+Expo. (2025). *expo-file-system Documentation*. https://docs.expo.dev/versions/latest/sdk/filesystem
 
-Railway. (2025). *Railway Documentation — Deployments*. https://docs.railway.app
+Fielding, R. T. (2000). *Architectural Styles and the Design of Network-based Software Architectures* (Thèse de doctorat). University of California, Irvine.
+
+Stripe Inc. (2026). *Webhooks — Best practices*. https://stripe.com/docs/webhooks/best-practices

@@ -1,239 +1,293 @@
 # Plan de Tests Fonctionnels — StreamMG
 
-**Document :** Plan de tests et rapport de validation  
-**Projet :** StreamMG — Plateforme de streaming audiovisuel malagasy  
-**Version :** 1.0  
-**Date :** Fevrier 2026  
-**Responsable tests fonctionnels API :** Membre 2 — Developpeur Backend  
-**Responsable tests de securite :** Membre 3 — Responsable Securite
+**Document :** Plan de tests  
+**Projet :** StreamMG — Plateforme de streaming audiovisuel et éducatif malagasy  
+**Date :** Février 2026
 
 ---
 
-## 1. Objectifs et perimetre des tests
+## 1. Objectifs et périmètre
 
-Le plan de tests a pour objectif de valider que chaque fonctionnalite declaree dans le cahier des charges se comporte conformement aux specifications, dans les conditions nominales comme dans les cas limites et d'erreur. Les tests sont realises manuellement, avec l'appui de la collection Postman pour les tests d'API backend, et de tests manuels sur navigateur et sur application mobile Expo Go pour les tests d'interface.
-
-Les tests automatises (tests unitaires avec Jest, tests d'integration) sont documentes comme perspectives d'amelioration future et ne sont pas requis dans le cadre de ce projet academique de niveau Licence.
-
-La repartition des responsabilites de test est la suivante. Le Membre 2 est responsable de l'execution des tests fonctionnels des endpoints API (modules TF-AUTH, TF-CAT, TF-READ, TF-PAY, TF-ADMIN) via la collection Postman. Le Membre 3 est responsable de l'execution des tests de securite (module TF-SEC) et des tests du mode hors-ligne (module TF-OFFLINE), ainsi que de la redaction du rapport de validation final et de la mise a jour de la matrice de traçabilite.
+Ce plan couvre trois niveaux : tests API backend (Postman, Membre 3), tests interface mobile sur appareil physique et émulateur (Membre 1), et tests interface web sur navigateurs (Membre 2). Une attention particulière est portée à : la vignette obligatoire sur tous les contenus, la protection HLS avec tokens signés et fingerprint, le chiffrement AES-256-GCM mobile, le middleware `checkAccess`, et les achats unitaires.
 
 ---
 
-## 2. Environnements de test
+## 2. Tests authentification — API (Membre 3)
 
-Les tests sont realises dans deux environnements distincts. L'environnement de developpement local utilise Node.js v20 en local, MongoDB Community Server en local, Expo en mode developpement (expo start), et la CLI Stripe pour la simulation des webhooks (stripe listen). L'environnement de staging, utilise pour la validation pre-soutenance, est identique a l'environnement de production : backend deploye sur Railway, base de donnees sur MongoDB Atlas, frontend web sur Vercel, webhooks Stripe configures dans le tableau de bord Stripe test.
+**TF-AUTH-01 — Inscription valide.**
+POST /api/auth/register `{ username, email, password }`. Résultat : 201, passwordHash bcrypt en base (préfixe $2b$), rôle "user", isPremium false.
 
----
+**TF-AUTH-02 — Inscription email dupliqué.**
+POST avec email existant. Résultat : 409 "Email déjà utilisé".
 
-## 3. Cas de tests par module
+**TF-AUTH-03 — Connexion valide.**
+POST /api/auth/login. Résultat : 200, JWT dans le corps, refresh token en cookie httpOnly.
 
-### 3.1 Module Authentification
+**TF-AUTH-04 — Rotation du refresh token.**
+POST /api/auth/refresh. Résultat : nouveau JWT, nouveau refresh token, ancien token supprimé de la collection `refreshTokens`.
 
-**TF-AUTH-01 — Inscription avec donnees valides**  
-Pre-condition : L'API est demarree. La base de donnees est vide ou ne contient pas l'email de test.  
-Entrees : `{ "username": "testuser", "email": "test@streamMG.mg", "password": "Password1" }`  
-Requete : POST /api/auth/register  
-Resultat attendu : Code HTTP 201. Reponse JSON contenant `{ "message": "Inscription reussie", "user": { "id": "...", "username": "testuser" } }`. Un document est cree dans la collection users avec le mot de passe hache (non en clair).  
-Verification post-test : Requete MongoDB `db.users.findOne({ email: "test@streamMG.mg" })` pour confirmer que le champ passwordHash commence par `$2b$` (prefixe bcrypt).
-
-**TF-AUTH-02 — Inscription avec email deja utilise**  
-Pre-condition : L'utilisateur TF-AUTH-01 existe en base de donnees.  
-Entrees : Meme email que TF-AUTH-01.  
-Resultat attendu : Code HTTP 409 Conflict. Message d'erreur "Cette adresse email est deja utilisee".
-
-**TF-AUTH-03 — Connexion avec identifiants valides**  
-Pre-condition : L'utilisateur TF-AUTH-01 existe.  
-Entrees : `{ "email": "test@streamMG.mg", "password": "Password1" }`  
-Requete : POST /api/auth/login  
-Resultat attendu : Code HTTP 200. Reponse JSON contenant un champ `accessToken` (JWT). Cookie httpOnly `refreshToken` present dans les en-tetes de reponse Set-Cookie.
-
-**TF-AUTH-04 — Connexion avec mot de passe incorrect**  
-Entrees : Email valide, mot de passe incorrect.  
-Resultat attendu : Code HTTP 401. Message generique "Identifiants incorrects" (sans preciser quel champ est errone).
-
-**TF-AUTH-05 — Renouvellement automatique du JWT**  
-Pre-condition : L'utilisateur TF-AUTH-03 est connecte. Le JWT a expire (simuler en reduisant temporairement la duree de vie a 5 secondes dans les variables d'environnement).  
-Action : Envoyer une requete a une route protegee avec le JWT expire. L'intercepteur axios doit detecter le 401, appeler POST /api/auth/refresh avec le refresh token en cookie, obtenir un nouveau JWT, et rejouer la requete initiale.  
-Resultat attendu : La requete initiale reussit apres le renouvellement transparent du JWT, sans intervention de l'utilisateur.
-
-**TF-AUTH-06 — Deconnexion**  
-Requete : POST /api/auth/logout avec un JWT valide.  
-Resultat attendu : Code HTTP 200. Le refresh token est supprime de la base de donnees. Une requete subsequente a POST /api/auth/refresh avec l'ancien cookie retourne 401.
+**TF-AUTH-05 — Déconnexion.**
+POST /api/auth/logout. Résultat : 200, document refresh token supprimé.
 
 ---
 
-### 3.2 Module Catalogue
+## 3. Tests vignette obligatoire — API (Membre 3)
 
-**TF-CAT-01 — Liste des contenus sans filtre**  
-Requete : GET /api/contents  
-Resultat attendu : Code HTTP 200. Tableau JSON de contenus pagines (20 elements maximum). Chaque element contient au minimum : _id, title, type, category, duration, thumbnail, viewCount.
+**TF-THUMB-01 — Upload sans vignette.**
+POST /api/provider/contents multipart sans fichier `thumbnail`. Résultat : 400 "La vignette est obligatoire." Aucun document créé dans `contents`.
 
-**TF-CAT-02 — Filtrage par type audio**  
-Requete : GET /api/contents?type=audio  
-Resultat attendu : Tous les elements retournes ont le champ `type` egal a "audio".
+**TF-THUMB-02 — Upload avec vignette invalide (PDF).**
+POST avec un fichier PDF en champ `thumbnail`. Résultat : 400 "Type MIME non autorisé". Aucun document créé.
 
-**TF-CAT-03 — Recherche textuelle**  
-Pre-condition : Un contenu avec le titre "Salegy Malagasy" existe en base de donnees.  
-Requete : GET /api/contents?search=salegy  
-Resultat attendu : Le contenu "Salegy Malagasy" apparait dans les resultats. La recherche est insensible a la casse.
+**TF-THUMB-03 — Upload avec vignette > 5 Mo.**
+POST avec un fichier JPEG de 6 Mo. Résultat : 400. Aucun document créé.
 
-**TF-CAT-04 — Pagination**  
-Pre-condition : Plus de 20 contenus existent en base de donnees.  
-Requete : GET /api/contents?page=2  
-Resultat attendu : La deuxieme page de 20 contenus est retournee. Les contenus de la page 1 ne sont pas repetes.
+**TF-THUMB-04 — Upload valide avec vignette JPEG.**
+POST avec un fichier JPEG de 1 Mo. Résultat : 201, document `contents` créé avec `thumbnail` renseigné (chemin `/uploads/thumbnails/<uuid>.jpg`). Vérifier que le champ `thumbnail` est non null et non vide.
 
----
+**TF-THUMB-05 — Upload valide avec vignette PNG.**
+Même test avec PNG. Résultat : 201, `thumbnail` renseigné.
 
-### 3.3 Module Lecture et Historique
-
-**TF-READ-01 — Enregistrement de la progression de lecture**  
-Pre-condition : L'utilisateur est connecte. Un contenu audio existe avec l'id `contentId`.  
-Requete : POST /api/history/:contentId avec le body `{ "progressSeconds": 127 }`  
-Resultat attendu : Code HTTP 200 ou 201. Un document est cree ou mis a jour dans la collection watchHistory avec userId, contentId et progressSeconds = 127.
-
-**TF-READ-02 — Reprise de lecture**  
-Pre-condition : TF-READ-01 a ete execute.  
-Requete : GET /api/history  
-Resultat attendu : La reponse inclut le contenu avec progressSeconds = 127.
-
-**TF-READ-03 — Incrementation du compteur de vues**  
-Requete : POST /api/contents/:id/view (route declenchee au demarrage de la lecture)  
-Resultat attendu : Le champ viewCount du contenu est incremente de 1 en base de donnees. L'operation est atomique (utilisation de $inc MongoDB).
+**TF-THUMB-06 — Présence de la vignette dans la réponse catalogue.**
+GET /api/contents. Résultat : chaque objet dans le tableau `contents` possède un champ `thumbnail` non null. Aucun contenu publié ne doit avoir `thumbnail: null` ou `thumbnail: ""`.
 
 ---
 
-### 3.4 Module Paiement Simule
+## 4. Tests middleware checkAccess — API (Membre 3)
 
-**TF-PAY-01 — Creation d'un PaymentIntent en mode test**  
-Pre-condition : L'utilisateur est connecte. Les cles Stripe test sont configurees.  
-Requete : POST /api/payment/create-intent avec `{ "plan": "premium_monthly" }`  
-Resultat attendu : Code HTTP 200. Reponse JSON contenant un champ `clientSecret` dont la valeur commence par "pi_" (identifiant de PaymentIntent Stripe).
+**TF-ACC-01 — Gratuit accessible sans JWT.**
+GET /api/hls/:id/token sans header Authorization, contenu `accessType: "free"`. Résultat : 200 et token HLS retourné.
 
-**TF-PAY-02 — Paiement reussi avec carte de test**  
-Action : Soumettre le formulaire Stripe Elements avec la carte 4242 4242 4242 4242, date 12/28, CVV 123.  
-Resultat attendu : Stripe retourne un statut "succeeded". Le webhook Stripe declenche la mise a jour de isPremium = true pour l'utilisateur en base de donnees. L'interface affiche l'ecran de confirmation.
+**TF-ACC-02 — Premium refusé à utilisateur standard.**
+JWT rôle "user", contenu `accessType: "premium"`. Résultat : 403 `{ reason: "subscription_required" }`.
 
-**TF-PAY-03 — Paiement refuse avec carte de test**  
-Action : Soumettre le formulaire avec la carte 4000 0000 0000 9995.  
-Resultat attendu : Stripe retourne un statut "declined". L'interface affiche le message "Votre carte a ete refusee". Le statut isPremium de l'utilisateur reste false en base de donnees.
+**TF-ACC-03 — Premium accessible à utilisateur premium.**
+JWT rôle "premium". Résultat : 200 et token HLS.
 
-**TF-PAY-04 — Verification du statut Premium apres souscription**  
-Pre-condition : TF-PAY-02 a ete execute avec succes.  
-Requete : GET /api/payment/status avec le JWT de l'utilisateur.  
-Resultat attendu : Reponse JSON `{ "isPremium": true, "premiumExpiry": "..." }`.
+**TF-ACC-04 — Payant refusé sans achat (utilisateur standard).**
+JWT rôle "user", contenu `accessType: "paid"`, aucun document dans `purchases`. Résultat : 403 `{ reason: "purchase_required", price: 800000 }`.
 
----
+**TF-ACC-05 — Payant accessible après achat.**
+Même requête après insertion d'un document dans `purchases`. Résultat : 200 et token HLS.
 
-### 3.5 Module Administration
+**TF-ACC-06 — Payant refusé à un utilisateur PREMIUM sans achat.**
+JWT rôle "premium", contenu `accessType: "paid"`, aucun achat. Résultat : 403 `{ reason: "purchase_required" }`. Vérifie que l'abonnement Premium ne couvre pas les contenus payants.
 
-**TF-ADMIN-01 — Upload d'un fichier audio**  
-Pre-condition : L'utilisateur connecte a le role admin. Un fichier MP3 de test est disponible.  
-Requete : POST /api/admin/contents (multipart/form-data avec le fichier MP3 et les metadonnees).  
-Resultat attendu : Code HTTP 201. Reponse JSON avec l'ID du nouveau contenu. Un document est cree dans la collection contents. Les metadonnees ID3 (titre, artiste, duree) ont ete extraites automatiquement et correspondent aux metadonnees embarquees dans le fichier MP3.
-
-**TF-ADMIN-02 — Upload refuse pour un non-administrateur**  
-Pre-condition : L'utilisateur connecte a le role "user" (non admin).  
-Requete : POST /api/admin/contents  
-Resultat attendu : Code HTTP 403 Forbidden.
-
-**TF-ADMIN-03 — Consultation des statistiques**  
-Pre-condition : Des entrees existent dans la collection watchHistory.  
-Requete : GET /api/admin/stats avec le JWT d'un administrateur.  
-Resultat attendu : Reponse JSON contenant les tableaux top10Weekly, top10Monthly, totalUsers et activeUsers7d, tous non nuls.
+**TF-ACC-07 — Admin accède à tout.**
+JWT rôle "admin", contenu `accessType: "paid"` non acheté. Résultat : 200.
 
 ---
 
-### 3.6 Mode hors-ligne (PWA Web)
+## 5. Tests protection HLS — API (Membre 3)
 
-**TF-OFFLINE-01 — Mise en cache d'un titre audio**  
-Pre-condition : L'application web est ouverte dans Chrome. Le Service Worker est actif (verifiable dans Chrome DevTools > Application > Service Workers). Un titre audio est disponible dans le catalogue.  
-Action : Cliquer sur l'icone de mise en cache hors-ligne d'un titre audio.  
-Resultat attendu : Le fichier audio apparait dans Chrome DevTools > Application > Cache Storage sous la cle "streamMG-offline-audio-v1". L'icone du titre passe a l'etat "disponible hors-ligne".
+**TF-HLS-01 — Token HLS généré correctement.**
+GET /api/hls/:contentId/token avec JWT valide + contenu accessible. Résultat : 200 `{ hlsUrl: "/hls/:id/index.m3u8?token=eyJ..." }`. Vérifier que le token contient `contentId`, `userId`, `fingerprint`, `exp`.
 
-**TF-OFFLINE-02 — Lecture hors-ligne**  
-Pre-condition : TF-OFFLINE-01 a ete execute. La connexion reseau est coupee (mode avion ou DevTools > Network > Offline).  
-Action : Naviguer vers le titre audio mis en cache et lancer la lecture.  
-Resultat attendu : La lecture demarre normalement, sans erreur reseau, en utilisant le fichier depuis le cache du navigateur.
+**TF-HLS-02 — Segment .ts accessible avec token valide.**
+GET /hls/:id/seg001.ts?token=... (User-Agent et IP correspondant au fingerprint). Résultat : 200 et contenu binaire du segment.
 
-**TF-OFFLINE-03 — Expiration du cache**  
-Pre-condition : Un titre a ete mis en cache. Le Service Worker est configure avec une expiration de 48 heures.  
-Action : Simuler l'ecoulement de 48 heures en modifiant l'horodatage stocke dans le cache (via la console DevTools) ou en reduisant le delai d'expiration a 1 minute pour le test.  
-Resultat attendu : Le Service Worker supprime le fichier expire du cache. L'icone du titre repasse a l'etat "non mis en cache".
+**TF-HLS-03 — Segment .ts refusé avec token expiré.**
+Attendre > 10 min puis requêter le même segment avec le même token. Résultat : 403.
 
----
+**TF-HLS-04 — Segment .ts refusé avec fingerprint différent.**
+Copier l'URL du segment HLS et l'utiliser depuis un User-Agent différent (simulé avec header modifié dans Postman). Résultat : 403. Ce test simule IDM ou JDownloader.
 
-### 3.6 Module Fournisseur de Contenu
+**TF-HLS-05 — Aucune route directe MP4.**
+GET /uploads/private/ny_fitiavana_src.mp4 (chemin brut). Résultat : 404 ou 403. Aucun fichier `.mp4` complet n'est accessible directement par l'URL.
 
-**TF-PROVIDER-01 — Upload d'un contenu par un provider**  
-Pre-condition : Un utilisateur avec le role "provider" est connecte. Un fichier MP3 de test est disponible.  
-Requete : POST /api/provider/contents (multipart/form-data avec le fichier MP3 et les metadonnees).  
-Resultat attendu : Code HTTP 201. Le document cree a le champ `isPublished: false` et `uploadedBy` egal a l'identifiant du provider. Le contenu n'est pas visible dans GET /api/contents.
-
-**TF-PROVIDER-02 — Acces refuse pour edition du contenu d'un autre provider**  
-Pre-condition : Deux providers distincts existent. Provider A a uploade un contenu.  
-Action : Provider B tente PUT /api/provider/contents/:idDuContenuDeA.  
-Resultat attendu : Code HTTP 403 Forbidden. Le contenu du Provider A est inchange.
-
-**TF-PROVIDER-03 — Approbation par l'administrateur**  
-Pre-condition : TF-PROVIDER-01 a ete execute. Un administrateur est connecte.  
-Requete : PUT /api/admin/contents/:id avec body { "isPublished": true }.  
-Resultat attendu : Le contenu est maintenant visible dans GET /api/contents. Son champ `isPublished` est `true`.
+**TF-HLS-06 — Manifest sans token.**
+GET /hls/:id/index.m3u8 sans paramètre `token`. Résultat : 403.
 
 ---
 
-## 4. Tests de securite basiques
+## 6. Tests chiffrement AES-256-GCM — Mobile (Membre 1)
 
-**TF-SEC-01 — Acces a une route protegee sans JWT**  
-Requete : GET /api/history sans en-tete Authorization.  
-Resultat attendu : Code HTTP 401 Unauthorized.
+**TF-AES-01 — Endpoint de téléchargement retourne clé + IV + URL signée.**
+POST /api/download/:contentId avec JWT valide. Résultat : 200 `{ aesKeyHex, ivHex, signedUrl }`. Vérifier que `aesKeyHex` fait bien 64 caractères hexadécimaux (32 octets AES-256) et `ivHex` 32 caractères (16 octets).
 
-**TF-SEC-02 — Acces a une route admin avec un token utilisateur standard**  
-Requete : POST /api/admin/contents avec le JWT d'un utilisateur de role "user".  
-Resultat attendu : Code HTTP 403 Forbidden.
+**TF-AES-02 — Fichier .enc créé dans le sandbox.**
+Déclencher un téléchargement mobile. Résultat : fichier `<contentId>.enc` présent dans `FileSystem.documentDirectory/offline/`. Vérifier que la taille est comparable au fichier source (légère augmentation due au padding AES-GCM).
 
-**TF-SEC-03 — Rate limiting sur la route de connexion**  
-Action : Envoyer 6 requetes consecutives a POST /api/auth/login avec des identifiants incorrects depuis la meme IP dans une fenetre de 15 minutes.  
-Resultat attendu : La sixieme requete (et les suivantes) recoit une reponse 429 Too Many Requests.
+**TF-AES-03 — Fichier .enc illisible hors application.**
+Copier le fichier `.enc` sur un PC via le gestionnaire de fichiers. Tenter d'ouvrir avec VLC ou un éditeur vidéo. Résultat : fichier illisible (données binaires chiffrées).
 
-**TF-SEC-04 — Injection dans le champ de recherche**  
-Action : Envoyer GET /api/contents?search={"$gt":""} (tentative d'injection NoSQL).  
-Resultat attendu : La requete ne retourne pas l'ensemble de la base de donnees. Elle est traitee comme une recherche textuelle sans syntaxe speciale, retournant 0 resultats ou les resultats correspondant a la chaine litterale.
+**TF-AES-04 — Clé stockée dans expo-secure-store.**
+Vérifier programmatiquement que `SecureStore.getItemAsync('aes_key_<contentId>')` retourne la clé après téléchargement. Vérifier que la clé est absente si le téléchargement échoue.
+
+**TF-AES-05 — Lecture hors-ligne sans réseau.**
+Activer le mode avion. Lancer la lecture d'un contenu téléchargé. Résultat : lecture fluide, progression normale. Vérifier dans les logs que `expo-av` charge depuis le chemin local et non depuis une URL réseau.
+
+**TF-AES-06 — Reprise sur coupure réseau pendant téléchargement.**
+Couper le réseau à 50 % du téléchargement, le rétablir. Résultat : le téléchargement reprend depuis le dernier chunk sans recommencer depuis le début.
 
 ---
 
-## 5. Matrice de traçabilite
+## 7. Tests achats unitaires — API (Membre 3)
 
-La matrice de traçabilite met en correspondance chaque fonctionnalite du cahier des charges avec les cas de test associes, afin de s'assurer qu'aucune specification n'est laissee sans verification.
+**TF-PUR-01 — PaymentIntent achat créé.**
+POST /api/payment/purchase `{ contentId }`, utilisateur sans achat antérieur. Résultat : 200 `{ clientSecret }`. Vérifier dans Stripe Dashboard que `metadata.type === "purchase"`, `userId`, `contentId` sont présents.
 
-| Fonctionnalite (CDC) | Cas de test | Statut |
+**TF-PUR-02 — Achat réussi et document purchases créé.**
+Compléter le PaymentIntent avec 4242 4242 4242 4242. Résultat : webhook → document dans `purchases` → accès débloqué → GET /api/hls/:id/token retourne 200.
+
+**TF-PUR-03 — Idempotence : double achat.**
+POST /api/payment/purchase avec le même contentId pour un utilisateur ayant déjà un achat. Résultat : 409 "Vous avez déjà acheté ce contenu". Aucun PaymentIntent Stripe créé. Aucun document inséré.
+
+**TF-PUR-04 — Achat refusé (carte invalide).**
+Carte 4000 0000 0000 9995. Résultat : aucun webhook → aucun document dans `purchases` → accès toujours refusé (403).
+
+---
+
+## 8. Tests progression tutoriels — API (Membre 3)
+
+**TF-TUT-01 — Enregistrement progression.**
+POST /api/tutorial/progress/:tutorialId `{ lessonIndex: 0, completed: true }`. Résultat : `completedLessons: [0]`, `percentComplete` calculé.
+
+**TF-TUT-02 — Avancement progressif.**
+POST avec `{ lessonIndex: 1, completed: true }`. Résultat : `completedLessons: [0, 1]`, percentComplete recalculé.
+
+**TF-TUT-03 — Tutoriel terminé.**
+POST avec la dernière leçon (index 2 pour 3 leçons). Résultat : `percentComplete: 100`.
+
+**TF-TUT-04 — Tutoriels en cours.**
+GET /api/tutorial/progress. Résultat : tableau avec `percentComplete < 100`, ordonné par `lastUpdatedAt` décroissant, chaque entrée contient `tutorial.thumbnail` (obligatoire).
+
+---
+
+## 9. Tests sécurité — API (Membre 3)
+
+**TF-SEC-01 — Route protégée sans JWT.**
+GET /api/provider/contents sans Authorization. Résultat : 401.
+
+**TF-SEC-02 — Route admin avec token utilisateur.**
+GET /api/admin/stats avec JWT rôle "user". Résultat : 403.
+
+**TF-SEC-03 — Rate limiting authentification.**
+11 POST /api/auth/login en < 15 min depuis la même IP. Résultat : 11ème requête → 429 Too Many Requests.
+
+**TF-SEC-04 — Fournisseur ne peut pas modifier contenu d'un autre.**
+PUT /api/provider/contents/:id avec JWT d'un autre fournisseur. Résultat : 403.
+
+**TF-SEC-05 — Webhook Stripe signature invalide.**
+POST /api/payment/webhook avec signature incorrecte. Résultat : 400. Aucune modification en base.
+
+**TF-SEC-06 — Clé AES non accessible via l'API.**
+GET /api/download/:contentId une deuxième fois pour le même utilisateur et le même contenu. Résultat : 403 "Ce contenu est déjà téléchargé." (la clé ne doit jamais être retransmise une seconde fois — elle est dans expo-secure-store).
+
+---
+
+## 10. Tests interface mobile (Membre 1)
+
+**TF-MOB-01 — Vignettes affichées dans le catalogue.**
+Parcourir le catalogue. Résultat : chaque ContentCard affiche la vignette. Aucune carte avec placeholder définitif (uniquement pendant le chargement).
+
+**TF-MOB-02 — Vignette visible dans les téléchargements.**
+Section "Téléchargements". Résultat : chaque contenu téléchargé affiche sa vignette (sauvegardée localement lors du téléchargement).
+
+**TF-MOB-03 — Écrans intermédiaires premium et payant.**
+Standard sur contenu premium → écran abonnement. Standard ou premium sur contenu payant → écran achat avec prix. Résultat : écrans s'affichent correctement avec le bon prix.
+
+**TF-MOB-04 — Lecteur vidéo en mode paysage.**
+Lecture d'une vidéo. Résultat : paysage automatique via expo-screen-orientation. Retour portrait à la fermeture.
+
+**TF-MOB-05 — Mini-player persistant.**
+Lecture audio, navigation vers une autre page. Résultat : mini-player toujours visible avec vignette (coverArt ou thumbnail), lecture continue.
+
+**TF-MOB-06 — Téléchargement AES-256-GCM complet.**
+Télécharger une vidéo. Résultat : fichier `.enc` créé, clé dans SecureStore, icône "Téléchargé ✓".
+
+**TF-MOB-07 — Lecture hors-ligne en mode avion.**
+Mode avion activé. Lire un contenu téléchargé. Résultat : lecture fluide depuis le fichier `.enc` déchiffré en mémoire.
+
+**TF-MOB-08 — Upload fournisseur : vignette obligatoire.**
+Formulaire fournisseur sans image → bouton "Soumettre" désactivé. Avec image → aperçu affiché, bouton activé.
+
+**TF-MOB-09 — Session persistante au redémarrage.**
+Fermer et rouvrir l'application. Résultat : reconnexion automatique silencieuse.
+
+**TF-MOB-10 — Progression tutoriel.**
+Terminer une leçon. Résultat : barre de progression mise à jour, % affiché.
+
+---
+
+## 11. Tests interface web (Membre 2)
+
+**TF-WEB-01 — Vignettes affichées dans le catalogue.**
+Même test que TF-MOB-01 sur Chrome, Firefox, Safari.
+
+**TF-WEB-02 — Lecture HLS dans hls.js.**
+Lire une vidéo. Résultat : onglet Réseau de DevTools ne montre aucun `.mp4` complet, uniquement des requêtes vers des segments `.ts` et le manifest `.m3u8`.
+
+**TF-WEB-03 — Token HLS invalide si URL copiée.**
+Copier l'URL d'un segment `.ts` depuis DevTools. L'ouvrir dans un nouvel onglet ou dans un autre navigateur. Résultat : 403 (fingerprint non correspondant).
+
+**TF-WEB-04 — Écrans intermédiaires.**
+Même tests que TF-MOB-03 sur web.
+
+**TF-WEB-05 — Mini-player persistant.**
+Lecture audio, navigation via react-router. Résultat : mini-player toujours présent avec vignette, lecture continue.
+
+**TF-WEB-06 — Service Worker audio (Cache First).**
+Lire un audio. DevTools → Application → Cache Storage → vérifier fichier présent. Désactiver réseau → relire. Résultat : lecture depuis le cache.
+
+**TF-WEB-07 — Flux d'achat Stripe Web.**
+Carte 4242 4242 4242 4242 dans Stripe Elements. Résultat : confirmation, accès débloqué.
+
+**TF-WEB-08 — Upload fournisseur : vignette obligatoire.**
+Soumettre sans image → bouton désactivé côté client. Avec image → aperçu affiché.
+
+**TF-WEB-09 — Responsivité 360 px.**
+Redimensionner à 360 px. Résultat : interface lisible, vignettes correctement redimensionnées, boutons accessibles.
+
+**TF-WEB-10 — Progression tutoriel.**
+Même test que TF-MOB-10 sur web.
+
+---
+
+## 12. Matrice de traçabilité
+
+| Fonctionnalité | Cas de test | Responsable |
 |---|---|---|
-| Inscription utilisateur | TF-AUTH-01, TF-AUTH-02 | A valider |
-| Connexion utilisateur | TF-AUTH-03, TF-AUTH-04 | A valider |
-| Renouvellement JWT | TF-AUTH-05 | A valider |
-| Deconnexion | TF-AUTH-06 | A valider |
-| Catalogue et filtres | TF-CAT-01 a TF-CAT-04 | A valider |
-| Historique de lecture | TF-READ-01, TF-READ-02 | A valider |
-| Compteur de vues | TF-READ-03 | A valider |
-| Paiement simule (succes) | TF-PAY-01, TF-PAY-02 | A valider |
-| Paiement simule (echec) | TF-PAY-03 | A valider |
-| Statut Premium | TF-PAY-04 | A valider |
-| Upload admin (audio) | TF-ADMIN-01 | A valider |
-| Protection routes admin | TF-ADMIN-02 | A valider |
-| Statistiques admin | TF-ADMIN-03 | A valider |
-| Mode hors-ligne | TF-OFFLINE-01, TF-OFFLINE-02, TF-OFFLINE-03 | A valider |
-| Rate limiting | TF-SEC-03 | A valider |
-| Protection injection NoSQL | TF-SEC-04 | A valider |
+| Vignette obligatoire upload | TF-THUMB-01 à 05 | M3 |
+| Vignette présente dans catalogue | TF-THUMB-06 | M3 |
+| Gratuit accessible sans JWT | TF-ACC-01 | M3 |
+| Premium refusé sans abonnement | TF-ACC-02 | M3 |
+| Premium accessible avec abonnement | TF-ACC-03 | M3 |
+| Payant refusé sans achat (standard) | TF-ACC-04 | M3 |
+| Payant accessible après achat | TF-ACC-05 | M3 |
+| Payant refusé à Premium sans achat | TF-ACC-06 | M3 |
+| Admin accède à tout | TF-ACC-07 | M3 |
+| Token HLS généré correctement | TF-HLS-01 | M3 |
+| Segment .ts valide | TF-HLS-02 | M3 |
+| Token HLS expiré | TF-HLS-03 | M3 |
+| Fingerprint différent → 403 | TF-HLS-04 | M3 |
+| Aucune route MP4 directe | TF-HLS-05 | M3 |
+| Manifest sans token → 403 | TF-HLS-06 | M3 |
+| Endpoint download clé AES | TF-AES-01 | M3 |
+| Fichier .enc créé | TF-AES-02 | M1 |
+| Fichier .enc illisible hors app | TF-AES-03 | M1 |
+| Clé dans SecureStore | TF-AES-04 | M1 |
+| Lecture hors-ligne sans réseau | TF-AES-05 | M1 |
+| Reprise sur coupure réseau | TF-AES-06 | M1 |
+| PaymentIntent achat | TF-PUR-01 | M3 |
+| Achat réussi + document purchases | TF-PUR-02 | M3 |
+| Idempotence double achat | TF-PUR-03 | M3 |
+| Vignettes mobile catalogue | TF-MOB-01, TF-MOB-02 | M1 |
+| Upload fournisseur vignette mobile | TF-MOB-08 | M1 |
+| HLS web (pas de .mp4) | TF-WEB-02, TF-WEB-03 | M2 |
+| Vignettes web catalogue | TF-WEB-01 | M2 |
+| Upload fournisseur vignette web | TF-WEB-08 | M2 |
 
 ---
 
-## 6. References bibliographiques
+## 13. Références bibliographiques
 
-Myers, G. J., Sandler, C., & Badgett, T. (2011). *The Art of Software Testing* (3e ed.). Wiley. ISBN 978-1118031964.
+Myers, G. J., Sandler, C., & Badgett, T. (2011). *The Art of Software Testing* (3e éd.). Wiley. ISBN 978-1118031964.
 
-Cohn, M. (2004). *User Stories Applied: For Agile Software Development*. Addison-Wesley Professional. ISBN 978-0321205681.
+Postman Inc. (2025). *Postman Documentation*. https://learning.postman.com/docs
 
-Postman Inc. (2025). *Postman Documentation — Writing Tests*. https://learning.postman.com/docs/writing-scripts/test-scripts
+OWASP Foundation. (2021). *OWASP Web Security Testing Guide v4.2*. https://owasp.org/www-project-web-security-testing-guide/
 
-OWASP Foundation. (2021). *OWASP Web Security Testing Guide (WSTG) v4.2*. https://owasp.org/www-project-web-security-testing-guide/
+Stripe Inc. (2026). *Testing Stripe integrations*. https://stripe.com/docs/testing
 
-Stripe Inc. (2026). *Testing Stripe.js*. https://stripe.com/docs/testing
+Apple Inc. (2019). *HTTP Live Streaming — RFC 8216*. https://datatracker.ietf.org/doc/html/rfc8216
