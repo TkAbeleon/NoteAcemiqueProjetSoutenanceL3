@@ -7,3 +7,4 @@
 ### ![[Diagramme des cas d’utilisation]]
 ### ![[Diagramme de séquence]]
 
+### ![[Diagramme de classes]]

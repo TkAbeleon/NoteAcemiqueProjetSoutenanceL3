@@ -77,3 +77,4 @@ Correspond à un *alt* sans **else**
 ## Opérateur *loop*:
 Représente un boucle
 L'opérande d'interaction sera répété un certain nombre de fois
+[[Diagramme de classes]]

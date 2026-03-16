@@ -24,10 +24,10 @@
 ## 2️⃣ IA / ML / DL
 
 ### A. Concepts IA
-- [ ] Différence IA / ML / DL
-- [ ] Supervised / Unsupervised
+- [x] Différence IA / ML / DL ✅ 2026-03-16
+- [x] Supervised / Unsupervised ✅ 2026-03-16
 - [ ] Overfitting / Underfitting
-- [ ] Train / Test / Validation
+- [x] Train / Test / Validation ✅ 2026-03-16
 
 ### B. Machine Learning
 - [ ] Régression linéaire (scikit-learn)
@@ -94,7 +94,7 @@
 ---
 
 ## 6️⃣ Bonus technique
-- [ ] Python avancé : Pandas, NumPy, Matplotlib
+- [x] Python avancé : Pandas, NumPy, Matplotlib ✅ 2026-03-16
 - [ ] Bash / Linux : scripts automatiques
 - [ ] Web scraping : PDF, images, données
 - [ ] Git / GitHub : versioning
