@@ -19,6 +19,7 @@
 | **Problèmes** | `#Risque` | Risque potentiel |
 | **Solutions** | `#Solution` | Solution identifiée |
 | **Solutions** | `#Decision` | Décision validée |
+| **Usage** | `#Feature` | Fonctionnalité produit (spécification) |
 | **Données** | `#Dataset` | Jeux de données |
 | **Données** | `#DataCleaning` | Préparation données |
 | **Sources** | `#NASA` | Données NASA |
@@ -31,15 +32,19 @@
 | **IA** | `#Clustering` | Algorithmes clustering |
 | **IA** | `#Prediction` | Modèles prédictifs |
 | **IA** | `#RAG` | Retrieval Augmented Generation |
+| **Spécification** | `#UML` | Diagrammes UML (cas d’utilisation, séquence, activité, classes) |
 | **Outils** | `#Python` | Scripts Python |
 | **Outils** | `#Notebook` | Jupyter/Colab |
 | **Outils** | `#API` | APIs externes |
 | **Outils** | `#n8n` | Automatisation n8n |
 | **Outils** | `#Docker` | Infrastructure Docker |
+| **Outils** | `#DevOps` | Automatisation, CI/CD, infra, déploiement |
 | **Outils** | `#FastAPI` | Backend FastAPI |
 | **Outils** | `#Frontend` | React ou Flutter |
+| **Outils** | `#Database` | Base de données (PostgreSQL/Supabase) |
 | **Usage** | `#Alerte` | Système alertes |
 | **Usage** | `#DecisionSupport` | Aide à la décision |
+| **Usage** | `#Auth` | Authentification / accès utilisateur |
 | **Références** | `#Reference` | Références externes |
 | **Références** | `#Documentation` | Documentation officielle |
 | **Soutenance** | `#Soutenance` | Documents soutenance |

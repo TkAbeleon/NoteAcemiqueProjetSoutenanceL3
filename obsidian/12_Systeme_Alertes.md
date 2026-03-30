@@ -8,10 +8,10 @@
 
 | Condition                  | Niveau      | Action                    |
 | -------------------------- | ----------- | ------------------------- |
-| `risk_score > 0.70`        | 🟠 ÉLEVÉ    | Email + WhatsApp          |
-| `frp > 50 MW`              | 🔴 CRITIQUE | Email + WhatsApp immédiat |
-| `cluster_size ≥ 10 points` | 🔴 CRITIQUE | Email + WhatsApp          |
-| `risk_score > 0.50`        | 🟡 MODÉRÉ   | Email uniquement          |
+| `risk_score > 0.70`        | 🟠 ÉLEVÉ    | Email + WhatsApp (+ SMS si activé) |
+| `frp > 50 MW`              | 🔴 CRITIQUE | Email + WhatsApp immédiat (+ SMS si activé) |
+| `cluster_size ≥ 10 points` | 🔴 CRITIQUE | Email + WhatsApp (+ SMS si activé) |
+| `risk_score > 0.50`        | 🟡 MODÉRÉ   | Email uniquement (ou SMS si besoin) |
 
 ---
 
@@ -31,6 +31,18 @@ def send_whatsapp_alert(message: str):
         to=f"whatsapp:{os.getenv('ALERT_PHONE')}"
     )
 
+def send_sms_alert(message: str):
+    """
+    SMS via Twilio (nécessite un numéro Twilio SMS-capable).
+    Si tu restes en sandbox WhatsApp uniquement, laisser cette option désactivée.
+    """
+    client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
+    client.messages.create(
+        body=message,
+        from_=os.getenv("TWILIO_SMS_FROM"),
+        to=os.getenv("ALERT_PHONE")
+    )
+
 def send_email_alert(subject: str, body: str):
     msg = MIMEText(body, 'html')
     msg['Subject'] = subject
@@ -45,6 +57,9 @@ def trigger_alert_if_needed(risk_score: float, frp: float, region: str, date: st
         message = f"🔥 ALERTE MADFIRE {date}\nRégion : {region}\nFRP : {frp}MW | Risque : {risk_score:.0%}"
         send_whatsapp_alert(message)
         send_email_alert(f"[ALERTE] JeryMotro {date}", f"<h2>{message}</h2>")
+        # Optionnel : SMS si configuré
+        # if os.getenv("TWILIO_SMS_FROM"):
+        #     send_sms_alert(message)
 ```
 
 ---

@@ -9,3 +9,4 @@ De plus l'agent informatique est sous la direction d'un chef informatique
 3. A partir de ces description textuelles, réaliser les digrammes de séquence correspondante
 4. Réaliser les diagrammes d'activités correspondants à  chaque cas d’utilisation
 5. Élaborer le diagramme de classe du système.
+![[Réponse_exo Gestion des matériels informatiques]]

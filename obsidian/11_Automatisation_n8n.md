@@ -8,8 +8,8 @@
 
 | Workflow | Déclencheur | Actions | Fichier |
 |----------|-------------|---------|---------|
-| `daily_collection` | CRON `*/30 * * * *` | Fetch FIRMS → Preprocess → BDD | `n8n/workflows/daily_collection.json` |
-| `alert_trigger` | Appelé après inférence | IF score>0.7 → Email + WhatsApp | `n8n/workflows/alert_trigger.json` |
+| `daily_collection` | CRON `0 */3 * * *` | Fetch FIRMS → Preprocess → BDD | `n8n/workflows/daily_collection.json` |
+| `alert_trigger` | Appelé après inférence | IF score>0.7 → Email + WhatsApp (+ SMS) | `n8n/workflows/alert_trigger.json` |
 | `weekly_report` | CRON `0 8 * * 1` | Agrégat → PDF → Email | `n8n/workflows/weekly_report.json` |
 
 ---
@@ -17,7 +17,7 @@
 ## 2. WORKFLOW daily_collection
 
 ```
-[CRON : */30 * * * *]
+[CRON : 0 */3 * * *]
     │
     ├─→ [HTTP Request : VIIRS_SNPP_NRT]
     │       URL : /api/area/csv/KEY/VIIRS_SNPP_NRT/-25.5,43,-11.5,50/1
@@ -57,6 +57,7 @@
     → To: whatsapp:+VOTRE_NUMERO
     → From: whatsapp:+14155238886 (Twilio sandbox)
     → Message: "🔥 ALERTE MADFIRE : {n} zones à risque élevé. FRP max : {frp}MW..."
+    → (Optionnel) SMS : To +VOTRE_NUMERO, From +NUM_TWILIO_SMS
     ↓
 [Send Email Node]
     → To: alertes@votremail.com

@@ -1,0 +1,73 @@
+Tu es un expert UML et modélisation orientée objet de très haut niveau, spécialisé dans les systèmes de gestion d’entreprise.
+Nom du système : Gestion des matériels informatiques
+Contexte complet du système :
+Le système est une plateforme web qui permet à une entreprise ou une institution de gérer l’ensemble de son parc informatique (ordinateurs, ordinateurs portables, serveurs, imprimantes, scanners, switches, licences logicielles, périphériques, etc.).
+L’objectif est de suivre la vie complète de chaque matériel : achat, assignation, utilisation, maintenance, panne, mise au rebut, inventaire et reporting.
+Acteurs principaux du système :
+
+Administrateur : gère tout le système (utilisateurs, rôles, configurations).
+Responsable IT : gère le parc, les assignations, les maintenances et les rapports.
+Utilisateur standard : consulte uniquement les matériels qui lui sont assignés et signale des pannes.
+Fournisseur externe : peut consulter et mettre à jour le statut des commandes en cours (lecture/écriture limitée).
+
+Fonctionnalités principales à prendre en compte (liste exhaustive) :
+
+Gestion du parc matériel (CRUD complet : ajouter, modifier, supprimer, consulter un matériel avec numéro de série, marque, modèle, date d’achat, valeur, localisation, statut).
+Assignation de matériel à un utilisateur (avec historique des assignations).
+Gestion des licences logicielles (associées aux matériels ou indépendantes).
+Suivi des stocks et inventaire (recherche, filtres, export CSV/PDF).
+Gestion des pannes et tickets de maintenance (création, suivi, résolution, historique).
+Gestion des achats et commandes fournisseurs.
+Alertes automatiques (matériel en fin de garantie, licence qui expire, matériel en panne depuis X jours).
+Rapports et tableaux de bord (nombre de matériels par type, valeur du parc, taux de panne, etc.).
+Authentification et gestion des utilisateurs (inscription, rôles, permissions).
+
+Rôles et accès différenciés :
+
+Utilisateur standard : peut seulement consulter son matériel assigné et créer des tickets de panne.
+Responsable IT : accès à tout le parc et aux rapports.
+Administrateur : accès total + gestion des utilisateurs.
+Fournisseur externe : accès limité aux commandes en cours.
+
+MISSION : Réalise exactement les 6 livrables suivants, dans l’ordre indiqué, sans rien oublier et en étant le plus exhaustif possible.
+INSTRUCTION SPÉCIALE POUR LES DIAGRAMMES (très importante) :
+Tous les diagrammes doivent être clairs, visibles, grands et très lisibles.
+Utilise systématiquement le format plantuml avec une configuration qui agrandit le texte et améliore la lisibilité :
+Syntaxe du diagramme invalide.
+
+Fais des diagrammes larges et bien espacés (évite les éléments trop serrés).
+Utilise des libellés longs et explicites.
+Ajoute des notes ou des commentaires si besoin pour plus de clarté.
+Les diagrammes doivent pouvoir être lus facilement même en taille réduite dans un document.
+
+
+Diagramme de cas d’utilisation (Use Case Diagram)
+Crée le diagramme complet avec tous les acteurs et cas d’utilisation identifiés. Utilise les relations include, extend et généralisation quand c’est pertinent. Présente-le en format plantuml avec la configuration ci-dessus.
+Descriptions textuelles de chaque cas d’utilisation
+Pour chaque cas d’utilisation identifié à l’étape 1, rédige une description complète selon ce modèle précis :
+Nom du cas d’utilisation
+Acteur(s) principal(aux)
+Objectif
+Pré-conditions
+Post-conditions
+Scénario nominal (étapes numérotées 1., 2., 3., …)
+Scénarios alternatifs / exceptions (avec numéro)
+
+Diagrammes de séquence
+À partir des descriptions de l’étape 2, réalise un diagramme de séquence par cas d’utilisation principal (au moins les 6-8 cas les plus importants). Utilise le format plantuml avec la configuration de grande lisibilité ci-dessus.
+Diagrammes d’activités
+Pour chaque cas d’utilisation, crée un diagramme d’activité UML correspondant (flux principal, décisions, parallélismes, points de terminaison). Format plantuml avec la configuration de grande lisibilité.
+Diagramme de classe du système
+Élabore le diagramme de classe complet (classes principales avec attributs, méthodes, associations, héritages, agrégations, compositions). Format plantuml avec la configuration de grande lisibilité.
+Diagramme de déploiement
+Réalise le diagramme de déploiement UML montrant les nœuds (serveur web, base de données, clients, etc.) et les artefacts déployés. Format plantuml avec la configuration de grande lisibilité.
+
+Consignes globales :
+
+Respecte strictement l’ordre 1 → 2 → 3 → 4 → 5 → 6.
+Numérote clairement chaque section (1., 2., etc.).
+Utilise exclusivement la notation UML 2.5 standard.
+Sois exhaustif tout en restant clair et professionnel.
+À la fin, ajoute une petite conclusion sur la cohérence globale de la modélisation.
+
+Commence maintenant.

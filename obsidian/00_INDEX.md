@@ -26,7 +26,12 @@
 - [[09_FastAPI_Backend]] — API REST entre ML et Frontend
 - [[10_Frontend_Decision]] — React vs Flutter (décision S2)
 - [[11_Automatisation_n8n]] — Collecte 30min + orchestration
-- [[12_Systeme_Alertes]] — Email + WhatsApp (Twilio Sandbox)
+- [[12_Systeme_Alertes]] — Email + WhatsApp + SMS (Twilio, selon config)
+- [[17_Fonctionnalite_Statut_Feu]] — Statut feu (actif / en baisse / probablement éteint)
+- [[18_Ameliorations_DB_Workflow]] — Checklist améliorations n8n + PostgreSQL
+- [[19_Acces_Sans_Inscription_Auth_Alertes]] — Accès sans inscription, auth uniquement pour alertes
+- [[20_UML_JeryMotro_Platform]] — UML complet (use cases, séquences, activités, classes)
+- [[21_Rapport_Avancement_2026-03-28]] — Rapport d’avancement (état actuel)
 
 ### 📊 Données
 - [[13_Dataset_FIRMS_MODIS]] — MODIS NRT Madagascar
@@ -69,7 +74,7 @@
 |---------|--------|
 | Bbox Madagascar | `-25.5,43,-11.5,50` |
 | Sources FIRMS | MODIS_NRT + VIIRS_SNPP_NRT + VIIRS_NOAA21_NRT |
-| Fréquence collecte | Toutes les 30 minutes |
+| Fréquence collecte | Toutes les 3 heures (actuel) |
 | Seuil alerte FRP | > 50 MW |
 | Seuil alerte risque ML | > 0.70 |
 | Latence pipeline cible | < 5 min |
