@@ -11,13 +11,13 @@
 
 | Phase | Semaines | Progression | Statut |
 |-------|----------|-------------|--------|
-| 🏗️ Fondation | S1–S4 | <progress value="0" max="4"></progress> `0/4 sem` | ⬜ À démarrer |
-| 🔬 Modélisation | S5–S8 | <progress value="0" max="4"></progress> `0/4 sem` | ⬜ À venir |
+| 🏗️ Fondation | S1–S4 | <progress value="4" max="4"></progress> `4/4 sem` | ✅ Terminé |
+| 🔬 Modélisation | S5–S8 | <progress value="1" max="4"></progress> `1/4 sem` | 🔄 En cours |
 | 🎯 Finalisation | S9–S12 | <progress value="0" max="4"></progress> `0/4 sem` | ⬜ À venir |
 
-**Semaine courante :** `S__ / S12`
-**Semaines restantes :** `__ semaines`
-**Dernière mise à jour :** `__/__/2026`
+**Semaine courante :** `S5-S6 / S12`
+**Semaines restantes :** `~6 semaines`
+**Dernière mise à jour :** `30/03/2026`
 
 ---
 
@@ -52,18 +52,19 @@ gantt
 
 | Composant | Priorité | Progression | Statut |
 |-----------|----------|-------------|--------|
-| 🐳 Docker Infrastructure | Must | <progress value="0" max="10"></progress> | ⬜ |
-| ⚡ FastAPI Backend | Must | <progress value="0" max="10"></progress> | ⬜ |
-| 🤖 JeryMotroNet XGBoost | Must | <progress value="0" max="10"></progress> | ⬜ |
-| 🧠 JeryMotroNet ConvLSTM | Must | <progress value="0" max="10"></progress> | ⬜ |
-| 🔵 HDBSCAN Clustering | Must | <progress value="0" max="10"></progress> | ⬜ |
-| ⚙️ Feature Engineering | Must | <progress value="0" max="10"></progress> | ⬜ |
-| 🖥️ Frontend React | Must | <progress value="0" max="10"></progress> | ⬜ |
-| ⚙️ n8n Automatisation | Must | <progress value="0" max="10"></progress> | ⬜ |
-| 🧠 RAG ChromaDB + Groq | Must | <progress value="0" max="10"></progress> | ⬜ |
-| 🔔 Système Alertes | Must | <progress value="0" max="10"></progress> | ⬜ |
-| 🧪 Tests E2E | Must | <progress value="0" max="10"></progress> | ⬜ |
-| 📄 Mémoire L3 | Must | <progress value="0" max="10"></progress> | ⬜ |
+| 🐳 Docker Infrastructure | Must | <progress value="8" max="10"></progress> | ✅ Opérationnel |
+| ⚡ FastAPI Backend | Must | <progress value="5" max="10"></progress> | 🔄 En cours |
+| 🤖 JeryMotroNet XGBoost | Must | <progress value="2" max="10"></progress> | 🔄 En cours (V2) |
+| 🧠 JeryMotroNet ConvLSTM | Must | <progress value="1" max="10"></progress> | 🔄 En cours |
+| 🔵 HDBSCAN Clustering | Must | <progress value="8" max="10"></progress> | ✅ Validé |
+| ⚙️ Feature Engineering | Must | <progress value="6" max="10"></progress> | ✅ V2 (+GEE Contexte) |
+| 🌍 GEE Enrichissement | Must | <progress value="4" max="10"></progress> | 🔄 Intégration en cours |
+| 🖥️ Frontend React | Must | <progress value="0" max="10"></progress> | ⬜ S7 |
+| ⚙️ n8n Automatisation | Must | <progress value="7" max="10"></progress> | ✅ Actif (30min) |
+| 🧠 RAG ChromaDB + Groq | Must | <progress value="3" max="10"></progress> | 🔄 En cours |
+| 🔔 Système Alertes | Must | <progress value="2" max="10"></progress> | ⬜ S9 |
+| 🧪 Tests E2E | Must | <progress value="0" max="10"></progress> | ⬜ S9-S10 |
+| 📄 Mémoire L3 | Must | <progress value="1" max="10"></progress> | ⬜ S12 |
 
 > [!tip] Mettre à jour la valeur `value` (0→10) de chaque barre chaque semaine
 
@@ -90,16 +91,18 @@ gantt
 ## 📦 LIVRABLES FINAUX — 23/05/2026
 
 - [x] **L1** — Cahier des Charges final (Markdown Obsidian) ✅ 2026-03-11
+- [x] **L1b** — Architecture V2 (Pipeline GEE + Stratégie données 2021-2026) ✅ 2026-03-30
 - [ ] **L2** — Repo GitHub `jery-motro-platform` complet + README
-- [ ] **L3** — `docker-compose up` fonctionnel (démontrable live)
+- [x] **L3a** — `docker-compose up` partiel (API + DB + n8n) ✅ 2026-03-26
+- [ ] **L3** — `docker-compose up` fonctionnel complet (5 services)
 - [ ] **L4** — FastAPI déployée + Swagger UI (URL publique Railway/Render)
 - [ ] **L5** — Frontend déployé sur Vercel (URL publique)
-- [ ] **L6** — Modèle JeryMotroNet + rapport métriques PDF
+- [ ] **L6** — Modèle JeryMotroNet (XGBoost V2 + ConvLSTM) + rapport métriques PDF
 - [ ] **L7** — Vidéo démo 3 minutes (MP4)
 - [ ] **L8** — Mémoire L3 complet (PDF)
 - [ ] **L9** — Présentation soutenance (PowerPoint)
 
-<progress value="0" max="9"></progress> **`0 / 9 livrables complétés`**
+<progress value="2" max="9"></progress> **`2 / 9 livrables complétés`**
 
 ---
 
@@ -107,10 +110,10 @@ gantt
 
 | Service | Où obtenir | Statut |
 |---------|-----------|--------|
-| NASA FIRMS MAP_KEY | `firms.modaps.eosdis.nasa.gov` | ⬜ À obtenir (S1) |
-| NASA Earthdata Token | `earthdata.nasa.gov` | ⬜ Disponible (vérifier) |
+| NASA FIRMS MAP_KEY | `firms.modaps.eosdis.nasa.gov` | ✅ Obtenue — en production |
+| NASA Earthdata Token | `earthdata.nasa.gov` | ✅ Disponible |
 | Groq API `gsk_...` | `console.groq.com` | ✅ Fournie |
-| Google Earth Engine | Compte académique gratuit | ⬜ À créer (S4) |
+| Google Earth Engine | Compte académique gratuit | ⬜ À créer (S5) — nécessaire GEE V2 |
 | Twilio Sandbox | `twilio.com` | ⬜ À créer (S9) |
 
 ---
@@ -175,4 +178,4 @@ flowchart LR
 > Ce dashboard doit être mis à jour **chaque lundi matin** avant de commencer à coder.
 > 10 minutes max. C'est votre boussole pour la soutenance.
 
-*Dernière mise à jour : 23/02/2026*
+*Dernière mise à jour : 30/03/2026 — V2 (GEE Enrichissement + stratégie 2021-2026)*

@@ -50,19 +50,19 @@ gantt
 > [!danger] Décision obligatoire cette semaine
 > **React vs Flutter** → documenter dans [[10_Frontend_Decision]] avant le 01/03/2026
 
-- [ ] Créer repo GitHub `jery-motro-platform` + structure dossiers
-- [ ] Installer Docker Desktop + tester `docker run hello-world`
-- [ ] Écrire `docker-compose.yml` minimal (API + DB + ChromaDB)
-- [ ] Créer `Dockerfile` FastAPI (`python:3.11-slim`)
-- [ ] Obtenir MAP_KEY NASA FIRMS (inscription gratuite)
-- [ ] Premier appel API FIRMS → vérifier CSV Madagascar
-- [ ] Créer `.env.example` + `.gitignore`
-- [ ] Installer Obsidian + importer ce vault
-- [ ] **⭐ Décision React vs Flutter** → [[10_Frontend_Decision]]
+- [x] Créer repo GitHub `jery-motro-platform` + structure dossiers
+- [x] Installer Docker Desktop + tester `docker run hello-world`
+- [x] Écrire `docker-compose.yml` minimal (API + DB + ChromaDB)
+- [x] Créer `Dockerfile` FastAPI (`python:3.11-slim`)
+- [x] Obtenir MAP_KEY NASA FIRMS (inscription gratuite)
+- [x] Premier appel API FIRMS → vérifier CSV Madagascar
+- [x] Créer `.env.example` + `.gitignore`
+- [x] Installer Obsidian + importer ce vault
+- [x] **⭐ Décision React vs Flutter** → [[10_Frontend_Decision]] ✅ React retenu
 
 **Livrable S1 :**
-- [ ] ✅ `docker-compose up` lance API + DB + ChromaDB
-- [ ] ✅ Premier CSV FIRMS Madagascar téléchargé
+- [x] ✅ `docker-compose up` lance API + DB + ChromaDB
+- [x] ✅ Premier CSV FIRMS Madagascar téléchargé
 
 ---
 
@@ -72,17 +72,17 @@ gantt
 > [!info] Objectif
 > Pipeline collecte FIRMS → PostgreSQL automatisé toutes les 30 minutes
 
-- [ ] Écrire `fetch_firms.py` (3 sources : MODIS + VIIRS SNPP + VIIRS NOAA21)
-- [ ] Écrire `clean_firms.py` (filtres confidence, frp ≥ 1.0, doublons)
-- [ ] Créer modèle SQLAlchemy `Detection` + migration Alembic
-- [ ] Créer endpoint FastAPI `GET /detections` (basique)
-- [ ] Installer n8n Docker + créer workflow `daily_collection` (CRON `*/30 * * * *`)
-- [ ] Configurer `Dockerfile` Frontend (selon décision S1)
-- [ ] Tester pipeline collecte bout-en-bout
+- [x] Écrire `fetch_firms.py` (3 sources : MODIS + VIIRS SNPP + VIIRS NOAA21)
+- [x] Écrire `clean_firms.py` (filtres confidence, frp ≥ 1.0, doublons)
+- [x] Créer modèle SQLAlchemy `Detection` + migration Alembic
+- [x] Créer endpoint FastAPI `GET /detections` (basique)
+- [x] Installer n8n Docker + créer workflow `daily_collection` (CRON `*/30 * * * *`)
+- [x] Configurer `Dockerfile` Frontend (selon décision S1)
+- [x] Tester pipeline collecte bout-en-bout
 
 **Livrable S2 :**
-- [ ] ✅ Données FIRMS dans PostgreSQL toutes les 30 min
-- [ ] ✅ Endpoint `/detections` retourne JSON valide
+- [x] ✅ Données FIRMS dans PostgreSQL toutes les 30 min (1729 détections)
+- [x] ✅ Endpoint `/detections` retourne JSON valide
 
 ---
 
@@ -92,18 +92,18 @@ gantt
 > [!info] Objectif
 > Comprendre parfaitement les données Madagascar 2020–2025
 
-- [ ] Télécharger archives FIRMS 2020–2025 Madagascar (loop mensuel)
-- [ ] `01_EDA_FIRMS.ipynb` : stats descriptives complètes
-- [ ] Visualisation temporelle : feux par mois/année/heure
-- [ ] Visualisation spatiale : carte densité feux avec Folium
-- [ ] Comparaison MODIS vs VIIRS (différences de détection)
-- [ ] Identifier top 5 régions les plus touchées
-- [ ] Documenter → [[13_Dataset_FIRMS_MODIS]] + [[14_Dataset_FIRMS_VIIRS]]
+- [x] Télécharger archives FIRMS 2021–2024 Madagascar (loop mensuel) — *période optimisée V2* ✅ 2026-04-01
+- [x] `01_EDA_FIRMS.ipynb` : stats descriptives complètes ✅ 2026-04-01
+- [x] Visualisation temporelle : feux par mois/année/heure ✅ 2026-04-01
+- [x] Visualisation spatiale : carte densité feux avec Folium ✅ 2026-04-01
+- [x] Comparaison MODIS vs VIIRS (différences de détection) ✅ 2026-04-01
+- [x] Identifier top 5 régions les plus touchées ✅ 2026-04-01
+- [x] Documenter → [[13_Dataset_FIRMS_MODIS]] + [[14_Dataset_FIRMS_VIIRS]] ✅ 2026-04-01
 
 **Livrable S3 :**
-- [ ] ✅ Notebook EDA complet avec visualisations
-- [ ] ✅ Carte feux 2020–2025 Madagascar
-- [ ] ✅ Rapport comparaison MODIS/VIIRS
+- [x] ✅ Notebook EDA complet avec visualisations
+- [x] ✅ Carte feux 2021–2024 Madagascar
+- [x] ✅ Rapport comparaison MODIS/VIIRS
 
 ---
 
@@ -113,18 +113,23 @@ gantt
 > [!warning] Semaine charnière
 > Le Feature Engineering et HDBSCAN sont la base de tout JeryMotroNet. Ne pas bâcler.
 
-- [ ] `feature_engineering.py` : `diff_brightness`, `frp_log`, `local_hour`, `is_dry_season`
-- [ ] Configurer Google Earth Engine API (compte académique) + tester accès ERA5
-- [ ] `hdbscan_cluster.py` : rayon 750m, fenêtre 48h, `min_cluster_size=3`
-- [ ] Évaluer qualité clusters (silhouette score, visualisation sur carte)
-- [ ] Ajouter `cluster_features` dans schéma PostgreSQL + migration Alembic
-- [ ] Endpoint FastAPI `GET /clusters`
-- [ ] Documenter → [[05_HDBSCAN_Clustering]] + [[06_Feature_Engineering]]
+> [!tip] Décision V2 (30/03/2026)
+> L’enrichissement GEE a été élargi : **Landcover (ESA WorldCover) + Pente (NASADEM) + NDVI (MODIS)** ajoutés à ERA5. Voir [[gee_integration_guide]] et [[06_Feature_Engineering]].
+
+- [x] `feature_engineering.py` : `diff_brightness`, `frp_log`, `local_hour`, `is_dry_season`
+- [x] Configurer Google Earth Engine API (compte académique) + tester accès ERA5
+- [x] `hdbscan_cluster.py` : rayon 750m, fenêtre 48h, `min_cluster_size=3`
+- [x] Évaluer qualité clusters (silhouette score, visualisation sur carte)
+- [x] Ajouter `cluster_features` dans schéma PostgreSQL + migration Alembic
+- [x] Endpoint FastAPI `GET /clusters`
+- [x] Documenter → [[05_HDBSCAN_Clustering]] + [[06_Feature_Engineering]]
+- [ ] 🔄 (V2 — S5) Créer `gee_enrichment.py` (Landcover + Slope + NDVI batch)
 
 **Livrable S4 :**
-- [ ] ✅ Dataset enrichi avec toutes les features calculées
-- [ ] ✅ HDBSCAN silhouette > 0.50 (validé)
-- [ ] ✅ Endpoint `/clusters` fonctionnel
+- [x] ✅ Dataset enrichi avec features FIRMS + ERA5 + Clusters
+- [x] ✅ HDBSCAN silhouette > 0.50 (validé)
+- [x] ✅ Endpoint `/clusters` fonctionnel
+- [ ] 🔄 Dataset V2 + Landcover/Slope/NDVI (prévu S5)
 
 ---
 
@@ -303,18 +308,18 @@ gantt
 
 | Semaine | Livrable principal | Statut |
 |---------|-------------------|--------|
-| S1 | `docker-compose up` + CSV FIRMS | ⬜ |
-| S2 | Pipeline collecte automatisée 30min | ⬜ |
-| S3 | Notebook EDA complet 2020–2025 | ⬜ |
-| S4 | HDBSCAN + features + `/clusters` | ⬜ |
-| S5–S6 | JeryMotroNet entraîné (XGB + ConvLSTM) | ⬜ |
-| S7 | FastAPI Swagger + carte Leaflet | ⬜ |
-| S8 | Frontend complet + JeryMotro AI | ⬜ |
-| S9–S10 | Alertes + toutes métriques mesurées | ⬜ |
-| S11 | URLs publiques + README | ⬜ |
-| S12 | Mémoire + soutenance 🎓 | ⬜ |
+| S1 | `docker-compose up` + CSV FIRMS | ✅ Terminé |
+| S2 | Pipeline collecte automatisée 30min | ✅ Terminé (1729 détections) |
+| S3 | Notebook EDA complet 2021–2024 | ✅ Terminé |
+| S4 | HDBSCAN + features + `/clusters` | ✅ Terminé (V2 en cours) |
+| S5–S6 | JeryMotroNet entraîné (XGB V2 + ConvLSTM) | 🔄 En cours |
+| S7 | FastAPI Swagger + carte Leaflet | ⬜ À venir |
+| S8 | Frontend complet + JeryMotro AI | ⬜ À venir |
+| S9–S10 | Alertes + toutes métriques mesurées | ⬜ À venir |
+| S11 | URLs publiques + README | ⬜ À venir |
+| S12 | Mémoire + soutenance 🎓 | ⬜ À venir |
 
-<progress value="0" max="10"></progress> **`0 / 10 jalons`**
+<progress value="4" max="10"></progress> **`4 / 10 jalons`**
 
 ---
 

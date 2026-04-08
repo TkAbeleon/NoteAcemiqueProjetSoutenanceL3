@@ -4,170 +4,144 @@
 
 ---
 
-## 1. PIPELINE COMPLET
+## 1. PIPELINE COMPLET (V2)
 
+```mermaid
+graph TD
+    A[FIRMS API + NASA Token] -->|Toutes les 30 min via n8n| B[Enrichissement contextuel GEE]
+    
+    subgraph "Google Earth Engine"
+        G1[ERA5 Météo]
+        G2[Pente NASADEM]
+        G3[NDVI Sentinel-2]
+        G4[Hansen GFC]
+    end
+    
+    G1 -.-> B
+    G2 -.-> B
+    G3 -.-> B
+    G4 -.-> B
+    
+    B --> E[Clustering HDBSCAN + Burned Area MCD64A1]
+    E --> F[MadFireNet XGBoost classification]
+    F --> H[Stockage Supabase + Drive]
+    H --> I[Dashboard Streamlit & React]
+    I --> J[IA Explicative RAG Groq Llama-3]
+    J --> K[Alertes: Email + SMS/WhatsApp Macrodroid]
+    K -.->|2 PNGs Thermique/Visible| ImgBB
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  SOURCE : NASA FIRMS API (toutes les 30 min via n8n)        │
-│  ├── MODIS_NRT                                              │
-│  ├── VIIRS_SNPP_NRT          Bbox : -25.5,43,-11.5,50       │
-│  └── VIIRS_NOAA21_NRT                                       │
-└────────────────────┬────────────────────────────────────────┘
-                     ↓ CSV brut
-┌────────────────────────────────────────────────────────────┐
-│  PYTHON PREPROCESSING (scripts/preprocessing/)             │
-│  ├── fetch_firms.py     → appel API + sauvegarde CSV       │
-│  ├── clean_firms.py     → nettoyage + validation           │
-│  └── feature_engineering.py                               │
-│       ├── diff_brightness = brightness - bright_t31        │
-│       ├── frp_log = log1p(frp)                             │
-│       ├── local_hour = UTC + 3                             │
-│       ├── is_dry_season = mois ∈ [4,5,6,7,8,9,10]         │
-│       └── ERA5 via GEE (temp, humidité, vent)              │
-└────────────────────┬───────────────────────────────────────┘
-                     ↓ DataFrame enrichi
-┌────────────────────────────────────────────────────────────┐
-│  HDBSCAN CLUSTERING (scripts/clustering/)                  │
-│  ├── Rayon spatial : 750m                                  │
-│  ├── Fenêtre temporelle : 48h                              │
-│  └── min_cluster_size : 3 points                           │
-│  Sortie : cluster_id, cluster_size, cluster_frp_total      │
-└────────────────────┬───────────────────────────────────────┘
-                     ↓ Features + clusters
-┌────────────────────────────────────────────────────────────┐
-│  MADFIRENET — MODÈLE ORIGINAL (scripts/models/)            │
-│  ├── Branche A : XGBoost                                   │
-│  │   ├── Entrée : features FIRMS + ERA5 + cluster_features │
-│  │   └── Sortie : fire_risk (0/1) + risk_score (0.0–1.0)  │
-│  └── Branche B : ConvLSTM                                  │
-│      ├── Entrée : séries temporelles 7j sur grille 375m    │
-│      └── Sortie : carte risque J+1 (grille Madagascar)     │
-└────────────────────┬───────────────────────────────────────┘
-                     ↓ Résultats JSON
-┌────────────────────────────────────────────────────────────┐
-│  STOCKAGE                                                  │
-│  ├── PostgreSQL : détections + prédictions + clusters      │
-│  └── ChromaDB   : embeddings résultats (RAG pour IA)       │
-└────────────────────┬───────────────────────────────────────┘
-                     ↓ ORM SQLAlchemy
-┌────────────────────────────────────────────────────────────┐
-│  FASTAPI BACKEND (api/)                                    │
-│  ├── GET /detections        → points feux filtrés          │
-│  ├── GET /predictions       → sorties JeryMotroNet           │
-│  ├── GET /clusters          → résultats HDBSCAN            │
-│  ├── GET /risk-map          → grille ConvLSTM J+1          │
-│  ├── GET /alerts            → historique alertes           │
-│  ├── POST /chat             → proxy Groq + RAG ChromaDB    │
-│  └── GET /docs              → Swagger UI auto              │
-└──────────┬─────────────────────────┬───────────────────────┘
-           ↓ JSON REST               ↓ IF score > 0.7 / FRP > 50MW
-┌──────────────────┐      ┌──────────────────────────────────┐
-│  FRONTEND        │      │  SYSTÈME D'ALERTES               │
-│  (React ou       │      │  ├── Email (smtplib)             │
-│   Flutter Web)   │      │  └── WhatsApp (Twilio Sandbox)   │
-│  ├── Carte       │      └──────────────────────────────────┘
-│  ├── Dashboard   │
-│  ├── Chat IA     │
-│  └── Alertes     │
-└──────────────────┘
-```
+
+### Étapes du Pipeline :
+1.  **Collecte :** Points FIRMS toutes les 30 min via n8n.
+2.  **Enrichissement Contextuel (GEE) :** Température, pente, NDVI, et historique de déforestation ajoutés au point.
+3.  **Clustering & Surface :** HDBSCAN identifie les événements feu, surface estimée par MCD64A1/Copernicus (pas d'analyse DL lourde).
+4.  **Inférence MadFireNet :** XGBoost classifie le risque (20 features).
+5.  **Stockage & Action :** Données poussées vers Supabase. Génération automatique de 2 PNGs (Thermique+Visible) uploadées sur ImgBB par Python. Alertes Macrodroid (SMS) et Email déclenchées.
+
 
 ---
 
-## 2. INFRASTRUCTURE DOCKER
+## 2. STRATÉGIE DE DÉPLOIEMENT & TECHNOLOGIES (V3)
 
-Voir détail → [[08_Docker_Infrastructure]]
+La version officielle est pensée pour être "Lean", gratuite (0 Ar), et hautement démonstrable en soutenance sans nécessiter de serveurs GPU.
 
-```
-docker-compose.yml
-├── madfire-api       (FastAPI — port 8000)
-├── madfire-frontend  (React/Flutter Web — port 3000)
-├── madfire-n8n       (Automatisation — port 5678)
-├── madfire-chromadb  (RAG — port 8001)
-└── madfire-db        (PostgreSQL — port 5432)
-```
-
-**Réseau Docker interne :** `madfire-network`
-Tous les services communiquent par nom de service (ex: `http://madfire-api:8000`).
+| Composant | Technologie Choisie | Hébergement Prévu |
+|-----------|--------------------|-------------------|
+| **Base de Données** | PostgreSQL | **Supabase** (Gratuit, Cloud) |
+| **Backend / API** | FastAPI / Python | Render ou Vercel |
+| **Interface Principale** | Streamlit | Streamlit Cloud (Déploiement rapide) |
+| **Interface Avancée** | React Web | Vercel (Gratuit) |
+| **Automatisation** | n8n | Render / Docker local |
+| **Stockage Images** | ImgBB | ImgBB API (Liens directs pour alertes) |
+| **Stockage Fichiers** | Google Drive | API Google |
+| **Moteur RAG** | ChromaDB + Llama-3 | API Groq (très rapide) |
+| **Passerelle SMS** | MacroDroid + SIM | Téléphone Android local personnel |
 
 ---
 
 ## 3. STRUCTURE DES DOSSIERS
 
 ```
-madfire-platform/
+jery-motro-platform/
 │
-├── 📁 api/                        # FastAPI Backend
-│   ├── main.py                    # App FastAPI + routers
+├── 📁 api/                              # Backend FastAPI → [[09_FastAPI_Backend]]
+│   ├── main.py                          # App FastAPI + routers + CORS
+│   ├── database.py                      # SQLAlchemy + session
+│   ├── requirements.txt
+│   ├── Dockerfile
 │   ├── routers/
-│   │   ├── detections.py
-│   │   ├── predictions.py
-│   │   ├── clusters.py
-│   │   ├── alerts.py
-│   │   └── chat.py
-│   ├── models/
-│   │   ├── detection.py           # SQLAlchemy ORM
+│   │   ├── detections.py                # GET /detections?date&min_risk
+│   │   ├── predictions.py               # GET /predictions
+│   │   ├── clusters.py                  # GET /clusters
+│   │   ├── alerts.py                    # GET /alerts
+│   │   └── chat.py                      # POST /chat  (JeryMotro AI RAG)
+│   ├── models/                          # SQLAlchemy ORM
+│   │   ├── detection.py
 │   │   ├── prediction.py
 │   │   └── alert.py
-│   ├── schemas/
-│   │   ├── detection.py           # Pydantic schemas
+│   ├── schemas/                         # Pydantic validation
+│   │   ├── detection.py
 │   │   └── prediction.py
-│   ├── services/
-│   │   ├── madflrenet_service.py  # Inférence ML/DL
-│   │   ├── rag_service.py         # Groq + ChromaDB
-│   │   └── alert_service.py      # Email + Twilio
-│   ├── database.py                # SQLAlchemy setup
-│   ├── requirements.txt
-│   └── Dockerfile
+│   └── services/
+│       ├── madfirenet_service.py        # ★ Inférence XGBoost V2 + ConvLSTM
+│       ├── rag_service.py               # ★ Groq llama3 + ChromaDB → [[07_MadFire_AI_RAG]]
+│       └── alert_service.py             # Email SMTP + Twilio WhatsApp → [[12_Systeme_Alertes]]
 │
-├── 📁 frontend/                   # React ou Flutter
-│   ├── (React) src/
+├── 📁 frontend/                         # React 18 + TypeScript + Leaflet → [[10_Frontend_Decision]]
+│   ├── src/
 │   │   ├── components/
-│   │   │   ├── MapView.jsx        # Carte Leaflet
-│   │   │   ├── Dashboard.jsx      # Graphiques
-│   │   │   ├── ChatPanel.jsx      # JeryMotro AI
-│   │   │   └── AlertPanel.jsx
+│   │   │   ├── MapView.jsx              # Carte Leaflet (feux + couleur risque)
+│   │   │   ├── Dashboard.jsx            # Graphiques Recharts (stats saisonnières)
+│   │   │   ├── ChatPanel.jsx            # Interface JeryMotro AI (RAG)
+│   │   │   ├── AlertPanel.jsx           # Historique alertes temps réel
+│   │   │   ├── RiskMap.jsx              # Heatmap ConvLSTM J+1
+│   │   │   └── StatsBar.jsx             # Métriques du jour
 │   │   ├── services/
-│   │   │   └── api.js             # Appels FastAPI
+│   │   │   └── api.js                   # Instance Axios → FastAPI
 │   │   └── App.jsx
 │   ├── package.json
 │   └── Dockerfile
 │
-├── 📁 ml/                         # Scripts ML/DL
+├── 📁 ml/                               # Machine Learning → [[04_MadFireNet]]
 │   ├── preprocessing/
-│   │   ├── fetch_firms.py
-│   │   ├── clean_firms.py
-│   │   └── feature_engineering.py
+│   │   ├── fetch_firms.py               # Collecte FIRMS API → [[13_Dataset_FIRMS_MODIS]]
+│   │   ├── clean_firms.py               # Nettoyage + filtre (confidence, frp≥1)
+│   │   ├── feature_engineering.py       # ★ 18+ features V2 → [[06_Feature_Engineering]]
+│   │   └── gee_enrichment.py            # ★ (V2) Landcover+Slope+NDVI batch → [[15_Dataset_ERA5_GEE]]
 │   ├── clustering/
-│   │   └── hdbscan_cluster.py
+│   │   └── hdbscan_cluster.py           # Rayon 750m, 48h, min_size=3 → [[05_HDBSCAN_Clustering]]
 │   ├── models/
-│   │   ├── xgboost_classifier.py
-│   │   ├── convlstm_predictor.py
-│   │   └── rf_regression.py      # Should Have
+│   │   ├── xgboost_classifier.py        # ★ JeryMotroXGB V2
+│   │   ├── convlstm_predictor.py        # ★ JeryMotroConvLSTM (grille 64×64)
+│   │   └── rf_regression.py             # (Should Have) durée feu
 │   ├── inference/
-│   │   └── run_madfirenet.py
+│   │   └── run_madfirenet.py            # Pipeline inférence unifié XGB + ConvLSTM
 │   └── notebooks/
-│       ├── 01_EDA_FIRMS.ipynb
-│       ├── 02_Feature_Engineering.ipynb
-│       ├── 03_XGBoost_Training.ipynb
-│       └── 04_ConvLSTM_Training.ipynb
+│       ├── 01_EDA_FIRMS.ipynb           # Exploration données 2021-2024
+│       ├── 02_Feature_Engineering.ipynb # Features V2 + GEE
+│       ├── 03_XGBoost_Training.ipynb    # ★ Entraînement + métriques vs NASA
+│       └── 04_ConvLSTM_Training.ipynb   # ★ Colab GPU T4
 │
-├── 📁 n8n/
+├── 📁 n8n/                              # Automatisation → [[11_Automatisation_n8n]]
 │   └── workflows/
-│       ├── daily_collection.json
-│       ├── alert_trigger.json
-│       └── weekly_report.json
+│       ├── daily_collection.json        # ★ CRON */30 → collecte+inférence+stockage
+│       ├── alert_trigger.json           # IF score>0.7 OU FRP>50MW → alertes
+│       └── weekly_report.json           # Rapport email hebdomadaire
 │
 ├── 📁 data/
-│   ├── raw/firms/                 # CSV bruts MODIS + VIIRS
-│   ├── processed/                 # Données nettoyées + features
-│   └── models_saved/              # .pkl + .pth modèles
+│   ├── raw/firms/                       # CSV MODIS + VIIRS NRT bruts
+│   ├── processed/                       # DataFrame enrichi + features V2
+│   └── models_saved/                    # xgb_v2.pkl · convlstm_v1.pth
 │
-├── docker-compose.yml
-├── .env.example                   # Clés API (jamais committer .env)
-├── .gitignore
-└── README.md
+├── docker-compose.yml                   # 5 services → [[08_Docker_Infrastructure]]
+├── .env.example                         # Toutes les clés requises (ne jamais committer .env)
+├── .gitignore                           # .env · data/raw · models_saved/
+└── README.md                            # Guide démarrage + badges + screenshots
 ```
+
+> [!tip] Correspondance Documentation ↔ Code
+> Chaque composant `★` est documenté dans un fichier Obsidian dédié.
+> Voir [[00_INDEX]] pour la navigation complète.
 
 ---
 
@@ -197,34 +171,36 @@ Utilisateur → React/Flutter
     → Retour JSON → Leaflet affiche les points
 ```
 
-### 4.3 Chat JeryMotro AI
+### 4.3 Chat JeryMotro AI (Groq Llama-3)
 
 ```
 Utilisateur → "Quelle zone est la plus touchée cette semaine ?"
     → POST /api/chat {message: "..."}
     → RAG Service : query ChromaDB → top 5 contextes pertinents
-    → Groq API : prompt = contexte + question
+    → Groq API (Llama-3) : prompt = contexte + question
     → Réponse limitée aux données du projet (pas de généralités)
-    → Retour JSON → Frontend affiche la réponse
+    → Retour JSON → Streamlit/React affiche la réponse
 ```
 
 ---
 
-## 5. MÉTRIQUES DE SUCCÈS
+## 5. STRATÉGIE DE DONNÉES (2020 - 2026)
 
-| Composant | Métrique | Seuil |
-|-----------|----------|-------|
-| JeryMotroNet XGBoost | Recall petits feux vs NASA brut | +25% |
-| JeryMotroNet ConvLSTM | MAE prédiction J+1 (km²) | < 200 km² |
-| FastAPI | Latence moyenne endpoint | < 200ms |
-| Pipeline complet | Latence collecte → prédiction | < 5 min |
-| Alertes | Latence après publication FIRMS | < 30 min |
-| HDBSCAN | Cohérence clusters (silhouette) | > 0.50 |
+Pour garantir la performance du modèle L3 :
+- **Entraînement :** 2021 – 2024 (Maximisation VIIRS 375m).
+- **Validation :** Année 2025 complète (Test de robustesse saisonnière).
+- **Démonstration :** Données 2026 en temps réel.
+
+## 6. MÉTRIQUES DE SUCCÈS (MAJ V2)
+
+| Composant | Métrique | Seuil Cible |
+|-----------|----------|-------------|
+| **XGBoost** | Recall (petits feux vs NASA) | +25% |
+| **XGBoost** | Précision (Landcover-filtered) | > 80% |
+| **ConvLSTM** | MAE risque J+1 | < 0.15 |
+| **Pipeline** | Temps Collecte → Alerte | < 15 min |
 
 ---
 
-*Cahier des charges → [[01_Cahier_des_Charges]]*
-*Docker → [[08_Docker_Infrastructure]]*
-*FastAPI → [[09_FastAPI_Backend]]*
-*Frontend → [[10_Frontend_Decision]]*
-*JeryMotroNet → [[04_JeryMotroNet]]*
+*Conception mise à jour pour le projet JeryMotro — Mars 2026.*
+*Fichier parent : [[00_INDEX]]*
