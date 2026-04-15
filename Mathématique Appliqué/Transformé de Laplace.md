@@ -86,3 +86,71 @@ Mais pour claculer la transofrmé de la Laplce inverse, pmusisuer méthode est c
 | $\frac{1}{2\omega} \sin(\omega t)$                                              | $\frac{s}{\left(s^2+\omega^2\right)^2}$        |
 | $\frac{1}{2\omega}\left[ \sin(\omega t) + \omega t \cos(\omega t)   \right]$    | $\frac{s^2}{\left( s^2 +\omega ^ 2 \right)^2}$ |
 | $\frac{1}{2\omega ^3}\left[ \sin(\omega t) - \omega t \cos(\omega t)   \right]$ | $\frac{1}{\left( s^2 +\omega ^ 2 \right)^2}$   |
+# Fonction de transfert des circuit électrique et électronique
+
+![[Fonction de transfert des circuit électrique et électronique.excalidraw]]
+$$
+s(t)=f(t)*e(t) 
+$$
+
+$$
+\mathcal{L} \{s(t)\}=\mathcal{L} \{f(t)*e(t)\}
+$$
+$$
+S(p)=F(p)E(p)
+$$
+$$
+F(p)=\frac{S(p)}{E(p)}
+$$
+**Exemple:**
+![[RL_transfer.excalidraw]]
+- $$
+e(t)+U_R+U_C=0
+$$
+$$
+e(t)-R.i(t)-L\frac{di(t)}{dt}=0
+$$
+$$
+e(t)-R.i(t)\frac{di(t)}{dt}=0(1)
+$$
+$$
+L\frac{di(t)}{dt}-s(t)=0
+$$
+$$
+s(t)=L\frac{di(t)}{dt}(2)
+$$
+D'après $(1)$
+$$
+e(t)=R.i(t)+L\frac{di(t)}{dt}
+$$
+$$
+\mathcal{L}\{e(t)\}=R.\mathcal{L}\{i(t)\}+L.\mathcal{L}\{\frac{di(t)}{dt}\}
+$$
+$$
+E(p)=J(p)(R+p.L)
+$$
+D'après $(2)$
+$$
+S(p)=L.p.I(p)
+$$
+$\Rightarrow$ $F(p)=\frac{S(p)}{E(p)}$
+$$
+F(p)=\frac{L.p.I(p)}{(R+L.p).I(p)}
+$$
+$$
+F(p)=\frac{L.p}{R+L.p}
+$$
+
+> [!hint] Formule
+> - **Bobine**:
+> $$
+> v(t)=L\frac{di(t)}{dt}
+> $$
+> - **Condensateur**:
+> $$
+> i(t)=C\frac{dv(t)}{dt}
+> $$
+> - **Résistance**:
+> $$
+> v(t)=R.i(t)
+> $$

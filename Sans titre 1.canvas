@@ -1,0 +1,31 @@
+{
+	"nodes":[
+		{"id":"657a4c2f1f3a665c","type":"group","ratio":1.7777777777777777,"x":-600,"y":-260,"width":1200,"height":675,"label":"Start Slide"},
+		{
+			"id":"f1c7477a51bf6db5",
+			"type":"text",
+			"text":"jhbh",
+			"styleAttributes":{},
+			"x":-120,
+			"y":60,
+			"width":260,
+			"height":60
+		},
+		{
+			"id":"2baaf7bef9ce2236",
+			"type":"text",
+			"text":"",
+			"styleAttributes":{"shape":"predefined-process"},
+			"x":-220,
+			"y":-40,
+			"width":260,
+			"height":100
+		}
+	],
+	"edges":[],
+	"metadata":{
+		"version":"1.0-1.0",
+		"frontmatter":{},
+		"startNode":"657a4c2f1f3a665c"
+	}
+}
