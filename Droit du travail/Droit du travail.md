@@ -1,6 +1,4 @@
-
 # Introduction
-
 ## Branche de droit du travail
 ![[Branche de droit du travail 2026-04-15 08.07.19.excalidraw]]
 Du manière générale, le droit su travail appartient au droit social, qui regroupe les regroupe les règles protégeant les travailleurs et organise les rapport sociaux dans l'entreprise.
@@ -129,3 +127,159 @@ Il permet de prouver le payment du salaire
 - Il peut être établie en malagasy et/ou en français
 ### Forme du bulletin de paye
 - Il peut être papier, manuel, informatisé ou électronique
+- Il doit permettre au salarié de vérifier les élément de sa rémunérations. *(Article 95)*
+## Protection de salarié
+- L'acceptation du bulletin de paye ne signifie pas que le salarié renonce à réclamer ce qui lui est dû.
+- Il peut contester ultérieurement un erreur ou salaire incomplet
+# Durée du travail, repos et congé
+La durée du travail réglementé pour éviter l'exploitation et protéger la santé
+## Durée du travail
+La loi fixe une durée normale et encadre les dépassement.
+### Travail effectif *(article 108)*
+- La durée du travail corresponds au temps de travail effectif
+- Le temps d'habillage, de déshabillage et de restoration n'entre pas dans le calcul sauf disposition favorable
+### Durée légal *(article 109)*
+- La durée ne peut excéder 173,33 heures/mois ou 40 h par semaine
+- Les heures accomplie au de là constitue des heures supplémentaire
+### Heures supplémentaire *(article 110)*
+- Elle sont autorisé selon les conditions fixé par le texte réglementaire
+- Le taux de majoration et fixé par décret selon les branches et catégorie professionnel
+## Repos et travail de nuit
+Le repos est un droit essentiel lié à la santé du travailleurs
+### Repos quotidien et hebdomadaire *(Article 109-112)*
+- Le salarié doit bénéficier de temps de repos pour préserver sa santé
+- L'organisation du repos doit respecter les règles légales et conventionnel
+### Travail de nuit *(Article 120)*
+- Le travail de nuit doit être encadré car il représenter un risques pour la santé
+- Les travailleurs de nuit doivent bénéficier des moyens de premiers secours et d'une surveillance adapter
+### Protection  des femmes enceinte *(article 146)*
+- Les femmes enceinte et allaitante ne doivent peut être employer la nuit le période protégé
+- Cette interdiction vise à protéger la mère et l'enfant
+## Congé
+Les congé permettent aux salariés de se reposer sans perdre son lien d'employ
+### Congé payé *(article 130)*
+- Le congé payé est un droit acquit après un période de service effectif
+- La jouissance du congé payé est acquise après de 12 mois de travail effectifs
+### Planification du congé *(Article 128)*
+- L'employeur doit planifié les départ en congé en début de congé
+- Cette planification se fait en consultation avec les délégué de personnels ou les travailleur concerner
+### Prescription du droit au congé *(Article 129)*
+- Les droit au congé payé se prescrit par 3 ans
+- Le salarié peut combattre cette prescription s'il prouve quel l'employeur l'a empêcher de jouir de son congé
+# Santé, sécurité et hygiène au travail
+La santé, la sécurité au travail sont des obligation majeurs de l'employeur
+## Politique e sécurité et de santé
+La préventions des risques professionnels est une responsabilité partager entre l’état, l'employeur, et le travailleurs
+### Rôles de l’État *(article 161)*
+L'État définit et applique un politique national de sécurité et santé au travail. Cette politique doit périodiquement réexaminer
+### Objectif de la politique *(article 160)*
+- Prévenir les accident de travail
+- Prévenir les atteinte à la santé lié au travail
+### Responsabilité de l'entreprise *(article )*
+- L'entreprise doit organisé des condition de travail sure
+- Elle doit prendre des mesures de prévention adapté au risque
+## Médecine du travail
+La médecine du travail protège la santé des salariés dans leurs milieu professionnel
+### Service médical du travail (*article 183 et 187*)
+- Le service médical peut être inter-entreprise ou propre à l'entreprise
+- Son organisation est fixé par décret
+### Médecin du travail *(article 185, 186)*
+- Le médecin de travail conseil l'employeur, les travailleurs et leurs représentants
+- Il bénéficie d'une indépendance professionnel
+### Premiers secours *(article 120)*
+- L'entreprise doit prévoir une organisation de premiers secours
+- Cette obligation est renforcé pour certain travaux à risque, notamment les travaux de nuit
+## Hygiène et restoration
+L'hygiène concerne aussi les locaux,  la nourriture et la condition materiel du travail
+### Cantine *(article 188)*
+- Une cantine peut être obligatoire lorsque l'organisation du travail ne permet pas salarié de se restaurer normalement
+- Elle aussi requise en cas d'heure continue
+### Propreté de la cantine *(article 189)*
+- La cantine doit être propre, confortable et aéré
+- Elle doit permet au travailleurs de se restaurer dans des conditions dignes
+### Nourriture servit *(article 190)*
+- La nourriture doit respecter les conditions d'hygiène
+- Un indemnité de restauration peut remplacer la cantine selon les conditions prévus
+# Relation collective du travail
+Les relations collective concernent les syndicats, les représentants du personnels et les conventions collectives
+## Les syndicats
+Les syndicats défendes les intérêt professionnel des travailleurs ou des employeurs
+### Rôles syndicales *(titre 5)*
+- Les syndicat représentent ce membre, ils participent sociales et la négociations collective
+### Délégué syndicale *(Article 113 à 114)*
+- Il s'agit dans l'entreprise pour représenté organisations syndicales 
+- Il bénéficie d'une protection contre certains licenciement abusifs
+### Permissions syndicales *(Article 114*
+- Le travail mandaté peut bénéficier de permissions de participer au congrée ou séminaire syndicaux
+- Ce permissions peuvent être rémunéré selon l'accord des parities ou la Convention Collective **(CC)**
+## Délégué du personnel
+Il serve intermédiaire entre les salariés et l'employeur.
+### Élection obligatoire
+- Les déléguées du personnel sont obligatoirement élus dans les établissement plus de 11 salariés
+- Un travailleurs peut saisir l'inspection du travail s'il l'employeur refuse d'organiser l’élection obligatoire *(Article 115)*
+### Mission
+- il Présente les réclamation de travailleurs 
+- Il participe à la défense les intérêt collectif dans l'entreprise
+### Protection *(Article 215-221)*
+- Il bénéficie d'un protection particulaire contre les mesures abusives
+- Cette protection garantie leur liberté d'action  
+## Convention collective
+La **CC** permet d'adapter la loi à la réalité d'un branche ou entreprise
+### Rôle de **CC** *(Article 244)*
+- Elle améliore la condition de travail
+- Le code de travail reconnaît son rôle central dans les relations professionnel
+### Négociation *(Article 245)*
+- L'incitative de la négociation appartient à la partie le plus diligente (majoritaire)
+- Les parties peuvent se faire assister par des personnes de leurs choix
+### Extension *(article 246)*
+- Une convention collective peut être rendu obligatoire dans une branche par décret
+- Cette extension intervient après avis de Conseil National de Travail et de l'Emploi (**CNTE**)
+# Règlement des conflits de travail
+Le conflit de travail peuvent être individuel ou collectif
+## Conflit individuel
+Le conflit individuel oppose généralement un salariés à son employeur
+### Saisine de l’inspection de travail *(article 262)*
+- Tous travail et employeur peut demander un règlement amiable
+- Cette étape permet d'éviter directement un procès
+### Caractère obligatoire *(article 263)*
+- Lorsque le salarié est encore sous contrat, la saisine de l’inspection est obligatoire avant la juridiction compétente
+- Les parities doivent répondre la convocation
+### Procès verbales *(articles 267)*
+- L'inspecteur dresse un PV de conciliation, de non conciliation ou de carence
+- Ce document sert de base pour la suite de la procédure 
+## Conflit collectif
+Un conflit collectif concerne un groupe de travailleur ou l'intérêt générale du personnels
+### Grève *(article 292-300)*
+- La grève est une cessation collective et concerter du travail
+- Elle doit respecter les conditions légales pour être licite
+### Obligation des gréviste *(Article 300)*
+- Les gréviste doit assurer la sécurité des biens et des personnes
+- Il doit respecter l'outil de travail
+### Lock-out *(article 301-302)*
+- Le lock-out est la fermeture temporaire de l'entreprise à l'occasion d'une grève
+- Il n'est licite que raison de sécurité ou cas de grève manifestement illégal
+## Mode de règlement
+La loi privilégie les règlement pacifique des conflits 
+### Conciliation *(article 262-267)*
+- Elle cherche un accord entre les parities. Elle souvent mené par l’inspection du travail
+### Médiation
+- Un tierce aide les parties à trouver une solution. La solution repose sur le dialogue et l'acceptation des parties.
+### Juridiction compétente
+- Si aucun accord n'est trouvé, le litige peut être porté vers devant le tribunal compétent (Tribunal du travail).
+- Le juge tranche le conflit selon la loi et les preuves présentés
+
+# Sanction et responsabilité
+Les sanctions permettent de garantir le respect des règles  de travail
+## Sanction disciplinaire
+L'employeur dispose d'un pourvoir disciplinaire, mais celui ci est limité par la loi
+### Interdiction des sanctions pécuniaire *(article 238)*
+- L'employeur ne peut pas infligé d'amende aux salariés. Une Sanction ne peut pas consister à retirer arbitrairement une somme d'argent
+### Procédure disciplinaire *(article 239)*
+- Le règlement intérieur doit prévoir un délai raisonnable pour engager la procédure. Il doit aussi pré voir un délai pour la décision disciplinaire
+### Suspension conservatoire *(article 240)*
+Elle doit être limité en temps nécessaire à la procédure. Le travailleur conserve au moins sa rémunérations principals pendant cette période
+## Responsabilité de l'employeur
+L'employeur peut engager sa responsabilité en cas de manquement à ces obligations
+### Harcèlement et violence *(Article 15)*
+Le travailleur victime peut demander des dommages intérêts. Le salarié ne peut pas être sanctionner pour avoir dénoncer ou résister à des faits de harcèlement
+### Responsabilité au cas d'inaction *(artcile 16)* 
