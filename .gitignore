@@ -17,3 +17,9 @@ copilot
 /obsidian/Mémoire_Feux_De_Brousses/.directory
 
 /copilot/
+*.log
+*__pycache__*
+*vscode*
+*.virtual_documents*
+*.ipynb_checkpoints*
+*codex*
