@@ -235,7 +235,7 @@ La **CC** permet d'adapter la loi à la réalité d'un branche ou entreprise
 - Une convention collective peut être rendu obligatoire dans une branche par décret
 - Cette extension intervient après avis de Conseil National de Travail et de l'Emploi (**CNTE**)
 # Règlement des conflits de travail
-Le conflit de travail peuvent être individuel ou collectif
+Le conflit *(litige, différents)* de travail peuvent être individuel ou collectif
 ## Conflit individuel
 Le conflit individuel oppose généralement un salariés à son employeur
 ### Saisine de l’inspection de travail *(article 262)*
@@ -247,7 +247,7 @@ Le conflit individuel oppose généralement un salariés à son employeur
 ### Procès verbales *(articles 267)*
 - L'inspecteur dresse un PV de conciliation, de non conciliation ou de carence
 - Ce document sert de base pour la suite de la procédure 
-## Conflit collectif
+## Conflit collectif(15 jours ancienneté)
 Un conflit collectif concerne un groupe de travailleur ou l'intérêt générale du personnels
 ### Grève *(article 292-300)*
 - La grève est une cessation collective et concerter du travail
@@ -282,4 +282,64 @@ Elle doit être limité en temps nécessaire à la procédure. Le travailleur co
 L'employeur peut engager sa responsabilité en cas de manquement à ces obligations
 ### Harcèlement et violence *(Article 15)*
 Le travailleur victime peut demander des dommages intérêts. Le salarié ne peut pas être sanctionner pour avoir dénoncer ou résister à des faits de harcèlement
-### Responsabilité au cas d'inaction *(artcile 16)* 
+### Responsabilité au cas d'inaction *(article 16)* 
+- L'employeur est responsable s'il ne prends pas le mesure approprier après avoir infirmé
+- Cette responsabilité vise à protéger les victimes dans l'entreprise
+### Infraction pénal *(Titre 10)*
+- Certains manquements peuvent entraîner des amandes ou peine pénal
+- Les pénalité sont prévus dans le titre X du code du travail
+## Responsabilité du travailleur
+Le travailleur doit aussi respecter ses obligations professionnels
+### Faute professionnel 
+- Une faute peut résulter d'un retards, d'une absence injustifié, d'une insubordination et d'un négligence
+- La sanction doit être proportionnée aux fautes 
+### Le respect des règles internes
+- La salarié doit respecter les règlements intérieur
+- Il doit respecter les consignes sécurité et de discipline 
+### Limite de la sanction
+- Toute sanction doit respecter la procédure prévu
+- La salarié peut contester une sanction abusive devant les autorité compétente
+# Droit du travail Malagasy contemporain
+Le [[Droit du travail]] Malagasy a connu plusieurs reforme pour s'adapter au réalité économique et sociale
+## Évolution des textes
+Le [[Droit du travail]] à Madagascar s'est construit progressivement depuis l'indépendance
+### Anciens textes
+- Ordonnance n°60-1319 du 01 Octobre 1960 portant code du travail 
+- Loi n° 94-029 du 25 Août 1995 portant code du travail
+### Code de 2003
+- Loi n°2003-044 du 28 Juillet 2004 portant code du travail; et a longtemps constitué la base du droit du travail Malagasy
+### Nouveau code de 2024
+- Loi n°2024-014 du 14 Août 2024 portant code du travail
+- Elle abroge les dispositions antérieurs contraire, notamment celle de la **loi n°2023-044** *(article 194)*
+## Nouveaux en jeux
+Les nouveaux code cherchent à répondre au réalité actuel du monde du travail
+### Travail informel
+- Beaucoup de travailleur  échappe encore à la protection juridique
+- Le renforcement du contrôle vise à mieux protéger ces travailleurs 
+### Travail domestique est vulnérable
+- Les travailleurs domestiques et les enfants sont particulièrement au abus
+- Les nouveaux code renforcent les compétences de l'inspection du travail dans certain secteur sensible
+### Travail numérique et nouvel forme d'emploi *(Article 92)*
+- Le payment digital du salaire est désormais favorisé lorsque cela protège les parties
+- Les nouvelles formes de travail nécessite d'une adaptation continue du droit
+## Défit d'application
+Un bon texte juridique doit être effectivement appliqué
+### Renforcement de l'inspection du travail *(Article 303-320; Article 379-382)*
+- Les inspecteurs contrôlent l’application du code
+- Ils peuvent constater les infractions par procès verbale
+### Sensibilisations des employeurs et travailleurs
+- Les parties doivent connaître leurs droits et leurs obligations
+- Les méconnaissance du droit favorise les abus et les conflits
+### Dialogue social
+- Les syndicats, délégué du personnel et convention collective doivent être renforcer
+- Le dialogue social permet d’éviter les grèves, licenciement abusifs et tension interne
+# Complément
+## Tableau récapitulatif du préavis par catégorie
+
+| ***Ancienneté de service*** | **G1**   | **G2**   | **G3**   | **G4**   | **G5**  |
+| --------------------------- | -------- | -------- | -------- | -------- | ------- |
+| moins de 8 jours            | 1 jours  | 2 jours  | 3 jours  | 4 jours  | 5 jours |
+| moins de 3 mois             | 3 jours  | 8 jours  | 15 jours | 1 mois   | 1 mois  |
+| moins de 1 ans              | 8 jours  | 15 jours | 1 mois   | 1.5 mois | 3 mois  |
+| plus un ans                 | 10 jours | 1 mois   | 1.5 mois | 2.5 mois | 4 mois  |
+| plus 5 ans                  | 1 mois   | 1.5 mois | 2 mois   | 3 mois   | 6 mois  |
