@@ -343,3 +343,6 @@ Un bon texte juridique doit être effectivement appliqué
 | moins de 1 ans              | 8 jours  | 15 jours | 1 mois   | 1.5 mois | 3 mois  |
 | plus un ans                 | 10 jours | 1 mois   | 1.5 mois | 2.5 mois | 4 mois  |
 | plus 5 ans                  | 1 mois   | 1.5 mois | 2 mois   | 3 mois   | 6 mois  |
+![[Disertation]]
+![[Droit du travail/Exercice|Exercice]]
+![[Droit du travail/Sans titre|Sans titre]]
