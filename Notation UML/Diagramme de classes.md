@@ -1,4 +1,4 @@
-- Diagramme **pivot** de l'ensemble de la modélisation de d'un système
+organization- Diagramme **pivot** de l'ensemble de la modélisation de d'un système
 - Permet de donner la représentation statique du système à développer
 - Fond" sur:
 	- le concept d'objet
