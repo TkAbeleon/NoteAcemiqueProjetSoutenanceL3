@@ -120,15 +120,6 @@
 
 4.8.4. Reprise au point **4.6** du scénario « Connexion par code OTP ».
 
-### 6 - Compte désactivé
-6.1. Le système détecte que le compte correspondant est désactivé.
-
-6.2. Le système refuse l'authentification.
-
-6.3. Le système informe l'utilisateur que le compte n'est pas actif.
-
-6.4. Fin du cas d'utilisation.
-
 -------
 # Cas d'utilisation "Créer compte"
 ## Généralité:
