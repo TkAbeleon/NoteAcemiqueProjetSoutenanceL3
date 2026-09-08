@@ -10,6 +10,8 @@ actor "Utilisateur Premium" as Premium
 
 actor "NASA FIRMS" as FIRMS
 actor "Service ML externe" as ML
+actor "n8n" as N8N
+actor "Base de connaissances Qdrant" as Qdrant
 
 rectangle "Système JeryMotro" {
 
@@ -31,6 +33,11 @@ rectangle "Système JeryMotro" {
     usecase "Générer les prédictions de risque" as UC12
     usecase "Mettre à jour le statut des feux" as UC13
     usecase "Déclencher les alertes" as UC14
+
+    usecase "Identifier le type de question" as UC15
+    usecase "Interroger la base de données" as UC16
+    usecase "Interroger la base de connaissances" as UC17
+    usecase "Combiner les résultats des sources" as UC18
 }
 
 ' Associations avec les utilisateurs
@@ -68,5 +75,20 @@ UC11 --> UC13
 UC12 --> UC13
 UC13 --> UC14
 UC10 <-- UC14
+
+' Chat IA avec n8n
+N8N --> UC6
+N8N --> UC15
+N8N --> UC16
+N8N --> UC17
+N8N --> UC18
+
+UC6 ..> UC15 : <<include>>
+UC15 ..> UC16 : <<include>>
+UC15 ..> UC17 : <<include>>
+UC15 ..> UC18 : <<include>>
+
+' Base de connaissances externe
+Qdrant --> UC17
 
 @enduml
