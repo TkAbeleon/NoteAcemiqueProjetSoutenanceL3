@@ -239,27 +239,76 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Dialoguer avec le Chat IA »
 - **Acteur principal:** Utilisateur Standard
-- **Précondition:** Le Chat IA est accessible.
-- **Début:** L'utilisateur saisit une question.
-- **Postcondition:** Une réponse est affichée lorsque la demande peut être traitée.
+- **Acteur secondaire:** n8n
+- **Acteur secondaire:** Base de connaissances Qdrant
+- **Précondition:** Le Chat IA est accessible et le service n8n peut recevoir les requêtes.
+- **Début:** L'utilisateur saisit une question dans le Chat IA.
+- **Postcondition:** Une réponse adaptée à la question est affichée à l'utilisateur lorsque les données nécessaires sont disponibles.
 
 ## Scénario nominal
 1. L'utilisateur ouvre le Chat IA.
 2. L'utilisateur saisit une question.
-3. Le système reçoit la question.
-4. Le système prépare le contexte JeryMotro nécessaire à la réponse.
-5. Le système transmet la demande au service de génération de réponse.
-6. Le service génère une réponse.
-7. Le système affiche la réponse à l'utilisateur.
-8. Fin de l'activité.
+3. JeryMotro reçoit la question et la transmet au workflow n8n.
+4. n8n reçoit la requête.
+5. n8n analyse la question et identifie le type de demande.
+6. n8n détermine les sources nécessaires pour construire la réponse.
+7. n8n récupère les informations historiques ou les données relatives aux feux depuis la base de données JeryMotro lorsque la question concerne l'historique des feux ou les données du système.
+8. n8n interroge la base de connaissances Qdrant lorsque la question concerne les connaissances générales sur les feux de brousse, notamment leur origine, leurs causes ou leur étude.
+9. Lorsque la question nécessite les deux sources, n8n récupère les informations depuis la base de données JeryMotro et Qdrant.
+10. n8n combine et met en contexte les informations récupérées.
+11. n8n génère la réponse à partir des informations disponibles.
+12. JeryMotro reçoit la réponse de n8n.
+13. Le système affiche la réponse à l'utilisateur.
+14. Fin de l'activité.
 
 ## Scénario alternatif
-### 6 - Réponse indisponible
-6.1. Le service ne fournit pas de réponse exploitable.
+### 6 - Question nécessitant la base de données JeryMotro
+6.1. n8n identifie une question portant principalement sur l'historique des feux ou sur les données enregistrées dans JeryMotro.
 
-6.2. Le système informe l'utilisateur que la réponse n'est pas disponible.
+6.2. n8n interroge la base de données JeryMotro.
 
-6.3. Fin de l'activité.
+6.3. n8n utilise les résultats pour construire la réponse.
+
+6.4. Reprise au point **10** du scénario nominal.
+
+### 6 - Question nécessitant la base de connaissances Qdrant
+6.1. n8n identifie une question portant sur les connaissances générales relatives aux feux de brousse, par exemple leur origine, leurs causes ou leur étude.
+
+6.2. n8n interroge la base de connaissances Qdrant.
+
+6.3. n8n utilise les résultats pour construire la réponse.
+
+6.4. Reprise au point **10** du scénario nominal.
+
+### 6 - Question nécessitant les deux sources
+6.1. n8n identifie une question nécessitant à la fois des données JeryMotro et des connaissances générales.
+
+6.2. n8n interroge la base de données JeryMotro.
+
+6.3. n8n interroge la base de connaissances Qdrant.
+
+6.4. n8n combine les informations obtenues.
+
+6.5. Reprise au point **11** du scénario nominal.
+
+### 7 ou 8 - Aucune information suffisante
+7.1. Les sources interrogées ne fournissent pas suffisamment d'informations pour répondre correctement à la question.
+
+7.2. n8n prépare une réponse indiquant que les informations disponibles ne permettent pas de fournir une réponse fiable.
+
+7.3. JeryMotro affiche la réponse à l'utilisateur.
+
+7.4. Fin de l'activité.
+
+## Scénario exceptionnel
+### 4 - Service n8n indisponible
+4.1. n8n ne peut pas recevoir ou traiter la requête.
+
+4.2. JeryMotro ne reçoit pas de réponse exploitable.
+
+4.3. Le système informe l'utilisateur que le Chat IA est temporairement indisponible.
+
+4.4. Fin de l'activité.
 
 ---
 
