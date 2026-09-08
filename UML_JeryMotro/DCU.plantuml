@@ -1,0 +1,72 @@
+@startuml
+left to right direction
+
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Visiteur" as Visiteur
+actor "Utilisateur Standard" as Standard
+actor "Utilisateur Premium" as Premium
+
+actor "NASA FIRMS" as FIRMS
+actor "Service ML externe" as ML
+
+rectangle "Système JeryMotro" {
+
+    usecase "Consulter carte de feux" as UC1
+    usecase "Voir les feux actifs" as UC2
+    usecase "Créer compte" as UC3
+
+    usecase "S'authentifier" as UC4
+    usecase "Consulter statistique" as UC5
+    usecase "Dialoguer avec le Chat IA" as UC6
+    usecase "Recevoir alertes email" as UC7
+
+    usecase "Définir zone prioritaire" as UC8
+    usecase "Recevoir alertes SMS et WhatsApp" as UC9
+
+    usecase "Gérer les alertes" as UC10
+
+    usecase "Collecter automatiquement les données FIRMS" as UC11
+    usecase "Générer les prédictions de risque" as UC12
+    usecase "Mettre à jour le statut des feux" as UC13
+    usecase "Déclencher les alertes" as UC14
+}
+
+' Associations avec les utilisateurs
+Visiteur --> UC1
+Visiteur --> UC2
+Visiteur --> UC3
+
+Standard --> UC4
+Standard --> UC5
+Standard --> UC6
+Standard --> UC7
+
+Premium --> UC8
+Premium --> UC9
+
+' Relations entre acteurs
+Standard --|> Visiteur
+Premium --|> Standard
+
+' Gestion des alertes
+UC4 ..> UC10 : <<include>>
+UC4 ..> UC5 : <<include>>
+UC4 ..> UC6 : <<include>>
+UC10 ..> UC7 : <<extend>>
+UC10 ..> UC9 : <<extend>>
+
+' Collecte des données externes
+FIRMS --> UC11
+
+' Traitement ML externe
+ML --> UC12
+
+' Traitements internes
+UC11 --> UC13
+UC12 --> UC13
+UC13 --> UC14
+UC10 <-- UC14
+
+@enduml
