@@ -2,6 +2,8 @@
 
 Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de cas d'utilisation JeryMotro. Chaque description suit la structure du cours : précondition, postcondition, scénario nominal et, lorsque cela est nécessaire, scénario alternatif ou exceptionnel.
 
+Les systèmes externes utilisés par JeryMotro sont représentés lorsqu'ils interviennent directement dans un cas d'utilisation : NASA FIRMS, Service ML externe, n8n, Base de connaissances Qdrant, Base de données PostgreSQL, WAHA et Service SMS. Le Service SMS représente le fournisseur configuré pour l'envoi des SMS, notamment HTTPSMS ou SMSGate.
+
 ---
 
 # DA1 — Consulter la carte de feux
@@ -9,7 +11,8 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Consulter la carte de feux »
 - **Acteur principal:** Visiteur
-- **Précondition:** La plateforme JeryMotro est accessible et les données de détection disponibles peuvent être consultées.
+- **Acteur secondaire:** Base de données PostgreSQL
+- **Précondition:** La plateforme JeryMotro est accessible et les données de détection sont disponibles.
 - **Début:** Le visiteur ouvre la carte de feux.
 - **Postcondition:** Les détections correspondant aux critères sélectionnés sont affichées sur la carte.
 
@@ -17,15 +20,16 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 1. Le visiteur ouvre la carte de feux.
 2. Le système affiche la carte et les outils de consultation.
 3. Le visiteur sélectionne les critères de recherche ou de filtrage souhaités.
-4. Le système recherche les détections correspondant aux critères sélectionnés.
-5. Le système reçoit les données disponibles.
-6. Le système affiche les détections sur la carte.
-7. Le visiteur consulte les résultats.
-8. Fin de l'activité.
+4. Le système interroge la base de données PostgreSQL.
+5. PostgreSQL retourne les détections correspondant aux critères.
+6. Le système traite les données reçues.
+7. Le système affiche les détections sur la carte.
+8. Le visiteur consulte les résultats.
+9. Fin de l'activité.
 
 ## Scénario alternatif
 ### 4 - Aucun résultat
-4.1. Le système ne trouve aucune détection correspondant aux critères sélectionnés.
+4.1. PostgreSQL ne retourne aucune détection correspondant aux critères.
 
 4.2. Le système indique qu'aucune détection n'est disponible.
 
@@ -40,25 +44,27 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Voir les feux actifs »
 - **Acteur principal:** Visiteur
-- **Précondition:** Les données de feux sont disponibles dans JeryMotro.
+- **Acteur secondaire:** Base de données PostgreSQL
+- **Précondition:** Les données de feux sont disponibles dans PostgreSQL.
 - **Début:** Le visiteur demande l'affichage des feux actifs.
 - **Postcondition:** Les feux actifs disponibles sont affichés.
 
 ## Scénario nominal
 1. Le visiteur demande la consultation des feux actifs.
-2. Le système récupère les données de feux disponibles.
-3. Le système identifie les feux dont le statut est actif.
-4. Le système prépare les informations associées aux feux retenus.
-5. Le système affiche les feux actifs.
-6. Fin de l'activité.
+2. Le système interroge PostgreSQL pour récupérer les données de feux.
+3. PostgreSQL retourne les données disponibles.
+4. Le système identifie les feux dont le statut est actif.
+5. Le système prépare les informations associées aux feux retenus.
+6. Le système affiche les feux actifs.
+7. Fin de l'activité.
 
 ## Scénario alternatif
-### 3 - Aucun feu actif
-3.1. Le système ne trouve aucun feu actif.
+### 2 - Aucun feu actif
+2.1. PostgreSQL ne contient aucun feu correspondant au statut actif.
 
-3.2. Le système indique qu'aucun feu actif n'est disponible.
+2.2. Le système indique qu'aucun feu actif n'est disponible.
 
-3.3. Fin de l'activité.
+2.3. Fin de l'activité.
 
 ---
 
@@ -67,30 +73,30 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Créer un compte »
 - **Acteur principal:** Visiteur
-- **Acteur secondaire:** Service d'envoi du code OTP
+- **Acteurs secondaires:** Base de données PostgreSQL, Service d'envoi du code OTP
 - **Précondition:** La page de création de compte est accessible.
 - **Début:** Le visiteur ouvre le formulaire d'inscription.
-- **Postcondition:** Le compte est créé et l'utilisateur est connecté lorsque la vérification OTP est réussie.
+- **Postcondition:** Le compte est créé et l'utilisateur est authentifié lorsque la vérification OTP est réussie.
 
 ## Scénario nominal
 1. Le visiteur ouvre la page de création de compte.
 2. Le système affiche le formulaire d'inscription.
 3. Le visiteur saisit ses informations, notamment son nom, son adresse e-mail, son organisation et son mot de passe.
 4. Le visiteur valide le formulaire.
-5. Le système vérifie que l'adresse e-mail n'est pas déjà utilisée.
+5. Le système vérifie dans PostgreSQL que l'adresse e-mail n'est pas déjà utilisée.
 6. L'adresse e-mail est disponible.
 7. Le système génère un code OTP à six chiffres.
 8. Le système envoie le code OTP à l'adresse e-mail fournie.
 9. Le visiteur saisit le code OTP reçu.
 10. Le système vérifie le code OTP.
 11. Le code OTP est valide.
-12. Le système crée le compte.
+12. Le système enregistre le nouveau compte dans PostgreSQL.
 13. Le système authentifie l'utilisateur.
 14. Fin de l'activité.
 
 ## Scénario alternatif
 ### 5 - Adresse e-mail déjà utilisée
-5.1. Le système constate que l'adresse e-mail existe déjà.
+5.1. PostgreSQL indique que l'adresse e-mail existe déjà.
 
 5.2. Le système affiche un message indiquant que l'adresse e-mail est déjà utilisée.
 
@@ -99,7 +105,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 5.4. Reprise au point **3** du scénario nominal.
 
 ### 10 - Code OTP incorrect
-10.1. Le système constate que le code OTP saisi est incorrect.
+10.1. Le système constate que le code OTP saisi est incorrect ou expiré.
 
 10.2. Le système affiche un message d'erreur.
 
@@ -122,7 +128,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « S'authentifier »
 - **Acteur principal:** Utilisateur Standard
-- **Acteur secondaire:** Service d'envoi du code OTP
+- **Acteurs secondaires:** Base de données PostgreSQL, Service d'envoi du code OTP
 - **Précondition:** L'utilisateur possède un compte JeryMotro et la page de connexion est accessible.
 - **Début:** L'utilisateur ouvre la page de connexion.
 - **Postcondition:** L'utilisateur est authentifié et accède aux fonctionnalités qui lui sont autorisées.
@@ -133,7 +139,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 3. L'utilisateur choisit le mode souhaité.
 4. Le système demande les informations nécessaires au mode choisi.
 5. L'utilisateur fournit les informations demandées.
-6. Le système recherche le compte correspondant.
+6. Le système recherche le compte correspondant dans PostgreSQL.
 7. Le système vérifie les informations d'authentification.
 8. Les informations sont valides.
 9. Le système authentifie l'utilisateur.
@@ -148,7 +154,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 
 3.3. L'utilisateur saisit son adresse e-mail et son mot de passe.
 
-3.4. Le système recherche le compte correspondant à l'adresse e-mail.
+3.4. Le système recherche le compte correspondant dans PostgreSQL.
 
 3.5. Le système vérifie le mot de passe.
 
@@ -163,7 +169,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 
 3.3. L'utilisateur choisit le canal et fournit l'adresse ou le numéro associé à son compte.
 
-3.4. Le système recherche le compte correspondant.
+3.4. Le système recherche le compte correspondant dans PostgreSQL.
 
 3.5. Le compte existe.
 
@@ -180,7 +186,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 3.11. Reprise au point **9** du scénario nominal.
 
 ### 6 - Compte inexistant
-6.1. Le système ne trouve aucun compte correspondant aux informations fournies.
+6.1. PostgreSQL ne contient aucun compte correspondant aux informations fournies.
 
 6.2. Le système informe l'utilisateur qu'aucun compte JeryMotro n'est associé aux informations saisies.
 
@@ -198,12 +204,12 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 7.4. Reprise au point correspondant du mode d'authentification choisi.
 
 ## Scénario exceptionnel
-### 3 - Échec de l'envoi du code OTP
-3.1. Le service d'envoi ne parvient pas à transmettre le code.
+### 7 - Échec du service OTP
+7.1. Le service d'envoi ne parvient pas à transmettre le code OTP.
 
-3.2. Le système informe l'utilisateur de l'échec de l'envoi.
+7.2. Le système informe l'utilisateur de l'échec de l'envoi.
 
-3.3. Fin de l'activité.
+7.3. Fin de l'activité.
 
 ---
 
@@ -212,21 +218,24 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Consulter les statistiques »
 - **Acteur principal:** Utilisateur Standard
+- **Acteur secondaire:** Base de données PostgreSQL
 - **Précondition:** L'utilisateur est authentifié et les données nécessaires sont disponibles.
 - **Début:** L'utilisateur ouvre la fonctionnalité de statistiques.
 - **Postcondition:** Les statistiques disponibles sont affichées.
 
 ## Scénario nominal
 1. L'utilisateur ouvre la page des statistiques.
-2. Le système récupère les données nécessaires.
-3. Le système traite les données disponibles.
-4. Le système affiche les indicateurs statistiques.
-5. L'utilisateur consulte les résultats.
-6. Fin de l'activité.
+2. Le système interroge PostgreSQL pour récupérer les données nécessaires.
+3. PostgreSQL retourne les données disponibles.
+4. Le système traite les données.
+5. Le système calcule ou prépare les indicateurs statistiques.
+6. Le système affiche les indicateurs statistiques.
+7. L'utilisateur consulte les résultats.
+8. Fin de l'activité.
 
 ## Scénario alternatif
 ### 2 - Données insuffisantes
-2.1. Le système ne dispose pas de données suffisantes pour certains indicateurs.
+2.1. PostgreSQL ne contient pas suffisamment de données pour certains indicateurs.
 
 2.2. Le système affiche les informations disponibles.
 
@@ -239,69 +248,68 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Dialoguer avec le Chat IA »
 - **Acteur principal:** Utilisateur Standard
-- **Acteur secondaire:** n8n
-- **Acteur secondaire:** Base de connaissances Qdrant
-- **Précondition:** Le Chat IA est accessible et le service n8n peut recevoir les requêtes.
+- **Acteurs secondaires:** n8n, Base de données PostgreSQL, Base de connaissances Qdrant
+- **Précondition:** Le Chat IA est accessible et n8n peut recevoir les requêtes.
 - **Début:** L'utilisateur saisit une question dans le Chat IA.
-- **Postcondition:** Une réponse adaptée à la question est affichée à l'utilisateur lorsque les données nécessaires sont disponibles.
+- **Postcondition:** Une réponse adaptée à la question est affichée lorsque les informations nécessaires sont disponibles.
 
 ## Scénario nominal
 1. L'utilisateur ouvre le Chat IA.
 2. L'utilisateur saisit une question.
-3. JeryMotro reçoit la question et la transmet au workflow n8n.
+3. JeryMotro reçoit la question et la transmet à n8n.
 4. n8n reçoit la requête.
-5. n8n analyse la question et identifie le type de demande.
+5. n8n identifie le type de question.
 6. n8n détermine les sources nécessaires pour construire la réponse.
-7. n8n récupère les informations historiques ou les données relatives aux feux depuis la base de données JeryMotro lorsque la question concerne l'historique des feux ou les données du système.
-8. n8n interroge la base de connaissances Qdrant lorsque la question concerne les connaissances générales sur les feux de brousse, notamment leur origine, leurs causes ou leur étude.
-9. Lorsque la question nécessite les deux sources, n8n récupère les informations depuis la base de données JeryMotro et Qdrant.
-10. n8n combine et met en contexte les informations récupérées.
+7. Si la question concerne l'historique des feux ou les données enregistrées dans JeryMotro, n8n interroge PostgreSQL.
+8. Si la question concerne les connaissances générales sur les feux de brousse, notamment leur origine, leurs causes ou leur étude, n8n interroge Qdrant.
+9. Si la question nécessite les deux sources, n8n interroge PostgreSQL et Qdrant.
+10. n8n combine les informations récupérées lorsque plusieurs sources sont nécessaires.
 11. n8n génère la réponse à partir des informations disponibles.
 12. JeryMotro reçoit la réponse de n8n.
 13. Le système affiche la réponse à l'utilisateur.
 14. Fin de l'activité.
 
 ## Scénario alternatif
-### 6 - Question nécessitant la base de données JeryMotro
+### 6 - Question nécessitant uniquement PostgreSQL
 6.1. n8n identifie une question portant principalement sur l'historique des feux ou sur les données enregistrées dans JeryMotro.
 
-6.2. n8n interroge la base de données JeryMotro.
+6.2. n8n interroge PostgreSQL.
 
-6.3. n8n utilise les résultats pour construire la réponse.
+6.3. n8n utilise les résultats obtenus pour construire la réponse.
 
-6.4. Reprise au point **10** du scénario nominal.
+6.4. Reprise au point **11** du scénario nominal.
 
-### 6 - Question nécessitant la base de connaissances Qdrant
-6.1. n8n identifie une question portant sur les connaissances générales relatives aux feux de brousse, par exemple leur origine, leurs causes ou leur étude.
+### 6 - Question nécessitant uniquement Qdrant
+6.1. n8n identifie une question portant sur les connaissances générales relatives aux feux de brousse.
 
-6.2. n8n interroge la base de connaissances Qdrant.
+6.2. n8n interroge Qdrant.
 
-6.3. n8n utilise les résultats pour construire la réponse.
+6.3. n8n utilise les résultats obtenus pour construire la réponse.
 
-6.4. Reprise au point **10** du scénario nominal.
+6.4. Reprise au point **11** du scénario nominal.
 
-### 6 - Question nécessitant les deux sources
+### 6 - Question nécessitant PostgreSQL et Qdrant
 6.1. n8n identifie une question nécessitant à la fois des données JeryMotro et des connaissances générales.
 
-6.2. n8n interroge la base de données JeryMotro.
+6.2. n8n interroge PostgreSQL.
 
-6.3. n8n interroge la base de connaissances Qdrant.
+6.3. n8n interroge Qdrant.
 
 6.4. n8n combine les informations obtenues.
 
 6.5. Reprise au point **11** du scénario nominal.
 
-### 7 ou 8 - Aucune information suffisante
-7.1. Les sources interrogées ne fournissent pas suffisamment d'informations pour répondre correctement à la question.
+### 7 ou 8 - Informations insuffisantes
+7.1. Les sources interrogées ne fournissent pas suffisamment d'informations.
 
-7.2. n8n prépare une réponse indiquant que les informations disponibles ne permettent pas de fournir une réponse fiable.
+7.2. n8n prépare une réponse indiquant que les informations disponibles ne permettent pas de répondre correctement.
 
 7.3. JeryMotro affiche la réponse à l'utilisateur.
 
 7.4. Fin de l'activité.
 
 ## Scénario exceptionnel
-### 4 - Service n8n indisponible
+### 4 - n8n indisponible
 4.1. n8n ne peut pas recevoir ou traiter la requête.
 
 4.2. JeryMotro ne reçoit pas de réponse exploitable.
@@ -317,25 +325,26 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Recevoir des alertes e-mail »
 - **Acteur principal:** Utilisateur Standard
-- **Acteur secondaire:** Service d'envoi d'e-mails
+- **Acteur secondaire:** n8n
 - **Précondition:** L'utilisateur possède un abonnement d'alerte actif et le canal e-mail est configuré.
 - **Début:** Une condition d'alerte correspondant aux paramètres de l'utilisateur est détectée.
-- **Postcondition:** L'alerte e-mail est envoyée et son état est enregistré.
+- **Postcondition:** L'alerte e-mail est transmise à l'utilisateur et son état est enregistré.
 
 ## Scénario nominal
 1. Le système détecte une condition correspondant aux paramètres d'alerte.
 2. Le système vérifie que l'abonnement de l'utilisateur est actif et que le canal e-mail est activé.
-3. Le système prépare le message d'alerte.
-4. Le système envoie le message par le service d'e-mail.
-5. Le service d'envoi confirme la transmission.
-6. Le système enregistre l'alerte comme envoyée.
-7. Fin de l'activité.
+3. Le système prépare les informations nécessaires à l'alerte.
+4. Le système transmet la demande d'envoi à n8n.
+5. n8n prépare et envoie le message e-mail.
+6. n8n retourne le résultat de l'envoi.
+7. Le système enregistre l'état de la notification dans PostgreSQL.
+8. Fin de l'activité.
 
 ## Scénario alternatif
 ### 2 - Canal e-mail non activé
 2.1. Le canal e-mail n'est pas activé pour l'utilisateur.
 
-2.2. Le système ne transmet pas l'alerte par e-mail.
+2.2. Le système ne transmet pas la notification par e-mail.
 
 2.3. Fin de l'activité.
 
@@ -346,6 +355,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Définir une zone prioritaire »
 - **Acteur principal:** Utilisateur Premium
+- **Acteur secondaire:** Base de données PostgreSQL
 - **Précondition:** L'utilisateur est authentifié et dispose de la fonctionnalité de zone prioritaire.
 - **Début:** L'utilisateur ouvre la configuration de sa zone prioritaire.
 - **Postcondition:** La zone prioritaire est enregistrée dans ses préférences.
@@ -356,7 +366,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 3. L'utilisateur définit la zone souhaitée.
 4. Le système vérifie la zone sélectionnée.
 5. La zone est valide.
-6. Le système enregistre la zone prioritaire.
+6. Le système enregistre la zone prioritaire dans PostgreSQL.
 7. Le système confirme l'enregistrement.
 8. Fin de l'activité.
 
@@ -375,19 +385,22 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Recevoir des alertes SMS et WhatsApp »
 - **Acteur principal:** Utilisateur Premium
-- **Acteur secondaire:** Services d'envoi SMS et WhatsApp
+- **Acteurs secondaires:** WAHA, Service SMS, Base de données PostgreSQL
 - **Précondition:** L'utilisateur Premium possède un abonnement actif et les coordonnées des canaux activés sont configurées.
 - **Début:** Une condition d'alerte correspondant aux paramètres de l'utilisateur est détectée.
 - **Postcondition:** Les notifications activées sont envoyées et leur état est enregistré.
 
 ## Scénario nominal
 1. Le système détecte une condition correspondant aux paramètres d'alerte.
-2. Le système vérifie l'abonnement et les canaux activés de l'utilisateur.
+2. Le système vérifie l'abonnement et les canaux activés de l'utilisateur dans PostgreSQL.
 3. Le système prépare le message d'alerte.
-4. Le système envoie le message par SMS et/ou WhatsApp selon les canaux configurés.
-5. Les services d'envoi retournent le résultat de la transmission.
-6. Le système enregistre l'état de l'alerte.
-7. Fin de l'activité.
+4. Pour le canal WhatsApp, le système transmet le message à WAHA.
+5. WAHA envoie le message WhatsApp à l'utilisateur.
+6. Pour le canal SMS, le système transmet le message au Service SMS.
+7. Le Service SMS envoie le SMS en utilisant le fournisseur configuré, notamment HTTPSMS ou SMSGate.
+8. Les services externes retournent le résultat de la transmission.
+9. Le système enregistre l'état des notifications dans PostgreSQL.
+10. Fin de l'activité.
 
 ## Scénario alternatif
 ### 2 - Canal non disponible
@@ -404,18 +417,19 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Gérer les alertes »
 - **Acteur principal:** Utilisateur Standard ou Utilisateur Premium
+- **Acteur secondaire:** Base de données PostgreSQL
 - **Précondition:** L'utilisateur est authentifié.
 - **Début:** L'utilisateur ouvre la gestion des alertes.
 - **Postcondition:** Les préférences d'alerte sont enregistrées ou l'abonnement est désactivé selon l'action réalisée.
 
 ## Scénario nominal
 1. L'utilisateur ouvre la gestion des alertes.
-2. Le système charge ses préférences d'alerte.
+2. Le système charge ses préférences depuis PostgreSQL.
 3. L'utilisateur choisit les canaux et paramètres qu'il souhaite utiliser.
 4. L'utilisateur renseigne ou modifie les coordonnées nécessaires.
 5. Le système valide les informations saisies.
 6. Les informations sont valides.
-7. Le système crée ou met à jour l'abonnement.
+7. Le système crée ou met à jour l'abonnement dans PostgreSQL.
 8. Le système confirme l'enregistrement des préférences.
 9. Fin de l'activité.
 
@@ -432,7 +446,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ### 3 - Désactivation des alertes
 3.1. L'utilisateur choisit de désactiver son abonnement.
 
-3.2. Le système désactive l'abonnement.
+3.2. Le système désactive l'abonnement dans PostgreSQL.
 
 3.3. Le système confirme la désactivation.
 
@@ -445,9 +459,10 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Collecter automatiquement les données FIRMS »
 - **Acteur principal:** NASA FIRMS
+- **Acteur secondaire:** Base de données PostgreSQL
 - **Précondition:** Les accès nécessaires à NASA FIRMS sont configurés et JeryMotro peut enregistrer les données collectées.
 - **Début:** JeryMotro lance automatiquement une collecte de données.
-- **Postcondition:** Les nouvelles détections disponibles sont intégrées dans JeryMotro et l'exécution de collecte est enregistrée.
+- **Postcondition:** Les nouvelles détections disponibles sont intégrées dans PostgreSQL et l'exécution de la collecte est enregistrée.
 
 ## Scénario nominal
 1. JeryMotro déclenche une collecte de données.
@@ -456,22 +471,18 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 4. Le système analyse et prépare les données reçues.
 5. Le système filtre les données nécessaires.
 6. Le système supprime les doublons.
-7. Le système insère ou met à jour les détections dans la base de données.
+7. Le système insère ou met à jour les détections dans PostgreSQL.
 8. Le système vérifie que l'enregistrement s'est correctement déroulé.
-9. Le système enregistre l'exécution et ses métriques.
+9. Le système enregistre l'exécution et ses métriques dans PostgreSQL.
 10. Fin de l'activité.
 
 ## Scénario alternatif
-### 2 - Une source FIRMS est indisponible
+### 2 - Source FIRMS indisponible
 2.1. Le système détecte qu'une source FIRMS ne répond pas correctement.
 
-2.2. Le système marque la source concernée comme indisponible ou en état dégradé.
+2.2. Le système enregistre l'état de la collecte.
 
-2.3. Le système vérifie si d'autres sources disponibles permettent de poursuivre la collecte.
-
-2.4. La collecte se poursuit avec les sources disponibles.
-
-2.5. Reprise au point **4** du scénario nominal.
+2.3. Fin de l'activité.
 
 ### 3 - Aucune nouvelle donnée
 3.1. NASA FIRMS ne retourne aucune nouvelle donnée pour la période demandée.
@@ -482,7 +493,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 
 ## Scénario exceptionnel
 ### 7 - Échec de l'enregistrement
-7.1. Le système ne parvient pas à enregistrer les détections dans la base de données.
+7.1. Le système ne parvient pas à enregistrer les détections dans PostgreSQL.
 
 7.2. Le système enregistre l'exécution comme échouée lorsque cela est possible.
 
@@ -495,35 +506,37 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Générer les prédictions de risque »
 - **Acteur principal:** Service ML externe
-- **Précondition:** Les données nécessaires à la prédiction sont disponibles et le service ML externe est accessible.
-- **Début:** JeryMotro transmet les données nécessaires au service ML externe.
-- **Postcondition:** Les prédictions retournées par le service ML sont récupérées et disponibles pour les traitements de JeryMotro.
+- **Acteur secondaire:** Base de données PostgreSQL
+- **Précondition:** Les données nécessaires à la prédiction sont disponibles dans JeryMotro et le service ML externe est accessible.
+- **Début:** JeryMotro prépare et transmet les données nécessaires au service ML externe.
+- **Postcondition:** Les prédictions retournées sont vérifiées et enregistrées dans PostgreSQL pour les traitements associés.
 
 ## Scénario nominal
-1. Le système prépare les données nécessaires à la prédiction.
-2. Le système transmet les données au service ML externe.
-3. Le service ML externe traite les données.
-4. Le service ML externe génère les prédictions de risque.
-5. Le service ML externe retourne les résultats à JeryMotro.
-6. Le système récupère et vérifie les résultats.
-7. Le système rend les prédictions disponibles pour les traitements associés.
-8. Fin de l'activité.
+1. Le système récupère dans PostgreSQL les données nécessaires à la prédiction.
+2. Le système prépare les données.
+3. Le système transmet les données au service ML externe.
+4. Le service ML externe traite les données.
+5. Le service ML externe génère les prédictions de risque.
+6. Le service ML externe retourne les résultats à JeryMotro.
+7. Le système récupère et vérifie les résultats.
+8. Le système enregistre les prédictions dans PostgreSQL.
+9. Fin de l'activité.
 
 ## Scénario alternatif
-### 6 - Résultat inexploitable
-6.1. Le système constate que le résultat reçu ne peut pas être exploité correctement.
+### 7 - Résultat inexploitable
+7.1. Le système constate que le résultat reçu ne peut pas être exploité correctement.
 
-6.2. Le système indique que la prédiction n'est pas disponible pour le traitement demandé.
+7.2. Le système ne valide pas la prédiction reçue.
 
-6.3. Fin de l'activité.
+7.3. Fin de l'activité.
 
 ## Scénario exceptionnel
-### 2 - Service ML indisponible
-2.1. Le service ML externe ne répond pas ou retourne une erreur.
+### 3 - Service ML indisponible
+3.1. Le service ML externe ne répond pas ou retourne une erreur.
 
-2.2. Le système ne valide pas de nouvelle prédiction.
+3.2. Le système ne valide pas de nouvelle prédiction.
 
-2.3. Fin de l'activité.
+3.3. Fin de l'activité.
 
 ---
 
@@ -532,27 +545,28 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Mettre à jour le statut des feux »
 - **Acteur principal:** Système JeryMotro
+- **Acteur secondaire:** Base de données PostgreSQL
 - **Précondition:** Des détections ou résultats de prédiction sont disponibles pour le traitement.
 - **Début:** Le système lance la mise à jour des statuts à partir des nouvelles données disponibles.
-- **Postcondition:** Les statuts des feux sont mis à jour dans JeryMotro.
+- **Postcondition:** Les statuts des feux sont mis à jour dans PostgreSQL.
 
 ## Scénario nominal
-1. Le système récupère les nouvelles détections et les résultats nécessaires.
+1. Le système récupère les nouvelles détections et les résultats de prédiction depuis PostgreSQL.
 2. Le système regroupe les informations correspondant aux événements de feu.
 3. Le système met à jour les informations temporelles des événements.
 4. Le système évalue l'état de chaque feu.
 5. Le système attribue le statut correspondant aux données disponibles.
 6. Le système vérifie si une nouvelle activité indique la réactivation d'un feu précédemment inactif.
-7. Le système enregistre les statuts mis à jour.
+7. Le système enregistre les statuts mis à jour dans PostgreSQL.
 8. Fin de l'activité.
 
 ## Scénario alternatif
 ### 4 - Données insuffisantes
 4.1. Le système ne dispose pas de données suffisantes pour déterminer précisément le statut.
 
-4.2. Le système attribue le statut correspondant à l'incertitude des données lorsque nécessaire.
+4.2. Le système conserve ou attribue le statut correspondant aux données disponibles.
 
-4.3. Le système enregistre l'état obtenu.
+4.3. Le système enregistre l'état obtenu dans PostgreSQL.
 
 4.4. Fin de l'activité.
 
@@ -570,19 +584,21 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ## Généralité
 - **Activité:** « Déclencher les alertes »
 - **Acteur principal:** Système JeryMotro
-- **Précondition:** Les événements de feu et leurs statuts sont disponibles, et les abonnements d'alerte actifs peuvent être consultés.
+- **Acteur secondaire:** Base de données PostgreSQL
+- **Précondition:** Les événements de feu et leurs statuts sont disponibles dans PostgreSQL, et les abonnements d'alerte actifs peuvent être consultés.
 - **Début:** Le système détecte un événement répondant aux conditions d'alerte.
-- **Postcondition:** Les alertes correspondant aux préférences des utilisateurs sont déclenchées et leur résultat est enregistré.
+- **Postcondition:** Les alertes correspondant aux préférences des utilisateurs sont déclenchées et leur résultat est enregistré dans PostgreSQL.
 
 ## Scénario nominal
-1. Le système récupère les événements de feu et leurs statuts.
+1. Le système récupère les événements de feu et leurs statuts depuis PostgreSQL.
 2. Le système identifie les événements répondant aux conditions d'alerte.
-3. Le système récupère les abonnements d'alerte actifs.
+3. Le système récupère les abonnements d'alerte actifs depuis PostgreSQL.
 4. Le système compare les caractéristiques de chaque événement avec les paramètres d'alerte des utilisateurs concernés.
 5. Le système détermine les canaux de notification activés pour chaque utilisateur.
 6. Le système déclenche l'envoi des alertes par les canaux correspondants.
-7. Le système enregistre le résultat des notifications.
-8. Fin de l'activité.
+7. Les services externes de notification traitent les demandes d'envoi.
+8. Le système enregistre le résultat des notifications dans PostgreSQL.
+9. Fin de l'activité.
 
 ## Scénario alternatif
 ### 4 - Aucun utilisateur concerné
@@ -605,7 +621,7 @@ Les descriptions suivantes correspondent aux cas d'utilisation du diagramme de c
 ### 6 - Échec d'envoi
 6.1. Un service de notification ne parvient pas à transmettre l'alerte.
 
-6.2. Le système enregistre l'échec du canal concerné.
+6.2. Le système enregistre l'échec du canal concerné dans PostgreSQL.
 
 6.3. Le traitement se poursuit pour les autres utilisateurs ou canaux lorsque cela est possible.
 
