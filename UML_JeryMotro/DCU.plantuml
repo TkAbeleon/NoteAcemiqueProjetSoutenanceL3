@@ -12,6 +12,9 @@ actor "NASA FIRMS" as FIRMS
 actor "Service ML externe" as ML
 actor "n8n" as N8N
 actor "Base de connaissances Qdrant" as Qdrant
+actor "Base de données PostgreSQL" as PSQL
+actor "WAHA" as WAHA
+actor "Service SMS" as SMS
 
 rectangle "Système JeryMotro" {
 
@@ -66,15 +69,19 @@ UC10 ..> UC9 : <<extend>>
 
 ' Collecte des données externes
 FIRMS --> UC11
+PSQL --> UC11
 
 ' Traitement ML externe
 ML --> UC12
+PSQL --> UC12
 
 ' Traitements internes
 UC11 --> UC13
 UC12 --> UC13
+PSQL --> UC13
 UC13 --> UC14
 UC10 <-- UC14
+PSQL --> UC14
 
 ' Chat IA avec n8n
 N8N --> UC6
@@ -86,9 +93,17 @@ N8N --> UC18
 UC6 ..> UC15 : <<include>>
 UC15 ..> UC16 : <<include>>
 UC15 ..> UC17 : <<include>>
-UC15 ..> UC18 : <<include>>
+UC15 ..> UC18 : <<extend>>
 
-' Base de connaissances externe
+' Sources du Chat IA
+PSQL --> UC16
 Qdrant --> UC17
+PSQL --> UC18
+Qdrant --> UC18
+
+' Notifications externes
+N8N --> UC7
+WAHA --> UC9
+SMS --> UC9
 
 @enduml
