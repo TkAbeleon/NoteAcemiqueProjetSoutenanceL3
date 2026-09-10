@@ -2,7 +2,7 @@
 
 Ce document décrit les cas d'utilisation présents dans le diagramme de cas d'utilisation (DCU) de JeryMotro.
 
-Les descriptions sont basées sur le fonctionnement réel du système et restent cohérentes avec le DCU. Pour chaque cas d'utilisation, on présente la généralité, le scénario nominal et, lorsque cela est réellement utile, un scénario alternatif. Un scénario exceptionnel n'est ajouté que lorsqu'un comportement exceptionnel doit être décrit pour comprendre le cas d'utilisation.
+Les descriptions sont basées sur le fonctionnement réel du système et restent cohérentes avec le DCU. Pour chaque cas d'utilisation, on présente la généralité, le scénario nominal et, lorsque cela est réellement utile, un scénario alternatif. Dans ce document, le scénario alternatif correspond à une reprise du scénario nominal après une condition qui demande une nouvelle tentative, une nouvelle saisie ou un nouveau choix. Il est donc présenté sous forme de boucle avec une numérotation du type `x.1`, `x.2`, `x.3`, puis une indication explicite de reprise au point concerné du scénario nominal. Un scénario exceptionnel n'est ajouté que lorsqu'un comportement exceptionnel doit être décrit pour comprendre le cas d'utilisation.
 
 Les éléments techniques internes (base de données, services d'orchestration, fournisseurs de notification, algorithmes et autres composants) ne sont pas utilisés comme acteurs du DCU. Les détails techniques sont réservés aux diagrammes d'activité, de séquence et d'architecture.
 
@@ -52,21 +52,25 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 
 ## Scénario nominal
 1. L'utilisateur ouvre l'espace d'authentification.
-2. Le système demande les informations nécessaires.
-3. L'utilisateur fournit les informations demandées.
-4. Le système vérifie les informations d'authentification.
-5. Les informations sont valides.
-6. Le système authentifie l'utilisateur.
-7. L'utilisateur accède aux fonctionnalités qui lui sont autorisées.
-8. Fin du cas d'utilisation.
+2. Le système propose les deux modes d'authentification disponibles : **par OTP** ou **par e-mail**.
+3. L'utilisateur choisit le mode d'authentification.
+4. Le système demande les informations nécessaires au mode choisi.
+5. L'utilisateur fournit les informations demandées.
+6. Le système vérifie les informations d'authentification.
+7. Les informations sont valides.
+8. Le système authentifie l'utilisateur.
+9. L'utilisateur accède aux fonctionnalités qui lui sont autorisées.
+10. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 4 — Informations incorrectes
-4.1. Les informations fournies ne permettent pas d'authentifier l'utilisateur.
+### 6 — Informations ou code incorrect
+6.1. Le système constate que les informations fournies ou le code OTP ne permettent pas d'authentifier l'utilisateur.
 
-4.2. Le système indique l'échec de l'authentification.
+6.2. Le système indique l'échec de l'authentification.
 
-4.3. L'utilisateur peut recommencer l'authentification.
+6.3. L'utilisateur saisit à nouveau les informations nécessaires ou choisit un autre mode d'authentification.
+
+6.4. Reprise au point **3** du scénario nominal.
 
 ---
 
@@ -89,12 +93,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 7. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 5 — Aucun résultat
-5.1. Aucune détection ne correspond aux critères sélectionnés.
+### 3 — Modification des critères de consultation
+3.1. Le visiteur souhaite modifier les critères sélectionnés.
 
-5.2. Le système indique qu'aucun résultat correspondant n'est disponible.
+3.2. Le visiteur choisit de nouveaux critères.
 
-5.3. Le visiteur peut modifier les critères.
+3.3. Reprise au point **4** du scénario nominal.
 
 ---
 
@@ -116,12 +120,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 6. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 3 — Aucun feu actif
-3.1. Aucun feu ne correspond au statut actif.
+### 3 — Nouvelle consultation
+3.1. Le visiteur souhaite actualiser ou modifier sa consultation.
 
-3.2. Le système indique qu'aucun feu actif n'est disponible.
+3.2. Le visiteur demande une nouvelle consultation.
 
-3.3. Fin du cas d'utilisation.
+3.3. Reprise au point **1** du scénario nominal.
 
 ---
 
@@ -143,12 +147,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 6. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 2 — Données insuffisantes
-2.1. Certaines données nécessaires à un indicateur ne sont pas disponibles.
+### 4 — Modification de la consultation
+4.1. L'utilisateur souhaite consulter les statistiques selon d'autres critères disponibles.
 
-2.2. Le système présente uniquement les informations disponibles.
+4.2. L'utilisateur modifie sa demande de consultation.
 
-2.3. Fin du cas d'utilisation.
+4.3. Reprise au point **2** du scénario nominal.
 
 ---
 
@@ -171,14 +175,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 7. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 4 — Informations insuffisantes
-4.1. Les informations disponibles ne permettent pas de produire une réponse satisfaisante.
+### 2 — Nouvelle question
+2.1. L'utilisateur souhaite poursuivre la conversation avec une autre question.
 
-4.2. Une réponse indiquant cette limitation est préparée.
+2.2. L'utilisateur saisit une nouvelle question.
 
-4.3. Le système affiche la réponse.
-
-4.4. Fin du cas d'utilisation.
+2.3. Reprise au point **3** du scénario nominal.
 
 ---
 
@@ -232,12 +234,14 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 6. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 2 — Alerte e-mail non configurée ou inactive
-2.1. L'utilisateur n'a pas configuré ou activé la réception des alertes e-mail.
+### 2 — Configuration de l'alerte à corriger
+2.1. Le système constate que la réception e-mail n'est pas correctement configurée ou activée.
 
-2.2. Le système ne transmet pas la notification par e-mail.
+2.2. L'utilisateur ouvre la gestion des alertes.
 
-2.3. Fin du cas d'utilisation.
+2.3. L'utilisateur corrige ou active la configuration e-mail.
+
+2.4. Reprise au point **2** du scénario nominal.
 
 ---
 
@@ -259,12 +263,14 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 6. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 2 — Canal non configuré ou inactif
-2.1. Le canal choisi n'est pas configuré ou n'est pas actif.
+### 2 — Configuration du canal à corriger
+2.1. Le système constate que le canal concerné n'est pas correctement configuré ou activé.
 
-2.2. Le système ne transmet pas la notification par ce canal.
+2.2. L'utilisateur ouvre la gestion des alertes.
 
-2.3. Fin du cas d'utilisation.
+2.3. L'utilisateur corrige ou active la configuration du canal.
+
+2.4. Reprise au point **2** du scénario nominal.
 
 ---
 
@@ -288,7 +294,7 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 8. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 5 — Zone invalide
+### 5 — Zone à corriger
 5.1. Les informations fournies ne permettent pas d'enregistrer correctement la zone.
 
 5.2. Le système signale le problème.
@@ -317,12 +323,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 6. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 4 — Aucune donnée à exporter
-4.1. Les critères sélectionnés ne donnent aucun résultat exportable.
+### 3 — Modification de la sélection
+3.1. L'utilisateur souhaite modifier les données sélectionnées pour l'export.
 
-4.2. Le système informe l'utilisateur qu'aucune donnée n'est disponible pour l'export demandé.
+3.2. L'utilisateur modifie sa sélection.
 
-4.3. Fin du cas d'utilisation.
+3.3. Reprise au point **4** du scénario nominal.
 
 ---
 
@@ -345,12 +351,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 7. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 3 — Aucune nouvelle donnée disponible
-3.1. La source ne fournit aucune nouvelle donnée exploitable.
+### 3 — Nouvelle collecte
+3.1. L'administrateur souhaite relancer la collecte.
 
-3.2. Le système termine la collecte sans ajout de nouvelles données.
+3.2. L'administrateur demande une nouvelle collecte.
 
-3.3. Le système indique le résultat à l'administrateur.
+3.3. Reprise au point **2** du scénario nominal.
 
 ---
 
@@ -373,12 +379,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 7. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 2 — Données insuffisantes
-2.1. Les données disponibles ne sont pas suffisantes pour certaines entrées.
+### 2 — Nouvelle sélection de données
+2.1. L'administrateur souhaite modifier les données à traiter.
 
-2.2. Le système traite les données qui restent exploitables.
+2.2. L'administrateur relance la sélection des données exploitables.
 
-2.3. Le système indique le résultat obtenu.
+2.3. Reprise au point **2** du scénario nominal.
 
 ---
 
@@ -401,12 +407,15 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 7. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 3 — Données insuffisantes pour un regroupement exploitable
-3.1. Les données disponibles ne permettent pas d'obtenir un regroupement suffisamment exploitable.
+### 2 — Nouvelle sélection des détections
+2.1. L'administrateur souhaite modifier les détections prises en compte.
 
-3.2. Le système indique que le résultat du regroupement est limité ou insuffisant.
+2.2. L'administrateur relance la sélection des détections exploitables.
 
-3.3. Fin du cas d'utilisation.
+2.3. Reprise au point **2** du scénario nominal.
+
+### Point de vigilance sur l'état actuel du projet
+Le mécanisme de regroupement est implémenté dans JeryMotro. La qualité et la fiabilité du regroupement HDBSCAN nécessitent toutefois encore une consolidation avec suffisamment de données pour permettre une validation fiable.
 
 ---
 
@@ -429,12 +438,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 7. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 2 — Données insuffisantes
-2.1. Certaines données nécessaires ne sont pas disponibles.
+### 2 — Nouvelle mise à jour
+2.1. L'administrateur souhaite actualiser les informations prises en compte.
 
-2.2. Le système traite uniquement les feux pour lesquels une mise à jour est possible.
+2.2. L'administrateur demande une nouvelle mise à jour.
 
-2.3. Le système indique le résultat obtenu.
+2.3. Reprise au point **2** du scénario nominal.
 
 ---
 
@@ -457,12 +466,12 @@ Les éléments techniques internes (base de données, services d'orchestration, 
 7. Fin du cas d'utilisation.
 
 ## Scénario alternatif
-### 3 — Aucune alerte à déclencher
-3.1. Aucune condition d'alerte active ne correspond aux données traitées.
+### 2 — Nouvelle évaluation
+2.1. L'administrateur souhaite effectuer une nouvelle évaluation des conditions d'alerte.
 
-3.2. Le système ne déclenche aucune notification.
+2.2. L'administrateur demande une nouvelle évaluation.
 
-3.3. Le système indique qu'aucune alerte n'a été déclenchée.
+2.3. Reprise au point **2** du scénario nominal.
 
 ---
 
@@ -508,4 +517,4 @@ Le document reste limité aux cas d'utilisation présents dans le DCU :
 - **Utilisateur Premium :** définir une zone prioritaire, exporter les données et recevoir les alertes SMS et WhatsApp.
 - **Administrateur :** collecter les données, générer les prédictions de risque, regrouper les détections, mettre à jour le statut des feux et déclencher les alertes.
 
-Les scénarios exceptionnels ne sont pas systématiques : ils sont ajoutés uniquement lorsqu'un comportement exceptionnel réel apporte une information utile à la compréhension du cas d'utilisation.
+Les scénarios alternatifs sont utilisés comme des boucles lorsque l'acteur doit recommencer une saisie, modifier un choix ou relancer une opération. Ils indiquent explicitement le point de reprise dans le scénario nominal. Les scénarios exceptionnels restent facultatifs et ne sont ajoutés que lorsqu'un comportement exceptionnel réel est utile à la compréhension du cas d'utilisation.
