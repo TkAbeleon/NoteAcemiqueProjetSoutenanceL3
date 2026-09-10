@@ -1,0 +1,42 @@
+@startuml
+
+title DS13 — Générer les prédictions de risque
+hide footbox
+skinparam shadowing false
+
+actor "Administrateur" as A
+participant "Interface Administration" as I
+participant "API FastAPI" as API
+participant "Routeur Interne" as R
+participant "Service JeryMotroNet" as ML
+participant "Base de données" as DB
+
+A -> I : Demande la génération des prédictions
+I -> API : Requête de traitement
+API -> R : POST /internal/run-scoring
+R -> DB : Sélectionner les détections sans score
+DB --> R : Détections
+
+alt Aucune détection à traiter
+    R --> API : no_detections_to_score
+    API --> I : Aucun traitement nécessaire
+    I --> A : Afficher le résultat
+else Détections disponibles
+    alt Scoring ML désactivé
+        R -> R : Calcul heuristique du score
+        R -> DB : Enregistrer score et label
+    else Scoring ML activé
+        R -> ML : predict_risk_scores(détections)
+        ML --> R : Scores et labels
+        alt Résultat ML invalide ou indisponible
+            R -> R : Utiliser le score heuristique de secours
+        end
+        R -> DB : Enregistrer scores et labels
+    end
+    DB --> R : Confirmation
+    R --> API : Nombre traité + modèle utilisé
+    API --> I : Résultat du traitement
+    I --> A : Afficher le résultat
+end
+
+@enduml
