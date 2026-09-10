@@ -1,0 +1,36 @@
+@startuml
+
+title DS15 — Mettre à jour le statut des feux
+hide footbox
+skinparam shadowing false
+
+actor "Administrateur" as A
+participant "Interface Administration" as I
+participant "API FastAPI" as API
+participant "Service de statut des feux" as S
+participant "Base de données" as DB
+
+A -> I : Demande la mise à jour des statuts
+I -> API : Requête de mise à jour
+API -> S : Évaluer les FireEvent
+S -> DB : Lire les événements et dernières détections
+DB --> S : Données des feux
+
+loop Pour chaque feu à évaluer
+    S -> S : Calculer le délai depuis last_seen
+    alt Détection récente (≤ 9 h)
+        S -> S : Statut = ACTIVE
+    else Absence ≤ 72 h
+        S -> S : Statut = COOLING
+    else Absence > 72 h
+        S -> S : Statut = LIKELY_OUT
+    end
+    S -> DB : Mettre à jour statut et raison
+    DB --> S : Confirmation
+end
+
+S --> API : Résultat de la mise à jour
+API --> I : Statuts mis à jour
+I --> A : Afficher le résultat
+
+@enduml
