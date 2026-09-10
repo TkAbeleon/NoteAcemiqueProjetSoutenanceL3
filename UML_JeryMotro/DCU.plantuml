@@ -1,12 +1,55 @@
 @startuml
 left to right direction
+title Diagramme de cas d'utilisation — Système JeryMotro
 
+skinparam shadowing false
 skinparam packageStyle rectangle
 skinparam actorStyle awesome
-skinparam linetype ortho
-skinparam nodesep 25
-skinparam ranksep 55
-skinparam packagePadding 18
+skinparam linetype polyline
+skinparam roundCorner 8
+
+skinparam nodesep 70
+skinparam ranksep 110
+skinparam packagePadding 30
+skinparam padding 6
+
+skinparam ArrowColor #7A8699
+skinparam ArrowFontColor #5A6472
+skinparam ArrowFontSize 11
+skinparam ArrowThickness 1
+
+skinparam usecase {
+    BackgroundColor #FDFEFE
+    BorderColor #4A7AA8
+    FontSize 13
+    FontColor #1B2733
+}
+
+skinparam actor {
+    BackgroundColor #FDFEFE
+    BorderColor #4A7AA8
+    FontSize 13
+    FontColor #1B2733
+}
+
+skinparam package {
+    BackgroundColor #F6F8FB
+    BorderColor #99A3B0
+    FontSize 14
+    FontStyle bold
+    FontColor #1B2733
+}
+
+skinparam rectangle {
+    BackgroundColor #FCFDFF
+    BorderColor #33475B
+    FontSize 15
+    FontStyle bold
+    FontColor #1B2733
+}
+
+skinparam TitleFontSize 18
+skinparam TitleFontColor #1B2733
 
 ' ==================================================
 ' ACTEURS HUMAINS — côté gauche
