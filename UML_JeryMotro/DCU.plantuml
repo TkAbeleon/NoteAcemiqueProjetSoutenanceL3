@@ -55,15 +55,13 @@ skinparam TitleFontColor #1B2733
 ' ACTEURS HUMAINS — côté gauche
 ' ==================================================
 
-together {
-    actor "Visiteur" as Visiteur
-    actor "Utilisateur Standard" as Standard
-    actor "Utilisateur Premium" as Premium
-}
+actor "Visiteur" as Visiteur
+actor "Utilisateur Standard" as Standard
+actor "Utilisateur Premium" as Premium
 
-' Héritage vertical des profils
-Visiteur -[hidden]down-> Standard
-Standard -[hidden]down-> Premium
+' Ordre vertical forcé : Visiteur (haut) -> Standard -> Premium (bas)
+Standard -[hidden]down-> Visiteur
+Premium -[hidden]down-> Standard
 
 ' ==================================================
 ' ACTEURS / SERVICES EXTERNES — côté droit
@@ -137,8 +135,8 @@ Premium -right-> UC8
 Premium -right-> UC9
 
 ' Héritage : Premium -> Standard -> Visiteur
-Standard -up-|> Visiteur
-Premium -up-|> Standard
+Standard -down-|> Visiteur
+Premium -down-|> Standard
 
 ' ==================================================
 ' AUTHENTIFICATION OBLIGATOIRE
