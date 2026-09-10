@@ -1,0 +1,44 @@
+@startuml
+
+title DS01 — Créer un compte
+hide footbox
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+
+actor "Visiteur" as V
+participant "Interface JeryMotro" as I
+participant "API FastAPI" as API
+participant "Auth Router" as AUTH
+participant "Auth Service" as AS
+participant "Base de données" as DB
+
+V -> I : Demande la création d'un compte
+I -> API : POST /auth/register
+API -> AUTH : register(données)
+AUTH -> DB : Rechercher l'e-mail
+DB --> AUTH : Résultat
+
+alt E-mail déjà utilisé
+    AUTH --> API : Erreur 400
+    API --> I : Inscription refusée
+    I --> V : Signaler le problème
+    loop Jusqu'à correction des données
+        V -> I : Corrige les informations
+        I -> API : Nouvelle requête d'inscription
+        API -> AUTH : register(données corrigées)
+        AUTH -> DB : Vérifier l'e-mail
+        DB --> AUTH : Résultat
+    end
+else E-mail disponible
+    AUTH -> AS : hash_password(mot de passe)
+    AS --> AUTH : Mot de passe haché
+    AUTH -> DB : INSERT User (rôle standard)
+    DB --> AUTH : Utilisateur créé
+    AUTH -> AS : create_access_token(id, rôle)
+    AS --> AUTH : JWT
+    AUTH --> API : Compte + access_token
+    API --> I : 201 + utilisateur + JWT
+    I --> V : Confirmer la création
+end
+
+@enduml
