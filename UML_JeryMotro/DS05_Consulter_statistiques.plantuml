@@ -1,0 +1,35 @@
+@startuml
+
+title DS05 — Consulter les statistiques
+hide footbox
+skinparam shadowing false
+
+actor "Utilisateur Standard" as U
+participant "Interface Statistiques" as I
+participant "API FastAPI" as API
+participant "Routeur Détections" as D
+participant "Base de données" as DB
+
+U -> I : Ouvre les statistiques
+I -> API : GET /detections/stats/daily
+API -> D : daily_stats(période)
+D -> DB : Agréger les détections par jour
+DB --> D : Totaux, risques, FRP
+D -> DB : Rechercher les régions affectées
+DB --> D : Régions distinctes
+D --> API : Statistiques quotidiennes
+API --> I : Données statistiques
+I --> U : Afficher les indicateurs
+
+loop Modification de la période
+    U -> I : Change la période
+    I -> API : Nouvelle requête avec date_from/date_to
+    API -> D : Recalculer les statistiques
+    D -> DB : Agrégations filtrées
+    DB --> D : Résultats
+    D --> API : Statistiques
+    API --> I : Mise à jour
+    I --> U : Afficher les nouveaux indicateurs
+end
+
+@enduml
