@@ -3,6 +3,13 @@ left to right direction
 
 skinparam packageStyle rectangle
 skinparam actorStyle awesome
+skinparam linetype ortho
+skinparam nodesep 35
+skinparam ranksep 45
+
+' =========================
+' Acteurs externes
+' =========================
 
 actor "Visiteur" as Visiteur
 actor "Utilisateur Standard" as Standard
@@ -18,32 +25,59 @@ actor "Service SMS" as SMS
 
 rectangle "Système JeryMotro" {
 
-    usecase "Consulter carte de feux" as UC1
-    usecase "Voir les feux actifs" as UC2
-    usecase "Créer compte" as UC3
+    ' =========================
+    ' Fonctionnalités publiques
+    ' =========================
+    package "Accès public" {
+        usecase "Consulter carte de feux" as UC1
+        usecase "Voir les feux actifs" as UC2
+        usecase "Créer compte" as UC3
+    }
 
-    usecase "S'authentifier" as UC4
-    usecase "Consulter statistiques" as UC5
-    usecase "Dialoguer avec le Chat IA" as UC6
-    usecase "Recevoir alertes e-mail" as UC7
+    ' =========================
+    ' Authentification
+    ' =========================
+    package "Authentification" {
+        usecase "S'authentifier" as UC4
+    }
 
-    usecase "Définir zone prioritaire" as UC8
-    usecase "Recevoir alertes SMS et WhatsApp" as UC9
+    ' =========================
+    ' Fonctionnalités utilisateur
+    ' =========================
+    package "Services utilisateur" {
+        usecase "Consulter statistiques" as UC5
+        usecase "Dialoguer avec le Chat IA" as UC6
+        usecase "Recevoir alertes e-mail" as UC7
+        usecase "Définir zone prioritaire" as UC8
+        usecase "Recevoir alertes SMS et WhatsApp" as UC9
+        usecase "Gérer les alertes" as UC10
+    }
 
-    usecase "Gérer les alertes" as UC10
+    ' =========================
+    ' Traitements automatiques
+    ' =========================
+    package "Traitements automatiques" {
+        usecase "Collecter automatiquement les données FIRMS" as UC11
+        usecase "Générer les prédictions de risque" as UC12
+        usecase "Mettre à jour le statut des feux" as UC13
+        usecase "Déclencher les alertes" as UC14
+    }
 
-    usecase "Collecter automatiquement les données FIRMS" as UC11
-    usecase "Générer les prédictions de risque" as UC12
-    usecase "Mettre à jour le statut des feux" as UC13
-    usecase "Déclencher les alertes" as UC14
-
-    usecase "Identifier le type de question" as UC15
-    usecase "Interroger la base de données" as UC16
-    usecase "Interroger la base de connaissances" as UC17
-    usecase "Combiner les résultats des sources" as UC18
+    ' =========================
+    ' Traitement du Chat IA
+    ' =========================
+    package "Traitement du Chat IA" {
+        usecase "Identifier le type de question" as UC15
+        usecase "Interroger la base de données" as UC16
+        usecase "Interroger la base de connaissances" as UC17
+        usecase "Combiner les résultats des sources" as UC18
+    }
 }
 
-' Associations avec les utilisateurs
+' =========================
+' Acteurs utilisateurs
+' =========================
+
 Visiteur --> UC1
 Visiteur --> UC2
 Visiteur --> UC3
@@ -56,33 +90,50 @@ Standard --> UC10
 
 Premium --> UC8
 Premium --> UC9
-Premium --> UC10
 
-' Généralisation des acteurs
+' Héritage des profils
 Standard --|> Visiteur
 Premium --|> Standard
 
+' =========================
+' Authentification obligatoire
+' =========================
+
+UC5 ..> UC4 : <<include>>
+UC6 ..> UC4 : <<include>>
+UC7 ..> UC4 : <<include>>
+UC8 ..> UC4 : <<include>>
+UC9 ..> UC4 : <<include>>
+UC10 ..> UC4 : <<include>>
+
+' =========================
 ' Base de données PostgreSQL
+' =========================
+
 PSQL --> UC1
 PSQL --> UC2
 PSQL --> UC3
 PSQL --> UC4
 PSQL --> UC5
+PSQL --> UC6
 PSQL --> UC8
-PSQL --> UC9
 PSQL --> UC10
 PSQL --> UC11
 PSQL --> UC12
 PSQL --> UC13
 PSQL --> UC14
-PSQL --> UC16
-PSQL --> UC18
 
-' Collecte et prédiction avec les systèmes externes
+' =========================
+' Collecte FIRMS et prédictions ML
+' =========================
+
 FIRMS --> UC11
 ML --> UC12
 
-' Chat IA avec n8n
+' =========================
+' Chat IA / n8n
+' =========================
+
 N8N --> UC6
 N8N --> UC15
 N8N --> UC16
@@ -90,14 +141,28 @@ N8N --> UC17
 N8N --> UC18
 
 UC6 ..> UC15 : <<include>>
+UC15 ..> UC16 : <<include>>
+UC15 ..> UC17 : <<include>>
+UC15 ..> UC18 : <<extend>>
 
-' Sources du Chat IA
 Qdrant --> UC17
 Qdrant --> UC18
 
+' =========================
 ' Notifications
+' =========================
+
 N8N --> UC7
 WAHA --> UC9
 SMS --> UC9
+
+' =========================
+' Traitement automatique des alertes
+' =========================
+
+UC11 --> UC13
+UC12 --> UC13
+UC13 --> UC14
+PSQL --> UC14
 
 @enduml
