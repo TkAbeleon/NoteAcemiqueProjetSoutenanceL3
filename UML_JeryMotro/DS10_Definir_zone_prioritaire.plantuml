@@ -1,0 +1,42 @@
+@startuml
+
+title DS10 — Définir une zone prioritaire
+hide footbox
+skinparam shadowing false
+
+actor "Utilisateur Premium" as U
+participant "Interface Zones" as I
+participant "API FastAPI" as API
+participant "Routeur Zones" as Z
+participant "Base de données" as DB
+
+U -> I : Ouvre la gestion des zones
+I -> API : GET /zones/
+API -> Z : get_zones()
+Z -> DB : Rechercher les zones de l'utilisateur
+DB --> Z : Zones
+Z --> API : Zones
+API --> I : Liste des zones
+I --> U : Afficher les zones
+
+U -> I : Définit nom, centre, rayon et seuils
+I -> API : POST /zones/
+API -> Z : create_zone(données)
+Z -> DB : INSERT MonitoredZone
+DB --> Z : Zone créée
+Z --> API : Zone
+API --> I : Zone enregistrée
+I --> U : Confirmer l'enregistrement
+
+loop Modification ou nouvelle zone
+    U -> I : Modifie ou ajoute une zone
+    I -> API : Nouvelle requête
+    API -> Z : create_zone(données)
+    Z -> DB : Enregistrer la zone
+    DB --> Z : Confirmation
+    Z --> API : Zone
+    API --> I : Mise à jour
+    I --> U : Afficher la zone
+end
+
+@enduml
