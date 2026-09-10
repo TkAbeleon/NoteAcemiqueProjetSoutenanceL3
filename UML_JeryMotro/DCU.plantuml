@@ -1,212 +1,107 @@
 @startuml
 left to right direction
+
 title Diagramme de cas d'utilisation — Système JeryMotro
 
 skinparam shadowing false
-skinparam packageStyle rectangle
 skinparam actorStyle awesome
-skinparam linetype polyline
-skinparam roundCorner 8
+skinparam linetype ortho
+skinparam nodesep 55
+skinparam ranksep 75
 
-skinparam nodesep 70
-skinparam ranksep 110
-skinparam packagePadding 30
-skinparam padding 6
+' =========================================================
+' ACTEURS
+' =========================================================
 
-skinparam ArrowColor #7A8699
-skinparam ArrowFontColor #5A6472
-skinparam ArrowFontSize 11
-skinparam ArrowThickness 1
+actor "Visiteur" as VIS
+actor "Utilisateur Standard" as STD
+actor "Utilisateur Premium" as PRE
+actor "Administrateur" as ADM
 
-skinparam usecase {
-    BackgroundColor #FDFEFE
-    BorderColor #4A7AA8
-    FontSize 13
-    FontColor #1B2733
-}
+' Hiérarchie des rôles
+STD -|> VIS
+PRE -|> STD
+ADM -|> PRE
 
-skinparam actor {
-    BackgroundColor #FDFEFE
-    BorderColor #4A7AA8
-    FontSize 13
-    FontColor #1B2733
-}
-
-skinparam package {
-    BackgroundColor #F6F8FB
-    BorderColor #99A3B0
-    FontSize 14
-    FontStyle bold
-    FontColor #1B2733
-}
-
-skinparam rectangle {
-    BackgroundColor #FCFDFF
-    BorderColor #33475B
-    FontSize 15
-    FontStyle bold
-    FontColor #1B2733
-}
-
-skinparam TitleFontSize 18
-skinparam TitleFontColor #1B2733
-
-' ==================================================
-' ACTEURS HUMAINS — côté gauche
-' ==================================================
-
-actor "Visiteur" as Visiteur
-actor "Utilisateur Standard" as Standard
-actor "Utilisateur Premium" as Premium
-
-' Ordre vertical forcé : Visiteur (haut) -> Standard -> Premium (bas)
-Standard -[hidden]down-> Visiteur
-Premium -[hidden]down-> Standard
-
-' ==================================================
-' ACTEURS / SERVICES EXTERNES — côté droit
-' ==================================================
-
-together {
-    actor "NASA FIRMS" as FIRMS
-    actor "Service ML externe" as ML
-    actor "n8n" as N8N
-    actor "Base de connaissances Qdrant" as Qdrant
-    actor "Base de données PostgreSQL" as PSQL
-    actor "WAHA" as WAHA
-    actor "Service SMS" as SMS
-}
-
-' ==================================================
+' =========================================================
 ' SYSTÈME JERYMOTRO
-' ==================================================
+' =========================================================
 
 rectangle "Système JeryMotro" {
 
-    package "Accès public" {
-        usecase "Consulter carte de feux" as UC1
-        usecase "Voir les feux actifs" as UC2
-        usecase "Créer compte" as UC3
-    }
+    usecase "Créer un compte" as UC01
+    usecase "S'authentifier" as UC02
 
-    package "Authentification" {
-        usecase "S'authentifier" as UC4
-    }
+    usecase "Consulter la carte des feux" as UC03
+    usecase "Consulter les feux actifs" as UC04
+    usecase "Consulter les statistiques" as UC05
 
-    package "Services utilisateur" {
-        usecase "Consulter statistiques" as UC5
-        usecase "Dialoguer avec le Chat IA" as UC6
-        usecase "Recevoir alertes e-mail" as UC7
-        usecase "Définir zone prioritaire" as UC8
-        usecase "Recevoir alertes SMS et WhatsApp" as UC9
-        usecase "Gérer les alertes" as UC10
-    }
+    usecase "Dialoguer avec le Chat IA" as UC06
 
-    package "Traitements automatiques" {
-        usecase "Collecter automatiquement les données FIRMS" as UC11
-        usecase "Générer les prédictions de risque" as UC12
-        usecase "Mettre à jour le statut des feux" as UC13
-        usecase "Déclencher les alertes" as UC14
-    }
+    usecase "Gérer les alertes" as UC07
+    usecase "Recevoir les alertes e-mail" as UC08
+    usecase "Recevoir les alertes SMS et WhatsApp" as UC09
 
-    package "Traitement du Chat IA" {
-        usecase "Identifier le type de question" as UC15
-        usecase "Interroger la base de données" as UC16
-        usecase "Interroger la base de connaissances" as UC17
-        usecase "Combiner les résultats des sources" as UC18
-    }
+    usecase "Définir une zone prioritaire" as UC10
+    usecase "Exporter les données" as UC11
+
+    usecase "Collecter les données" as UC12
+    usecase "Générer les prédictions de risque" as UC13
+    usecase "Regrouper les détections" as UC14
+    usecase "Mettre à jour le statut des feux" as UC15
+    usecase "Déclencher les alertes" as UC16
 }
 
-' ==================================================
-' ACTEURS HUMAINS
-' ==================================================
+' =========================================================
+' VISITEUR
+' =========================================================
 
-Visiteur -right-> UC1
-Visiteur -right-> UC2
-Visiteur -right-> UC3
+VIS --> UC01
+VIS --> UC03
+VIS --> UC04
 
-Standard -right-> UC4
-Standard -right-> UC5
-Standard -right-> UC6
-Standard -right-> UC7
-Standard -right-> UC10
+' =========================================================
+' UTILISATEUR STANDARD
+' =========================================================
 
-Premium -right-> UC8
-Premium -right-> UC9
+STD --> UC02
+STD --> UC05
+STD --> UC06
+STD --> UC07
+STD --> UC08
 
-' Héritage : Premium -> Standard -> Visiteur
-Standard -down-|> Visiteur
-Premium -down-|> Standard
+' =========================================================
+' UTILISATEUR PREMIUM
+' =========================================================
 
-' ==================================================
-' AUTHENTIFICATION OBLIGATOIRE
-' ==================================================
+PRE --> UC10
+PRE --> UC11
+PRE --> UC09
 
-UC5 ..> UC4 : <<include>>
-UC6 ..> UC4 : <<include>>
-UC7 ..> UC4 : <<include>>
-UC8 ..> UC4 : <<include>>
-UC9 ..> UC4 : <<include>>
-UC10 ..> UC4 : <<include>>
+' =========================================================
+' ADMINISTRATEUR
+' =========================================================
 
-' ==================================================
-' BASE DE DONNÉES POSTGRESQL
-' ==================================================
+ADM --> UC12
+ADM --> UC13
+ADM --> UC14
+ADM --> UC15
+ADM --> UC16
 
-UC1 -right-> PSQL
-UC2 -right-> PSQL
-UC3 -right-> PSQL
-UC4 -right-> PSQL
-UC5 -right-> PSQL
-UC6 -right-> PSQL
-UC8 -right-> PSQL
-UC10 -right-> PSQL
-UC11 -right-> PSQL
-UC12 -right-> PSQL
-UC13 -right-> PSQL
-UC14 -right-> PSQL
-UC16 -right-> PSQL
-UC18 -right-> PSQL
+' =========================================================
+' AUTHENTIFICATION
+' =========================================================
 
-' ==================================================
-' COLLECTE FIRMS ET PRÉDICTIONS ML
-' ==================================================
+UC05 ..> UC02 : <<include>>
+UC06 ..> UC02 : <<include>>
+UC07 ..> UC02 : <<include>>
+UC08 ..> UC02 : <<include>>
+UC09 ..> UC02 : <<include>>
+UC10 ..> UC02 : <<include>>
+UC11 ..> UC02 : <<include>>
 
-UC11 -right-> FIRMS
-UC12 -right-> ML
-
-' ==================================================
-' CHAT IA / n8n
-' ==================================================
-
-UC6 ..> UC15 : <<include>>
-UC15 ..> UC16 : <<include>>
-UC15 ..> UC17 : <<include>>
-UC15 ..> UC18 : <<extend>>
-
-UC6 -right-> N8N
-UC15 -right-> N8N
-UC16 -right-> N8N
-UC17 -right-> N8N
-UC18 -right-> N8N
-UC17 -right-> Qdrant
-UC18 -right-> Qdrant
-
-' ==================================================
-' NOTIFICATIONS
-' ==================================================
-
-UC7 -right-> N8N
-UC9 -right-> WAHA
-UC9 -right-> SMS
-
-' ==================================================
-' TRAITEMENTS AUTOMATIQUES DES ALERTES
-' ==================================================
-
-UC11 ..> UC13 : <<include>>
-UC12 ..> UC13 : <<include>>
-UC13 ..> UC14 : <<include>>
-UC14 -right-> PSQL
+' Configuration préalable des alertes
+UC08 ..> UC07 : <<include>>
+UC09 ..> UC07 : <<include>>
 
 @enduml
