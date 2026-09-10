@@ -1,7 +1,5 @@
 # Diagramme de cas d'utilisation — JeryMotro
 
-> Note : le fichier source est un **diagramme de cas d'utilisation** UML (généré avec Visual Paradigm Community Edition), et non un diagramme d'activité.
-
 ## Système
 
 **JeryMotro**
@@ -11,82 +9,71 @@
 - **Visiteur**
 - **Utilisateur Standard**
 - **Utilisateur Premium**
+- **Administrateur**
 
 ## Généralisation entre acteurs
 
-Les flèches à triangle creux indiquent une relation d'héritage entre acteurs :
+- `Utilisateur Standard` **--|>** `Visiteur`
+- `Utilisateur Premium` **--|>** `Utilisateur Standard`
+- `Administrateur` **--|>** `Utilisateur Premium`
 
-- `Utilisateur Standard` **--|>** `Visiteur` _(hérite de)_
-- `Utilisateur Premium` **--|>** `Utilisateur Standard` _(hérite de)_
-
-Autrement dit : un Utilisateur Standard peut tout faire ce que peut un Visiteur, et un Utilisateur Premium peut tout faire ce que peut un Utilisateur Standard.
+Les acteurs spécialisés héritent des fonctionnalités de l'acteur général.
 
 ## Cas d'utilisation par acteur
 
 ### Visiteur
 
-- Consulter carte de feux
-- Voir les feux actifs
-- Créer compte
+- Créer un compte
+- Consulter la carte des feux
+- Consulter les feux actifs
 
-### Utilisateur Standard (+ hérite des cas du Visiteur)
+### Utilisateur Standard
+
+En plus des fonctionnalités héritées du Visiteur :
 
 - S'authentifier
-- Consulter statistique
+- Consulter les statistiques
 - Dialoguer avec le Chat IA
-- Recevoir alertes email
+- Gérer les alertes
+- Recevoir les alertes e-mail
 
-### Utilisateur Premium (+ hérite des cas de l'Utilisateur Standard)
+### Utilisateur Premium
 
-- Définir zone prioritaire
-- Recevoir alertes sms et whatsapp
+En plus des fonctionnalités héritées de l'Utilisateur Standard :
+
+- Définir une zone prioritaire
+- Exporter les données
+- Recevoir les alertes SMS et WhatsApp
+
+### Administrateur
+
+En plus des fonctionnalités héritées de l'Utilisateur Premium :
+
+- Collecter les données
+- Générer les prédictions de risque
+- Regrouper les détections
+- Mettre à jour le statut des feux
+- Déclencher les alertes
 
 ## Relations entre cas d'utilisation
 
-|Cas de base|Relation|Cas lié|Détail|
-|---|---|---|---|
-|S'authentifier|`<<Include>>`|Gérer les alertes|S'authentifier inclut systématiquement Gérer les alertes|
-|Gérer les alertes|`<<Extend>>`|Recevoir alertes email|Point d'extension : _Gérer les alertes_|
-|Gérer les alertes|`<<Extend>>`|Recevoir alertes sms et whatsapp|Point d'extension : _Gérer les alertes_|
+Les fonctionnalités nécessitant une authentification utilisent le cas d'utilisation `S'authentifier` :
 
-## Représentation schématique (Mermaid)
+- `Consulter les statistiques` **<<include>>** `S'authentifier`
+- `Dialoguer avec le Chat IA` **<<include>>** `S'authentifier`
+- `Gérer les alertes` **<<include>>** `S'authentifier`
+- `Recevoir les alertes e-mail` **<<include>>** `S'authentifier`
+- `Recevoir les alertes SMS et WhatsApp` **<<include>>** `S'authentifier`
+- `Définir une zone prioritaire` **<<include>>** `S'authentifier`
+- `Exporter les données` **<<include>>** `S'authentifier`
 
-```mermaid
-flowchart LR
-    subgraph SYS["Système : JeryMotro"]
-        UC1(("Consulter carte de feux"))
-        UC2(("Voir les feux actifs"))
-        UC3(("Créer compte"))
-        UC4(("S'authentifier"))
-        UC5(("Consulter statistique"))
-        UC6(("Dialoguer avec le Chat IA"))
-        UC7(("Définir zone prioritaire"))
-        UC8(("Gérer les alertes"))
-        UC9(("Recevoir alertes email"))
-        UC10(("Recevoir alertes sms et whatsapp"))
-    end
+La réception d'une alerte suppose au préalable qu'une alerte ait été configurée et activée par l'utilisateur. Cette dépendance est représentée par :
 
-    Visiteur["Visiteur"] --- UC1
-    Visiteur --- UC2
-    Visiteur --- UC3
+- `Recevoir les alertes e-mail` **<<include>>** `Gérer les alertes`
+- `Recevoir les alertes SMS et WhatsApp` **<<include>>** `Gérer les alertes`
 
-    Standard["Utilisateur Standard"] --- UC4
-    Standard --- UC5
-    Standard --- UC6
-    Standard --- UC9
+## Principes de modélisation retenus
 
-    Premium["Utilisateur Premium"] --- UC7
-    Premium --- UC10
+Le diagramme de cas d'utilisation reste volontairement centré sur les acteurs et les services fonctionnels offerts par JeryMotro.
 
-    Standard -.->|généralisation| Visiteur
-    Premium -.->|généralisation| Standard
-
-    UC4 -.->|"<<include>>"| UC8
-    UC8 -.->|"<<extend>>"| UC9
-    UC8 -.->|"<<extend>>"| UC10
-```
-
-## Notes
-
-- Les associations "Utilisateur Standard → Recevoir alertes email" et "Utilisateur Premium → Recevoir alertes sms et whatsapp" sont déduites du tracé des lignes coudées reliant les acteurs à ces ellipses ; à vérifier contre le diagramme d'origine si une correction est nécessaire.
-- "Utilisateur Stadard" dans le fichier source semble être une coquille pour "Utilisateur Standard".
+Les bases de données, les services techniques et les mécanismes internes ne sont pas représentés ici. Les détails du pipeline de traitement, du clustering et des communications avec les services externes seront décrits dans les diagrammes d'activité, de séquence et d'architecture.
