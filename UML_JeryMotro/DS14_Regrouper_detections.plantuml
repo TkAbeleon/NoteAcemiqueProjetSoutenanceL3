@@ -1,0 +1,51 @@
+@startuml
+
+title DS14 — Regrouper les détections
+hide footbox
+skinparam shadowing false
+
+actor "Administrateur" as A
+participant "Interface Administration" as I
+participant "API FastAPI" as API
+participant "Routeur Interne" as R
+participant "Cluster Service" as C
+participant "Base de données" as DB
+
+A -> I : Demande le regroupement
+I -> API : POST /internal/rebuild-clusters
+API -> R : rebuild_clusters()
+R -> DB : Sélectionner les détections sans cluster
+DB --> R : Détections
+
+alt Aucune nouvelle détection
+    R --> API : no_new_detections
+    API --> I : Aucun regroupement nécessaire
+    I --> A : Afficher le résultat
+else Détections disponibles
+    R -> C : perform_hdbscan_clustering(détections)
+    C --> R : Labels des clusters
+    R -> DB : Mettre à jour cluster_id / is_noise
+    DB --> R : Confirmation
+
+    loop Pour chaque cluster obtenu
+        R -> C : aggregate_cluster_group()
+        C --> R : Données FireEvent
+        R -> DB : Créer ou mettre à jour FireEvent
+        DB --> R : Confirmation
+    end
+
+    R -> DB : Associer les détections aux FireEvent
+    DB --> R : Confirmation
+    R --> API : Résultat du regroupement
+    API --> I : Clusters traités
+    I --> A : Afficher le résultat
+end
+
+note right of C
+HDBSCAN est implémenté.
+La qualité du regroupement doit
+encore être consolidée avec
+suffisamment de données.
+end note
+
+@enduml
