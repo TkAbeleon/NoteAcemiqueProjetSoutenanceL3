@@ -5,28 +5,15 @@ hide footbox
 skinparam shadowing false
 
 actor "Utilisateur Standard" as U
-participant "Service de surveillance" as S
-participant "Base de données" as DB
-participant "Service Alertes" as A
-participant "n8n" as N8N
-participant "Service e-mail" as MAIL
+participant "Backend" as B
+database "Base de données" as DB
+participant "n8n / Service e-mail" as N
 
-S -> DB : Rechercher les abonnements actifs et vérifiés
-DB --> S : Abonnements
-S -> S : Évaluer risque / FRP par rapport aux seuils
-
-alt Conditions d'alerte satisfaites
-    S -> A : route_alert(risque, FRP, région, abonnements)
-    A -> N8N : Requête d'envoi e-mail
-    N8N -> MAIL : Transmettre le message
-    MAIL --> N8N : Résultat d'envoi
-    N8N --> A : Résultat
-    A --> S : SENT / FAILED
-    S -> DB : Enregistrer Alert
-    DB --> S : Confirmation
-    MAIL --> U : Notification e-mail
-else Conditions non satisfaites
-    S --> S : Aucune notification
-end
+B -> DB : Rechercher les abonnements e-mail actifs
+DB --> B : Abonnements vérifiés
+B -> N : Envoyer l'alerte e-mail
+N --> U : Notification e-mail
+B -> DB : Enregistrer l'alerte
+DB --> B : Confirmation
 
 @enduml
