@@ -5,34 +5,21 @@ hide footbox
 skinparam shadowing false
 
 actor "Utilisateur Premium" as U
-participant "Service de surveillance" as S
-participant "Base de données" as DB
-participant "Service Alertes" as A
-participant "Service SMS" as SMS
-participant "WAHA" as WAHA
+participant "Backend" as B
+database "Base de données" as DB
+participant "Service de notification" as N
 
-S -> DB : Rechercher abonnements actifs et vérifiés
-DB --> S : Abonnements Premium/Admin
-S -> S : Comparer risque et FRP aux seuils
+B -> DB : Rechercher les abonnements actifs
+DB --> B : Abonnements vérifiés
+B -> N : Envoyer l'alerte
 
-alt Conditions d'alerte satisfaites
-    S -> A : route_alert(risque, FRP, région, abonnements)
-    alt Canal SMS
-        A -> SMS : Envoyer le message
-        SMS --> A : SENT / FAILED
-    else Canal WhatsApp
-        A -> WAHA : POST /api/sendText
-        WAHA --> A : SENT / FAILED
-    end
-    A --> S : Résultat des envois
-    S -> DB : Enregistrer Alert
-    DB --> S : Confirmation
-    alt Envoi réussi
-        SMS --> U : Notification SMS
-        WAHA --> U : Notification WhatsApp
-    end
-else Conditions non satisfaites
-    S --> S : Aucune notification
+alt SMS
+    N --> U : Notification SMS
+else WhatsApp
+    N --> U : Notification WhatsApp
 end
+
+B -> DB : Enregistrer l'alerte
+DB --> B : Confirmation
 
 @enduml
