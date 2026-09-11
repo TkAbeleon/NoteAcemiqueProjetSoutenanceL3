@@ -1,44 +1,34 @@
 @startuml
+left to right direction
 
 title DS01 — Créer un compte
 hide footbox
 skinparam shadowing false
-skinparam sequenceMessageAlign center
 
 actor "Visiteur" as V
-participant "Interface JeryMotro" as I
-participant "API FastAPI" as API
-participant "Auth Router" as AUTH
-participant "Auth Service" as AS
-participant "Base de données" as DB
+participant "Frontend" as F
+participant "Backend" as B
+database "Base de données" as DB
 
-V -> I : Demande la création d'un compte
-I -> API : POST /auth/register
-API -> AUTH : register(données)
-AUTH -> DB : Rechercher l'e-mail
-DB --> AUTH : Résultat
+V -> F : Remplit le formulaire d'inscription
+F -> B : Envoyer les données
+B -> DB : Vérifier l'e-mail
+DB --> B : E-mail disponible ?
 
 alt E-mail déjà utilisé
-    AUTH --> API : Erreur 400
-    API --> I : Inscription refusée
-    I --> V : Signaler le problème
-    loop Jusqu'à correction des données
-        V -> I : Corrige les informations
-        I -> API : Nouvelle requête d'inscription
-        API -> AUTH : register(données corrigées)
-        AUTH -> DB : Vérifier l'e-mail
-        DB --> AUTH : Résultat
+    B --> F : Inscription refusée
+    F --> V : Afficher l'erreur
+    loop Jusqu'à correction
+        V -> F : Corriger les informations
+        F -> B : Renvoyer le formulaire
+        B -> DB : Vérifier l'e-mail
+        DB --> B : Résultat
     end
 else E-mail disponible
-    AUTH -> AS : hash_password(mot de passe)
-    AS --> AUTH : Mot de passe haché
-    AUTH -> DB : INSERT User (rôle standard)
-    DB --> AUTH : Utilisateur créé
-    AUTH -> AS : create_access_token(id, rôle)
-    AS --> AUTH : JWT
-    AUTH --> API : Compte + access_token
-    API --> I : 201 + utilisateur + JWT
-    I --> V : Confirmer la création
+    B -> DB : Créer le compte
+    DB --> B : Compte créé
+    B --> F : Confirmation + JWT
+    F --> V : Compte créé
 end
 
 @enduml
