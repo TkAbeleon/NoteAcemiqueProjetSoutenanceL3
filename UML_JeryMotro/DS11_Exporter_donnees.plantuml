@@ -5,29 +5,34 @@ hide footbox
 skinparam shadowing false
 
 actor "Utilisateur Premium" as U
-participant "Interface Export" as I
-participant "API FastAPI" as API
-participant "Routeur / Service d'export" as E
-participant "Base de données" as DB
+participant "Frontend" as F
+participant "Backend" as B
+database "Base de données" as DB
 
-U -> I : Ouvre la fonctionnalité d'export
-I -> API : Demande les données exportables
-API -> E : Préparer l'export
-E -> DB : Rechercher les données sélectionnées
-DB --> E : Données
-E --> API : Résultat préparé
-API --> I : Résultat de l'export
-I --> U : Fournir le résultat
+U -> F : Ouvre l'export
+F -> B : Demander les détections de la période
+B -> DB : Rechercher les détections
+DB --> B : Détections
+B --> F : Données
 
-loop Tant que l'utilisateur modifie sa sélection
-    U -> I : Modifie les critères
-    I -> API : Nouvelle demande d'export
-    API -> E : Préparer selon la nouvelle sélection
-    E -> DB : Rechercher les données
-    DB --> E : Données
-    E --> API : Résultat
-    API --> I : Nouvel export
-    I --> U : Fournir le résultat
+alt Export CSV
+    F -> F : Générer le fichier CSV
+else Export JSON
+    F -> F : Générer le fichier JSON
+else Export PDF
+    F -> F : Générer le rapport PDF
+end
+
+F --> U : Télécharger le fichier
+
+loop Modification de la période
+    U -> F : Modifier les dates
+    F -> B : Demander les nouvelles données
+    B -> DB : Rechercher les détections
+    DB --> B : Détections
+    B --> F : Données
+    F -> F : Générer le fichier
+    F --> U : Télécharger le fichier
 end
 
 @enduml
