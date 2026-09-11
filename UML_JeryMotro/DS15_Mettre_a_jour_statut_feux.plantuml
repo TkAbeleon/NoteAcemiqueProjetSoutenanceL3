@@ -5,42 +5,18 @@ hide footbox
 skinparam shadowing false
 
 actor "Administrateur" as A
-participant "Interface Administration" as I
-participant "API FastAPI" as API
-participant "Routeur Interne" as R
-participant "Cluster Service" as C
-participant "Service de statut" as S
-participant "Base de données" as DB
+participant "Frontend" as F
+participant "Backend" as B
+database "Base de données" as DB
 
-A -> I : Demande la mise à jour des feux
-I -> API : POST /internal/rebuild-clusters
-API -> R : rebuild_clusters()
-R -> DB : Sélectionner les détections sans cluster
-DB --> R : Détections
-R -> C : perform_hdbscan_clustering(détections)
-C --> R : Labels
-R -> C : aggregate_cluster_group(cluster, détections)
-C -> S : compute_fire_status(last_seen)
-S --> C : Statut + raison
-C --> R : Données FireEvent avec statut
-R -> DB : Créer / mettre à jour FireEvent
-DB --> R : Confirmation
-R -> DB : Associer les détections au FireEvent
-DB --> R : Confirmation
-R --> API : Résultat du traitement
-API --> I : Résultat
-I --> A : Afficher les feux mis à jour
-
-alt Aucune nouvelle détection à regrouper
-    R --> API : no_new_detections
-    API --> I : Aucun traitement nécessaire
-    I --> A : Afficher le résultat
-end
-
-note right of S
-Statuts réellement calculés :
-ACTIVE, COOLING,
-LIKELY_OUT ou UNKNOWN.
-end note
+A -> F : Lance la mise à jour
+F -> B : Demander la mise à jour
+B -> DB : Lire les détections regroupées
+DB --> B : Détections
+B -> B : Calculer le statut des feux
+B -> DB : Mettre à jour les événements
+DB --> B : Confirmation
+B --> F : Résultat
+F --> A : Afficher les statuts
 
 @enduml
