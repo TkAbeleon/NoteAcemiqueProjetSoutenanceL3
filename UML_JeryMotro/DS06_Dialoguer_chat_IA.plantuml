@@ -4,49 +4,25 @@ title DS06 — Dialoguer avec le Chat IA
 hide footbox
 skinparam shadowing false
 
-actor "Utilisateur" as U
-participant "Interface Chat" as I
-participant "API FastAPI" as API
-participant "Routeur Chat" as C
-participant "Service RAG" as RAG
+actor "Utilisateur Standard" as U
+participant "Frontend" as F
+participant "Backend" as B
 participant "n8n" as N8N
-participant "Base de données" as DB
 
-U -> I : Saisit une question
-I -> API : POST /chat
-API -> C : chat(message, zone_id, conversation_id)
+U -> F : Saisit une question
+F -> B : Envoyer la question
+B -> N8N : Transmettre la demande
+N8N --> B : Réponse
+B --> F : Réponse du Chat IA
+F --> U : Afficher la réponse
 
-alt Zone sélectionnée
-    C -> DB : Rechercher la zone
-    DB --> C : Zone et prompt personnalisé
-end
-
-C -> RAG : rag_query(question, contexte)
-RAG -> N8N : POST webhook RAG
-N8N --> RAG : Réponse + sources
-RAG --> C : Réponse normalisée
-C --> API : ChatResponse
-API --> I : Réponse
-I --> U : Afficher la réponse
-
-loop Tant que l'utilisateur poursuit la conversation
-    U -> I : Saisit une nouvelle question
-    I -> API : POST /chat avec conversation_id
-    API -> C : Nouvelle demande
-    C -> RAG : rag_query()
-    RAG -> N8N : POST webhook RAG
-    N8N --> RAG : Réponse
-    RAG --> C : Réponse normalisée
-    C --> API : ChatResponse
-    API --> I : Réponse
-    I --> U : Afficher la réponse
-end
-
-alt Webhook n8n indisponible
-    RAG --> C : Réponse de secours
-    C --> API : Message de limitation
-    API --> I : Fallback
-    I --> U : Afficher la limitation
+loop Poursuite de la conversation
+    U -> F : Nouvelle question
+    F -> B : Envoyer la question
+    B -> N8N : Transmettre la demande
+    N8N --> B : Réponse
+    B --> F : Réponse
+    F --> U : Afficher la réponse
 end
 
 @enduml
