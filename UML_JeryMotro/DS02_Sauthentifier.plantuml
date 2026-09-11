@@ -3,79 +3,44 @@
 title DS02 — S'authentifier
 hide footbox
 skinparam shadowing false
-skinparam sequenceMessageAlign center
 
 actor "Utilisateur" as U
-participant "Interface JeryMotro" as I
-participant "API FastAPI" as API
-participant "Auth Router" as AUTH
-participant "Auth Service" as AS
-participant "OTP Service" as OTP
-participant "Service d'envoi" as SEND
-participant "Base de données" as DB
+participant "Frontend" as F
+participant "Backend" as B
+database "Base de données" as DB
 
-U -> I : Demande l'authentification
-I -> API : Requête d'authentification
-API -> AUTH : /auth/login ou /auth/otp/*
+U -> F : Demande l'authentification
 
-alt Authentification par e-mail et mot de passe
-    AUTH -> DB : Rechercher l'utilisateur par e-mail
-    DB --> AUTH : Utilisateur
-    AUTH -> AS : verify_password()
-    AS --> AUTH : Valide / invalide
-    alt Identifiants valides
-        AUTH -> AS : create_access_token(id, rôle)
-        AS --> AUTH : JWT
-        AUTH --> API : Utilisateur + JWT
-        API --> I : Authentification réussie
-        I --> U : Accès aux fonctionnalités autorisées
-    else Identifiants incorrects
-        AUTH --> API : Erreur 401
-        API --> I : Échec de l'authentification
-        I --> U : Afficher l'erreur
+alt E-mail et mot de passe
+    U -> F : Saisit e-mail et mot de passe
+    F -> B : Envoyer les identifiants
+    B -> DB : Rechercher le compte
+    DB --> B : Compte
+    B --> F : Authentification réussie + JWT
+    F --> U : Accès accordé
+
+    alt Identifiants incorrects
+        B --> F : Erreur d'authentification
+        F --> U : Afficher l'erreur
         loop Nouvelle tentative
-            U -> I : Ressaisit les identifiants
-            I -> API : Nouvelle requête
-            API -> AUTH : Vérification
-            AUTH -> DB : Rechercher l'utilisateur
-            DB --> AUTH : Utilisateur
-            AUTH -> AS : verify_password()
-            AS --> AUTH : Résultat
+            U -> F : Ressaisir les identifiants
+            F -> B : Nouvelle authentification
+            B -> DB : Vérifier le compte
+            DB --> B : Résultat
         end
     end
-else Authentification par OTP
-    U -> I : Choisit le mode OTP
-    I -> API : POST /auth/otp/request
-    API -> AUTH : otp_request()
-    AUTH -> DB : Rechercher le compte
-    DB --> AUTH : Utilisateur
-    AUTH -> OTP : create_and_send_otp()
-    OTP -> SEND : Envoyer le code OTP
-    SEND --> OTP : Résultat d'envoi
-    OTP --> AUTH : OTP envoyé
-    AUTH --> API : Confirmation d'envoi
-    API --> I : Demander le code OTP
-
-    loop Jusqu'à validation du code ou nouvelle demande
-        U -> I : Saisit le code OTP
-        I -> API : POST /auth/otp/verify
-        API -> AUTH : otp_verify()
-        AUTH -> DB : Rechercher le compte
-        DB --> AUTH : Utilisateur
-        AUTH -> OTP : verify_otp(code)
-        OTP --> AUTH : Valide / invalide
-        alt Code valide
-            AUTH -> AS : create_access_token(id, rôle)
-            AS --> AUTH : JWT
-            AUTH --> API : Utilisateur + JWT
-            API --> I : Authentification réussie
-            I --> U : Accès aux fonctionnalités autorisées
-        else Code invalide ou expiré
-            AUTH --> API : Erreur 400
-            API --> I : Code invalide ou expiré
-            I --> U : Demander une nouvelle saisie
-        end
+else OTP
+    U -> F : Choisit OTP
+    F -> B : Demander un code OTP
+    B --> F : Code envoyé
+    F --> U : Demander le code
+    loop Jusqu'à validation
+        U -> F : Saisit le code
+        F -> B : Vérifier le code
+        B --> F : Code valide / invalide
     end
+    B --> F : Authentification réussie + JWT
+    F --> U : Accès accordé
 end
 
 @enduml
