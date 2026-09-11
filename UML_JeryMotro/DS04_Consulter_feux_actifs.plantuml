@@ -5,33 +5,24 @@ hide footbox
 skinparam shadowing false
 
 actor "Visiteur" as V
-participant "Interface JeryMotro" as I
-participant "API FastAPI" as API
-participant "Routeur Clusters" as C
-participant "Base de données" as DB
+participant "Frontend" as F
+participant "Backend" as B
+database "Base de données" as DB
 
-V -> I : Demande les feux actifs
-I -> API : GET /clusters?cluster_status=ACTIVE
-API -> C : list_clusters(ACTIVE)
-C -> DB : Rechercher les FireEvent actifs
-DB --> C : Feux actifs
-C --> API : Liste des feux actifs
-API --> I : Résultats
-I --> V : Afficher les feux actifs
+V -> F : Demande les feux actifs
+F -> B : Rechercher les feux actifs
+B -> DB : Lire les événements actifs
+DB --> B : Feux actifs
+B --> F : Résultats
+F --> V : Afficher les feux actifs
 
-alt Aucun feu actif
-    I --> V : Indiquer qu'aucun feu actif n'est disponible
-end
-
-loop Nouvelle consultation
-    V -> I : Actualise ou modifie la consultation
-    I -> API : Nouvelle requête
-    API -> C : Rechercher les feux actifs
-    C -> DB : SELECT FireEvent actifs
-    DB --> C : Résultats
-    C --> API : Résultats
-    API --> I : Mise à jour
-    I --> V : Afficher les résultats
+loop Actualisation de la consultation
+    V -> F : Actualiser
+    F -> B : Nouvelle demande
+    B -> DB : Rechercher les feux actifs
+    DB --> B : Résultats
+    B --> F : Mise à jour
+    F --> V : Afficher les résultats
 end
 
 @enduml
