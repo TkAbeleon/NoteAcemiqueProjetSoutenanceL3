@@ -5,33 +5,24 @@ hide footbox
 skinparam shadowing false
 
 actor "Visiteur" as V
-participant "Interface Carte" as I
-participant "API FastAPI" as API
-participant "Routeur Détections" as D
-participant "Base de données" as DB
+participant "Frontend" as F
+participant "Backend" as B
+database "Base de données" as DB
 
-V -> I : Ouvre la carte des feux
-I -> API : GET /detections + critères
-API -> D : list_detections(critères)
-D -> DB : Rechercher les détections filtrées
-DB --> D : Détections
-D --> API : Liste + total + filtres appliqués
-API --> I : Données de la carte
-I --> V : Afficher les détections
+V -> F : Ouvre la carte
+F -> B : Demander les détections
+B -> DB : Rechercher les détections
+DB --> B : Détections
+B --> F : Résultats
+F --> V : Afficher la carte
 
-loop Tant que le visiteur modifie les critères
-    V -> I : Modifie période, risque, région ou source
-    I -> API : Nouvelle requête /detections
-    API -> D : Appliquer les critères
-    D -> DB : Requête filtrée
-    DB --> D : Résultats
-    D --> API : Liste des détections
-    API --> I : Résultats
-    I --> V : Actualiser la carte
-end
-
-alt Aucun résultat
-    I --> V : Indiquer qu'aucune détection ne correspond
+loop Modification des critères
+    V -> F : Modifier période, risque, région ou source
+    F -> B : Nouvelle demande
+    B -> DB : Rechercher selon les critères
+    DB --> B : Résultats
+    B --> F : Détections filtrées
+    F --> V : Actualiser la carte
 end
 
 @enduml
