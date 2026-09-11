@@ -5,35 +5,18 @@ hide footbox
 skinparam shadowing false
 
 actor "Administrateur" as A
-participant "API FastAPI" as API
-participant "Routeur Interne" as R
-participant "Collection Scheduler" as S
-participant "Service NASA FIRMS" as F
-participant "Base de données" as DB
+participant "Frontend" as F
+participant "Backend" as B
+participant "NASA FIRMS" as N
+database "Base de données" as DB
 
-A -> API : Demande le lancement de la collecte
-API -> R : POST /internal/collect-missing
-R -> S : collect_missing_data()
-
-alt Une collecte est déjà en cours
-    S --> R : already_running
-    R --> API : État de la collecte
-    API --> A : Informer qu'une collecte est en cours
-else Collecte disponible
-    S -> F : Rechercher les données FIRMS manquantes
-    F -> F : Télécharger les fenêtres de données
-    F -> F : Normaliser les détections
-    F -> DB : Insérer les nouvelles détections
-    DB --> F : Nombre inséré
-    loop Pour chaque fenêtre de données
-        F -> F : Traiter la fenêtre suivante
-        F -> DB : Insérer les détections
-        DB --> F : Confirmation
-    end
-    F --> S : Résultat de la collecte
-    S --> R : Statut + lignes insérées
-    R --> API : Résultat
-    API --> A : Afficher le résultat
-end
+A -> F : Lance la collecte
+F -> B : Demander la collecte
+B -> N : Récupérer les données manquantes
+N --> B : Détections
+B -> DB : Enregistrer les nouvelles détections
+DB --> B : Confirmation
+B --> F : Résultat de la collecte
+F --> A : Afficher le résultat
 
 @enduml
