@@ -5,48 +5,20 @@ hide footbox
 skinparam shadowing false
 
 actor "Administrateur" as A
-participant "Interface Administration" as I
-participant "API FastAPI" as API
-participant "Routeur Alertes" as R
-participant "Base de données" as DB
-participant "Service Alertes" as S
-participant "n8n / e-mail" as EMAIL
-participant "WAHA" as WAHA
-participant "Service SMS" as SMS
+participant "Frontend" as F
+participant "Backend" as B
+database "Base de données" as DB
+participant "Services de notification" as N
 
-A -> I : Demande le déclenchement des alertes
-I -> API : POST /alerts/trigger
-API -> R : trigger_alert(données)
-R -> DB : Rechercher abonnements actifs et vérifiés
-DB --> R : Abonnements
-R -> R : Comparer risque / FRP aux seuils
-
-alt Aucune condition d'alerte satisfaite
-    R --> API : Aucune notification
-    API --> I : Résultat
-    I --> A : Aucune alerte déclenchée
-else Conditions satisfaites
-    R -> S : route_alert(risque, FRP, région, abonnements)
-    loop Pour chaque abonnement éligible
-        alt Canal e-mail
-            S -> EMAIL : Envoyer la notification
-            EMAIL --> S : SENT / FAILED
-        else Canal WhatsApp
-            S -> WAHA : POST /api/sendText
-            WAHA --> S : SENT / FAILED
-        else Canal SMS
-            S -> SMS : Envoyer la notification
-            SMS --> S : SENT / FAILED
-        end
-    end
-    S --> R : Résultats des envois
-    loop Pour chaque résultat
-        R -> DB : Enregistrer Alert
-        DB --> R : Confirmation
-    end
-    R --> API : Statut + canaux + identifiants
-    API --> I : Résultat du déclenchement
-    I --> A : Afficher le résultat
-end
+A -> F : Lance le déclenchement
+F -> B : Demander les alertes
+B -> DB : Rechercher les abonnements éligibles
+DB --> B : Abonnements
+B -> N : Envoyer les notifications
+N --> B : Résultats des envois
+B -> DB : Enregistrer les alertes
+DB --> B : Confirmation
+B --> F : Résultat
+F --> A : Afficher le résultat
 
 @enduml
