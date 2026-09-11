@@ -5,59 +5,30 @@ hide footbox
 skinparam shadowing false
 
 actor "Utilisateur" as U
-participant "Interface Alertes" as I
-participant "API FastAPI" as API
-participant "Routeur Alertes" as A
-participant "Base de données" as DB
-participant "Service d'envoi OTP" as SEND
+participant "Frontend" as F
+participant "Backend" as B
+database "Base de données" as DB
 
-U -> I : Ouvre la gestion des alertes
-I -> API : GET /alerts/subscriptions
-API -> A : list_subscriptions()
-A -> DB : Rechercher les abonnements de l'utilisateur
-DB --> A : Abonnements
-A --> API : Liste des abonnements
-API --> I : Configuration actuelle
-I --> U : Afficher les paramètres
+U -> F : Ouvre les alertes
+F -> B : Consulter les abonnements
+B -> DB : Lire les abonnements
+DB --> B : Abonnements
+B --> F : Configuration actuelle
+F --> U : Afficher les paramètres
 
-U -> I : Choisit un canal et une destination
-I -> API : POST /alerts/subscribe
-API -> A : subscribe(canal, destination, seuils)
+U -> F : Configure une alerte
+F -> B : Enregistrer la configuration
+B -> DB : Créer / modifier l'abonnement
+DB --> B : Confirmation
+B --> F : Configuration enregistrée
+F --> U : Confirmer
 
-alt SMS ou WhatsApp avec compte Standard
-    A --> API : Erreur 403
-    API --> I : Canal réservé au Premium
-    I --> U : Afficher le refus
-else Canal autorisé
-    A -> DB : Rechercher l'abonnement du canal
-    DB --> A : Abonnement existant ou absent
-    A -> DB : Créer / mettre à jour l'abonnement
-    A -> DB : Enregistrer code et expiration
-    A -> SEND : Envoyer le code de vérification
-    SEND --> A : Résultat d'envoi
-    A --> API : Abonnement à vérifier
-    API --> I : Demander le code
-    I --> U : Saisir le code
-
-    loop Jusqu'à validation ou nouvelle demande
-        U -> I : Saisit le code
-        I -> API : POST /alerts/subscriptions/{id}/verify
-        API -> A : verify_subscription(code)
-        A -> DB : Lire l'abonnement
-        DB --> A : Code, expiration, tentatives
-        alt Code valide
-            A -> DB : is_verified = true
-            DB --> A : Confirmation
-            A --> API : Abonnement vérifié
-            API --> I : Configuration validée
-            I --> U : Confirmer l'activation
-        else Code incorrect ou expiré
-            A -> DB : Mettre à jour les tentatives
-            DB --> A : Confirmation
-            A --> API : Erreur de vérification
-            API --> I : Demander une nouvelle saisie
-        end
-    end
+loop Si la vérification est demandée
+    U -> F : Saisit le code de vérification
+    F -> B : Vérifier le code
+    B -> DB : Contrôler l'abonnement
+    DB --> B : Résultat
+    B --> F : Valide / invalide
 end
 
 @enduml
