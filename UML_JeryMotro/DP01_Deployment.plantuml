@@ -1,0 +1,87 @@
+@startuml
+left to right direction
+
+!theme plain
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+actor "Utilisateur" as U
+
+node "Internet" as NET {
+    cloud "NASA FIRMS" as FIRMS
+    cloud "Vertex AI" as VERTEX
+    cloud "Service SMS externe\n(HTTPSMS si configuré)" as HTTPSMS
+}
+
+node "Serveur JeryMotro" as SERVER {
+
+    node "Nginx\nReverse Proxy / TLS" as NGINX {
+        artifact "Frontend Web" as FE
+    }
+
+    node "Services applicatifs" as APPS {
+        component "Backend FastAPI\n:8200" as BE
+        component "n8n\n:5678" as N8N
+        component "WAHA\n:3001" as WAHA
+        component "SMSGate\n:3030" as SMSGATE
+        component "Mattermost\n:8065" as MATTERMOST
+    }
+
+    node "Données" as DATA {
+        database "PostgreSQL" as DB
+        database "Qdrant\n:6333" as QDRANT
+    }
+
+    artifact ".env / configuration" as ENV
+}
+
+U --> NGINX : HTTPS
+NGINX --> FE : servir l'application
+NGINX --> BE : /api
+NGINX --> QDRANT : /rag
+NGINX --> WAHA : /whatsapp
+NGINX --> N8N : /automation
+NGINX --> MATTERMOST : /chat
+NGINX --> SMSGATE : /sms
+
+BE --> DB : connexion locale
+BE --> N8N : appels locaux
+BE --> WAHA : appels locaux
+BE --> SMSGATE : appels locaux
+BE --> HTTPSMS : selon configuration .env
+BE --> FIRMS : collecte des données
+
+N8N --> DB : données du Chat / RAG
+N8N --> QDRANT : recherche vectorielle
+N8N --> VERTEX : génération du Chat IA
+
+N8N --> WAHA : notification WhatsApp
+N8N --> SMSGATE : notification SMS
+N8N --> HTTPSMS : selon configuration
+
+QDRANT --> DB : contenu / références selon workflow
+
+ENV ..> BE : paramètres
+ENV ..> N8N : paramètres
+ENV ..> WAHA : paramètres
+ENV ..> SMSGATE : choix du service SMS
+
+note right of SERVER
+Tous les composants déployés ici sont sur
+le même serveur physique/VM.
+Les communications internes utilisent
+localhost et les ports locaux.
+end note
+
+note bottom of SMSGATE
+Service SMS local utilisé lorsque
+SMSGate est sélectionné dans .env.
+end note
+
+note bottom of HTTPSMS
+Alternative : service HTTPSMS si
+configuré dans .env.
+end note
+
+@enduml
