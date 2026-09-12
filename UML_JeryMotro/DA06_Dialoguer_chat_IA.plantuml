@@ -1,0 +1,23 @@
+@startuml
+
+title DA06 — Dialoguer avec le Chat IA
+skinparam shadowing false
+
+start
+:Saisir une question;
+:Envoyer la demande;
+:Relayer la demande au workflow n8n;
+:Rechercher les données utiles dans la DB;
+:Effectuer la recherche vectorielle dans Qdrant;
+:Construire le contexte et générer la réponse;
+:Afficher la réponse;
+
+while (Poursuivre la conversation ?) is (oui)
+  :Saisir une nouvelle question;
+  :Relayer la demande;
+  :Rechercher le contexte nécessaire;
+  :Générer et afficher la réponse;
+endwhile (non)
+
+stop
+@enduml
