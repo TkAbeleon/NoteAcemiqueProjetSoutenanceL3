@@ -1,0 +1,17 @@
+@startuml
+
+title DA08 — Recevoir les alertes e-mail
+skinparam shadowing false
+
+start
+:Une condition d'alerte est détectée;
+:Rechercher l'abonnement e-mail;
+if (Abonnement actif et vérifié ?) then (oui)
+  :Préparer la notification;
+  :Envoyer l'e-mail;
+  :Enregistrer le résultat de l'alerte;
+else (non)
+  :Ne pas envoyer;
+endif
+stop
+@enduml
