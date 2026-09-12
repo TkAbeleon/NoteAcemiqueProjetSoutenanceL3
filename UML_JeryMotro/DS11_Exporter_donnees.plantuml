@@ -1,4 +1,5 @@
 @startuml
+skinparam monochrome true
 
 title DS11 — Exporter les données
 hide footbox

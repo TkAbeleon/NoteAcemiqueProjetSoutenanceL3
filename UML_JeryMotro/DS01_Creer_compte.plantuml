@@ -1,4 +1,5 @@
 @startuml
+skinparam monochrome true
 
 title DS01 — Créer un compte
 hide footbox

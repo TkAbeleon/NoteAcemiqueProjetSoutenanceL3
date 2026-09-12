@@ -1,4 +1,5 @@
 @startuml
+skinparam monochrome true
 left to right direction
 
  title Diagramme de classes — JeryMotro

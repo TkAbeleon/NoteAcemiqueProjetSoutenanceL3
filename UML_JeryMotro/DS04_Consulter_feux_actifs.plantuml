@@ -1,4 +1,5 @@
 @startuml
+skinparam monochrome true
 
 title DS04 — Consulter les feux actifs
 hide footbox

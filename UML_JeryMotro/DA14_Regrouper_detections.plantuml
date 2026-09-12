@@ -1,4 +1,5 @@
 @startuml
+skinparam monochrome true
 
 title DA14 — Regrouper les détections
 skinparam shadowing false
