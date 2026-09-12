@@ -1,0 +1,354 @@
+# =============================================================
+# A METTRE TOUT EN HAUT DU FICHIER (En dehors des blocs server)
+# =============================================================
+map $http_accept_language $prerender_lang {
+    default                 fr;
+    ~*(^|,\s*)(mg)          mg;
+    ~*(^|,\s*)(en)          en;
+    ~*(^|,\s*)(fr)          fr;
+}
+
+# ---------------------------------------------------------
+# 1. FRONTEND — fichiers statiques + prerendering SEO
+# ---------------------------------------------------------
+server {
+    server_name jerymotro.duckdns.org;
+
+    root /mnt/jerymotro/JeryMotro_WEB/artifacts/jerymotro/dist/public;
+    index index.html;
+
+    # ── Routes publiques : HTML prerendu selon la langue ──
+    location = / {
+        try_files /$prerender_lang/index.html /index.html;
+    }
+    location = /login {
+        try_files /$prerender_lang/login/index.html /index.html;
+    }
+    location = /register {
+        try_files /$prerender_lang/register/index.html /index.html;
+    }
+
+    # ── Accès direct aux versions par langue (liens hreflang) ──
+    location ~ ^/(fr|mg|en)(/.*)?$ {
+        try_files $uri $uri/ /$1/index.html /index.html;
+    }
+
+    # ── Sitemap ──
+    location = /sitemap.xml {
+        try_files /sitemap.xml =404;
+    }
+
+    # ── Assets statiques (cache 1 an) ──
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # ── Toutes les autres routes : SPA fallback ──
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location = /map {
+        try_files /$prerender_lang/map/index.html /index.html;
+    }
+
+    location = /dashboard {
+        try_files /$prerender_lang/dashboard/index.html /index.html;
+    }
+
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/jerymotro.duckdns.org-0001/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/jerymotro.duckdns.org-0001/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+# ---------------------------------------------------------
+# 2. API BACKEND (Port 8200)
+# api.jerymotro.duckdns.org -> FastAPI / Python
+# ---------------------------------------------------------
+server {
+    server_name api.jerymotro.duckdns.org;
+
+    # Autorise l'envoi de gros fichiers
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://localhost:8200;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/jerymotro.duckdns.org-0001/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/jerymotro.duckdns.org-0001/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+# ---------------------------------------------------------
+# 3. VECTOR DB : QDRANT (Port 6333)
+# rag.jerymotro.duckdns.org -> Qdrant API
+# ---------------------------------------------------------
+server {
+    server_name rag.jerymotro.duckdns.org;
+
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://localhost:6333;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/jerymotro.duckdns.org-0001/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/jerymotro.duckdns.org-0001/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+# ---------------------------------------------------------
+# 4. WAHA (WhatsApp API) (Port 3001)
+# waha.jerymotro.duckdns.org -> WAHA
+# ---------------------------------------------------------
+server {
+    server_name waha.jerymotro.duckdns.org;
+
+    location / {
+        # IMPORTANT : WAHA écoute sur 3000 par défaut. 
+        # Comme le port 3000 est déjà pris par le frontend, lancez WAHA sur 3001
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/jerymotro.duckdns.org-0001/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/jerymotro.duckdns.org-0001/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+
+# ---------------------------------------------------------
+# 5. CHAT PLATFORM : MATTERMOST (Port 8065)
+# chat.jerymotro.duckdns.org -> Mattermost Docker
+# ---------------------------------------------------------
+server {
+    server_name chat.jerymotro.duckdns.org;
+
+    # Autorise l'envoi de gros fichiers (images, vidéos, documents)
+    client_max_body_size 500M;
+
+    location / {
+        proxy_pass http://localhost:8065;
+        proxy_http_version 1.1;
+        
+        # Gestion stricte des WebSockets (essentiel pour le chat en temps réel)
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # En-têtes standards de reverse-proxy
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Frame-Options SAMEORIGIN;
+        
+        # Ajustement des timeouts pour éviter les déconnexions intempestives
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+    }
+
+    # Configuration SSL réutilisant vos certificats DuckDNS existants
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/jerymotro.duckdns.org-0001/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/jerymotro.duckdns.org-0001/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+
+# ---------------------------------------------------------
+# 6. AUTOMATION PLATFORM : N8N (Port 5678)
+# n8n.jerymotro.duckdns.org -> n8n Docker
+# ---------------------------------------------------------
+server {
+    server_name n8n.jerymotro.duckdns.org;
+
+    # Permet de recevoir de gros fichiers dans les webhooks n8n
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://localhost:5678;
+        proxy_http_version 1.1;
+
+        # Indispensable pour éviter l'erreur "Connection lost" sur l'interface
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        # Transmission des vraies adresses IP
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Configuration SSL Certbot
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/jerymotro.duckdns.org-0001/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/jerymotro.duckdns.org-0001/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+
+
+# ---------------------------------------------------------
+# 7. SMS GATEWAY — API (Port 3030)
+# api.smsgate.jerymotro.duckdns.org -> SMS Gateway server
+# ---------------------------------------------------------
+server {
+    server_name api.smsgate.jerymotro.duckdns.org;
+
+    client_max_body_size 20M;
+
+    location / {
+        proxy_pass http://localhost:3030;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+
+        # Important pour les longues connexions / SSE
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+        proxy_buffering off;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/smsgate.jerymotro.duckdns.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/smsgate.jerymotro.duckdns.org/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+
+# ---------------------------------------------------------
+
+# 8. SMS GATEWAY — WEB CLIENT (Port 3031)
+
+# smsgate.jerymotro.duckdns.org -> web-client-ts (Node.js + Socket.IO)
+
+# ---------------------------------------------------------
+
+server {
+
+    server_name smsgate.jerymotro.duckdns.org;
+
+    location / {
+
+        proxy_pass http://localhost:3031;
+
+        proxy_http_version 1.1;
+
+        # Indispensable pour Socket.IO (WebSocket)
+
+        proxy_set_header Upgrade $http_upgrade;
+
+        proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host $host;
+
+        proxy_set_header X-Real-IP $remote_addr;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_read_timeout 3600s;
+
+        proxy_send_timeout 3600s;
+
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/smsgate.jerymotro.duckdns.org/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/smsgate.jerymotro.duckdns.org/privkey.pem; # managed by Certbot
+
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+}
+
+server {
+    if ($host = jerymotro.duckdns.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name jerymotro.duckdns.org;
+    return 404; # managed by Certbot
+
+
+}
+server {
+    if ($host = api.jerymotro.duckdns.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name api.jerymotro.duckdns.org;
+    return 404; # managed by Certbot
+
+
+}
+server {
+    if ($host = rag.jerymotro.duckdns.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name rag.jerymotro.duckdns.org;
+    return 404; # managed by Certbot
+
+
+}
+server {
+    if ($host = waha.jerymotro.duckdns.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name waha.jerymotro.duckdns.org;
+    return 404; # managed by Certbot
+
+
+}
