@@ -4,21 +4,15 @@ title DS13 — Générer les prédictions de risque
 hide footbox
 skinparam shadowing false
 
-actor "Administrateur" as A
-participant "Frontend" as F
 participant "Backend" as B
+participant "Base de données" as DB
 participant "JeryMotroNet" as ML
-database "Base de données" as DB
 
-A -> F : Lance le calcul du risque
-F -> B : Demander les prédictions
-B -> DB : Sélectionner les détections à traiter
+B -> DB : Sélectionner les nouvelles détections non scorées
 DB --> B : Détections
-B -> ML : Calculer les scores
+B -> ML : Calculer les scores de risque
 ML --> B : Scores de risque
-B -> DB : Enregistrer les scores
+B -> DB : Enregistrer les scores de risque
 DB --> B : Confirmation
-B --> F : Résultat
-F --> A : Afficher le résultat
 
 @enduml
