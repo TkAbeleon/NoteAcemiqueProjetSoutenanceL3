@@ -4,19 +4,13 @@ title DS15 — Mettre à jour le statut des feux
 hide footbox
 skinparam shadowing false
 
-actor "Administrateur" as A
-participant "Frontend" as F
 participant "Backend" as B
-database "Base de données" as DB
+participant "Base de données" as DB
 
-A -> F : Lance la mise à jour
-F -> B : Demander la mise à jour
-B -> DB : Lire les détections regroupées
-DB --> B : Détections
-B -> B : Calculer le statut des feux
+B -> DB : Lire les événements de feu
+DB --> B : Événements
+B -> B : Calculer le statut de chaque feu
 B -> DB : Mettre à jour les événements
 DB --> B : Confirmation
-B --> F : Résultat
-F --> A : Afficher les statuts
 
 @enduml
