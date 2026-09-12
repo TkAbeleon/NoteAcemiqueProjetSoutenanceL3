@@ -1,0 +1,22 @@
+@startuml
+
+title DA11 — Exporter les données
+skinparam shadowing false
+
+start
+:Ouvrir l'export;
+:Choisir la période et les données;
+:Demander les détections;
+:Recevoir les données;
+
+if (Format choisi ?) then (CSV)
+  :Générer le fichier CSV;
+elseif (JSON)
+  :Générer le fichier JSON;
+else (PDF)
+  :Générer le rapport PDF;
+endif
+
+:Télécharger le fichier;
+stop
+@enduml
