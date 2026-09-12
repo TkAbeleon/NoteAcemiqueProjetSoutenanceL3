@@ -5,7 +5,7 @@ left to right direction
 skinparam linetype ortho
 
 node "Poste utilisateur" <<device>> as CLIENT {
-    artifact "Navigateur Web" as BROWSER
+    node "Navigateur Web" <<executionEnvironment>> as BROWSER
 }
 
 node "Serveur JeryMotro" <<device>> as SERVER {
@@ -14,32 +14,29 @@ node "Serveur JeryMotro" <<device>> as SERVER {
         artifact "Frontend Web\nBuild statique" as FRONTEND
     }
 
-    node "Backend / services applicatifs" <<executionEnvironment>> as APPS {
-        artifact "Backend FastAPI" as BACKEND
-        artifact "n8n" as N8N
-        artifact "WAHA" as WAHA
-        artifact "HTTPSMS / SMSGate\nSelon .env" as SMS
+    node "Services applicatifs" <<executionEnvironment>> as APPS {
+        node "Backend FastAPI" <<executionEnvironment>> as BACKEND
+        node "n8n" <<executionEnvironment>> as N8N
+        node "WAHA" <<executionEnvironment>> as WAHA
+        node "HTTPSMS / SMSGate" <<executionEnvironment>> as SMS
     }
 
     node "Services de données" <<executionEnvironment>> as DATA {
-        artifact "PostgreSQL" as POSTGRES
-        artifact "Qdrant" as QDRANT
+        node "PostgreSQL" <<executionEnvironment>> as POSTGRES
+        node "Qdrant" <<executionEnvironment>> as QDRANT
     }
 }
 
-node "NASA FIRMS" <<external system>> as FIRMS
-node "Vertex AI" <<external system>> as VERTEX
-node "Service SMS" <<external system>> as SMS_EXT
+node "NASA FIRMS" as FIRMS
+node "Vertex AI" as VERTEX
+node "Service SMS externe" as SMS_EXT
 
-CLIENT -- SERVER : <<HTTPS>>
-SERVER -- FIRMS : <<HTTPS / API>>
-SERVER -- VERTEX : <<HTTPS / API>>
-SERVER -- SMS_EXT : <<HTTPS / API>>
+CLIENT -- NGINX : <<HTTPS>>
 
+NGINX -- BACKEND : <<HTTP / local>>
 BACKEND -- N8N : <<HTTP / localhost>>
-BACKEND -- WAHA : <<HTTP / localhost>>
-BACKEND -- SMS : <<HTTP / localhost>>
 BACKEND -- POSTGRES : <<TCP / local>>
+BACKEND -- FIRMS : <<HTTPS / API>>
 
 N8N -- POSTGRES : <<connexion locale>>
 N8N -- QDRANT : <<HTTP / localhost>>
@@ -47,15 +44,16 @@ N8N -- VERTEX : <<HTTPS / API>>
 N8N -- WAHA : <<API locale>>
 N8N -- SMS : <<API locale>>
 
+SMS -- SMS_EXT : <<HTTPS / API>>
+
 note right of SERVER
 Un seul nœud matériel héberge
 les services principaux de JeryMotro.
-Les services internes communiquent
-localement.
+Les échanges internes restent locaux.
 end note
 
-note bottom of SMS
-Service réellement sélectionné
+note right of SMS
+Le service SMS actif est choisi
 par la configuration .env.
 end note
 
