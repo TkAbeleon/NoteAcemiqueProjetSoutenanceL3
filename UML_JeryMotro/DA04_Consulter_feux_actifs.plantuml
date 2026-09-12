@@ -1,0 +1,17 @@
+@startuml
+
+title DA04 — Consulter les feux actifs
+skinparam shadowing false
+
+start
+:Ouvrir les feux actifs;
+:Demander les événements actifs;
+:Afficher les feux actifs;
+
+while (Actualiser la consultation ?) is (oui)
+  :Rechercher les événements actifs;
+  :Mettre à jour l'affichage;
+endwhile (non)
+
+stop
+@enduml
