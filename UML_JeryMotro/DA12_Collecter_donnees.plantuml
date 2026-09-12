@@ -1,0 +1,21 @@
+@startuml
+
+title DA12 — Collecter les données
+skinparam shadowing false
+
+start
+:Déclenchement par le cron;
+if (Collecte déjà en cours ?) then (oui)
+  :Arrêter cette exécution;
+  stop
+else (non)
+  :Déterminer les sources et la période manquante;
+  :Interroger NASA FIRMS;
+  :Recevoir les détections;
+  :Normaliser les données;
+  :Ignorer les doublons;
+  :Enregistrer les nouvelles détections;
+  :Terminer la collecte;
+endif
+stop
+@enduml
