@@ -1,0 +1,51 @@
+name: Apply UML monochrome style
+
+on:
+  push:
+    paths:
+      - ".uml-monochrome-trigger"
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply monochrome style
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path("UML_JeryMotro")
+          for path in sorted(root.glob("*.plantuml")):
+              text = path.read_text(encoding="utf-8")
+              if "skinparam monochrome true" in text:
+                  continue
+
+              lines = text.splitlines()
+              try:
+                  start = next(i for i, line in enumerate(lines) if line.strip() == "@startuml")
+              except StopIteration:
+                  continue
+
+              lines[start + 1:start + 1] = ["skinparam monochrome true"]
+              path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+      - name: Commit UML style changes and remove temporary workflow
+        shell: bash
+        run: |
+          rm -f .uml-monochrome-trigger .github/workflows/uml-monochrome.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add UML_JeryMotro/*.plantuml .uml-monochrome-trigger .github/workflows/uml-monochrome.yml
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "style(UML): apply monochrome black-and-white diagrams"
+          git push
