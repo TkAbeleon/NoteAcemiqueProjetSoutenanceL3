@@ -1,0 +1,211 @@
+@startuml
+left to right direction
+
+ title Diagramme de classes — JeryMotro
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "Modèle métier JeryMotro" {
+
+    enum UserRole {
+        standard
+        premium
+        admin
+    }
+
+    enum AlertChannel {
+        EMAIL
+        SMS
+        WHATSAPP
+    }
+
+    enum FireStatus {
+        ACTIVE
+        COOLING
+        LIKELY_OUT
+        UNKNOWN
+    }
+
+    class User {
+        + id : Integer
+        + email : String
+        + hashed_password : String
+        + full_name : String
+        + organization : String
+        + role : UserRole
+        + phone_number : String
+        + whatsapp_number : String
+        + phone_verified : Boolean
+        + otp_code_hash : String
+        + otp_expires_at : DateTime
+        + otp_attempts : Integer
+        + is_active : Boolean
+        + created_at : DateTime
+        + updated_at : DateTime
+    }
+
+    class AlertSubscription {
+        + id : BigInteger
+        + user_id : BigInteger
+        + channel : AlertChannel
+        + destination : String
+        + enabled : Boolean
+        + min_risk : Float
+        + min_frp : Float
+        + is_verified : Boolean
+        + verification_code : String
+        + verification_expires_at : DateTime
+        + verification_attempts : Integer
+        + created_at : DateTime
+        + updated_at : DateTime
+    }
+
+    class MonitoredZone {
+        + id : Integer
+        + user_id : Integer
+        + name : String
+        + latitude : Float
+        + longitude : Float
+        + radius_km : Float
+        + min_risk : Float
+        + min_frp : Float
+        + custom_ai_prompt : Text
+        + created_at : DateTime
+        + updated_at : DateTime
+    }
+
+    class FirmsFireDetection {
+        + id : BigInteger
+        + source : String
+        + satellite : String
+        + instrument : String
+        + latitude : Float
+        + longitude : Float
+        + acq_date : Date
+        + acq_time : String
+        + acq_datetime : DateTime
+        + local_hour : Integer
+        + brightness : Float
+        + bright_t31 : Float
+        + diff_brightness : Float
+        + frp : Float
+        + frp_log : Float
+        + confidence : String
+        + confidence_num : Integer
+        + daynight : String
+        + scan : Float
+        + track : Float
+        + scan_track_ratio : Float
+        + is_dry_season : Boolean
+        + temperature_2m : Float
+        + relative_humidity : Float
+        + wind_speed : Float
+        + precipitation : Float
+        + landcover : String
+        + slope_deg : Float
+        + ndvi_10m : Float
+        + is_recent_loss : Integer
+        + risk_score : Float
+        + fire_label : Integer
+        + cluster_id : Integer
+        + fire_event_id : BigInteger
+        + cluster_size : Integer
+        + cluster_frp_total : Float
+        + cluster_frp_max : Float
+        + is_noise : Integer
+        + region : String
+        + collection_run_id : String
+        + inserted_at : DateTime
+        + updated_at : DateTime
+    }
+
+    class FireEvent {
+        + id : BigInteger
+        + fire_id : String
+        + center_latitude : Float
+        + center_longitude : Float
+        + radius_km : Float
+        + region : String
+        + cluster_size : Integer
+        + cluster_frp_total : Float
+        + cluster_frp_max : Float
+        + risk_score_max : Float
+        + risk_level : String
+        + first_seen : DateTime
+        + last_seen : DateTime
+        + duration_hours : Float
+        + hours_since_last_seen : Float
+        + cluster_status : FireStatus
+        + status_reason : String
+        + reactivation_count : Integer
+        + created_at : DateTime
+        + updated_at : DateTime
+    }
+
+    class Alert {
+        + id : BigInteger
+        + user_id : BigInteger
+        + fire_event_id : BigInteger
+        + detection_id : BigInteger
+        + alert_level : String
+        + region : String
+        + latitude : Float
+        + longitude : Float
+        + risk_score : Float
+        + frp : Float
+        + message : Text
+        + images : Array[String]
+        + channel : String
+        + destination : String
+        + status : String
+        + error_message : Text
+        + sent_at : DateTime
+        + created_at : DateTime
+    }
+
+    class Prediction {
+        + id : BigInteger
+        + prediction_date : Date
+        + latitude : Float
+        + longitude : Float
+        + grid_cell_id : String
+        + risk_score_j1 : Float
+        + confidence : Float
+        + model_version : String
+        + input_window_days : Integer
+        + region : String
+        + created_at : DateTime
+    }
+
+    class CollectionRun {
+        + id : BigInteger
+        + run_id : String
+        + source : String
+        + started_at : DateTime
+        + finished_at : DateTime
+        + ok : Boolean
+        + row_count_raw : Integer
+        + row_count_valid : Integer
+        + row_count_dedup : Integer
+        + error : Text
+        + created_at : DateTime
+    }
+}
+
+User "1" -- "0..*" AlertSubscription : possède
+User "1" -- "0..*" MonitoredZone : surveille
+User "1" -- "0..*" Alert : reçoit
+
+FireEvent "1" -- "0..*" FirmsFireDetection : regroupe
+FireEvent "1" -- "0..*" Alert : génère
+
+AlertSubscription --> AlertChannel : canal
+User --> UserRole : rôle
+FireEvent --> FireStatus : statut
+
+' Le lien collection_run_id existe dans la détection,
+' mais n'est pas une ForeignKey déclarée vers CollectionRun.
+' Il est donc volontairement laissé hors des associations fortes.
+
+@enduml
