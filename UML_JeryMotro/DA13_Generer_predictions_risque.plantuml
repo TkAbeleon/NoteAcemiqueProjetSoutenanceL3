@@ -1,0 +1,24 @@
+@startuml
+
+title DA13 — Générer les prédictions de risque
+skinparam shadowing false
+
+start
+:Sélectionner les détections non scorées;
+if (Détections disponibles ?) then (non)
+  :Aucune prédiction à générer;
+  stop
+else (oui)
+  if (Scoring ML activé ?) then (oui)
+    :Envoyer les données au modèle JeryMotroNet;
+    :Recevoir les scores;
+    if (Score invalide ou indisponible ?) then (oui)
+      :Calculer le score heuristique;
+    endif
+  else (non)
+    :Calculer le score heuristique;
+  endif
+  :Enregistrer le score et le label de risque;
+endif
+stop
+@enduml
