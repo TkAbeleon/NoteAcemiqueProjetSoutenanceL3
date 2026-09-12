@@ -7,40 +7,62 @@ skinparam shadowing false
 actor "Utilisateur" as U
 participant "Frontend" as F
 participant "Backend" as B
-database "Base de données" as DB
+participant "Base de données" as DB
 
 U -> F : Demande l'authentification
 
 alt E-mail et mot de passe
-    U -> F : Saisit e-mail et mot de passe
+    U -> F : Saisit l'e-mail et le mot de passe
     F -> B : Envoyer les identifiants
     B -> DB : Rechercher le compte
     DB --> B : Compte
-    B --> F : Authentification réussie + JWT
-    F --> U : Accès accordé
 
-    alt Identifiants incorrects
+    alt Identifiants valides
+        B --> F : JWT
+        F --> U : Authentification réussie
+    else Identifiants incorrects
         B --> F : Erreur d'authentification
         F --> U : Afficher l'erreur
         loop Nouvelle tentative
-            U -> F : Ressaisir les identifiants
+            U -> F : Corriger les identifiants
             F -> B : Nouvelle authentification
             B -> DB : Vérifier le compte
             DB --> B : Résultat
         end
     end
+
 else OTP
-    U -> F : Choisit OTP
-    F -> B : Demander un code OTP
-    B --> F : Code envoyé
-    F --> U : Demander le code
-    loop Jusqu'à validation
-        U -> F : Saisit le code
-        F -> B : Vérifier le code
-        B --> F : Code valide / invalide
+    U -> F : Choisir le canal OTP
+
+    alt E-mail
+        U -> F : Saisir l'adresse e-mail
+    else SMS
+        U -> F : Saisir le numéro de téléphone
+    else WhatsApp
+        U -> F : Saisir le numéro WhatsApp
     end
-    B --> F : Authentification réussie + JWT
-    F --> U : Accès accordé
+
+    F -> B : Demander l'envoi du code OTP
+    B -> DB : Vérifier l'identifiant
+    DB --> B : Compte
+    B --> F : Code OTP envoyé
+    F --> U : Demander le code OTP
+
+    loop Jusqu'à validation du code
+        U -> F : Saisir le code OTP
+        F -> B : Vérifier le code OTP
+        B -> DB : Vérifier le compte et le code
+        DB --> B : Résultat
+
+        alt Code valide
+            B --> F : JWT
+            F --> U : Authentification réussie
+        else Code incorrect ou expiré
+            B --> F : Code refusé
+            F --> U : Afficher l'erreur
+            U -> F : Ressaisir le code OTP
+        end
+    end
 end
 
 @enduml
