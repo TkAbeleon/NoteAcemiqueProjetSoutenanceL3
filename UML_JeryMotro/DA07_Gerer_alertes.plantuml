@@ -1,0 +1,31 @@
+@startuml
+
+title DA07 — Gérer les alertes
+skinparam shadowing false
+
+start
+:Ouvrir la gestion des alertes;
+:Afficher la configuration;
+:Choisir un canal et une destination;
+:Définir les seuils de risque et de FRP;
+
+if (Canal autorisé ?) then (oui)
+  :Créer ou modifier l'abonnement;
+  if (Nouvelle destination ?) then (oui)
+    :Générer et envoyer un OTP;
+    :Saisir le code;
+    :Vérifier le code;
+    if (Code valide ?) then (oui)
+      :Valider l'abonnement;
+    else (non)
+      :Refuser la vérification;
+    endif
+  else (non)
+    :Enregistrer la configuration;
+  endif
+else (non)
+  :Refuser l'accès au canal;
+endif
+
+stop
+@enduml
