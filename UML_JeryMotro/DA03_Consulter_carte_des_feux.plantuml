@@ -1,0 +1,20 @@
+@startuml
+
+title DA03 — Consulter la carte des feux
+skinparam shadowing false
+
+start
+:Ouvrir la carte;
+:Demander les détections;
+:Appliquer les critères de consultation;
+:Afficher les détections sur la carte;
+
+while (Modifier les critères ?) is (oui)
+  :Modifier période, risque,
+région ou source;
+  :Actualiser les détections;
+  :Mettre à jour la carte;
+endwhile (non)
+
+stop
+@enduml
