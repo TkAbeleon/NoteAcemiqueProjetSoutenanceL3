@@ -1,87 +1,73 @@
 @startuml
 left to right direction
 
-!theme plain
 skinparam shadowing false
-skinparam componentStyle rectangle
 skinparam linetype ortho
 
 actor "Utilisateur" as U
 
-node "Internet" as NET {
-    cloud "NASA FIRMS" as FIRMS
-    cloud "Vertex AI" as VERTEX
-    cloud "Service SMS externe\n(HTTPSMS si configuré)" as HTTPSMS
-}
+cloud "NASA FIRMS" as FIRMS
+cloud "Vertex AI" as VERTEX
+cloud "HTTPSMS" as HTTPSMS
 
-node "Serveur JeryMotro" as SERVER {
+node "Serveur JeryMotro\nMachine physique ou VM" as SERVER {
 
     node "Nginx\nReverse Proxy / TLS" as NGINX {
-        artifact "Frontend Web" as FE
+        artifact "Frontend Web\n(build statique)" as FRONTEND
     }
 
     node "Services applicatifs" as APPS {
-        component "Backend FastAPI\n:8200" as BE
-        component "n8n\n:5678" as N8N
-        component "WAHA\n:3001" as WAHA
-        component "SMSGate\n:3030" as SMSGATE
-        component "Mattermost\n:8065" as MATTERMOST
+        artifact "Backend FastAPI\nlocalhost:8200" as BACKEND
+        artifact "n8n\nlocalhost:5678" as N8N
+        artifact "WAHA\nlocalhost:3001" as WAHA
+        artifact "SMSGate\nlocalhost:3030\n(si sélectionné)" as SMSGATE
     }
 
-    node "Données" as DATA {
-        database "PostgreSQL" as DB
-        database "Qdrant\n:6333" as QDRANT
+    node "Services de données" as DATA {
+        artifact "PostgreSQL" as POSTGRES
+        artifact "Qdrant\nlocalhost:6333" as QDRANT
     }
-
-    artifact ".env / configuration" as ENV
 }
 
-U --> NGINX : HTTPS
-NGINX --> FE : servir l'application
-NGINX --> BE : /api
-NGINX --> QDRANT : /rag
-NGINX --> WAHA : /whatsapp
-NGINX --> N8N : /automation
-NGINX --> MATTERMOST : /chat
-NGINX --> SMSGATE : /sms
+U --> SERVER : HTTPS
+FIRMS --> SERVER : HTTPS / API FIRMS
+SERVER --> VERTEX : HTTPS / API IA
+SERVER --> HTTPSMS : HTTPS / API SMS
 
-BE --> DB : connexion locale
-BE --> N8N : appels locaux
-BE --> WAHA : appels locaux
-BE --> SMSGATE : appels locaux
-BE --> HTTPSMS : selon configuration .env
-BE --> FIRMS : collecte des données
-
-N8N --> DB : données du Chat / RAG
-N8N --> QDRANT : recherche vectorielle
-N8N --> VERTEX : génération du Chat IA
-
-N8N --> WAHA : notification WhatsApp
-N8N --> SMSGATE : notification SMS
-N8N --> HTTPSMS : selon configuration
-
-QDRANT --> DB : contenu / références selon workflow
-
-ENV ..> BE : paramètres
-ENV ..> N8N : paramètres
-ENV ..> WAHA : paramètres
-ENV ..> SMSGATE : choix du service SMS
+BACKEND --> POSTGRES : TCP / local
+BACKEND --> N8N : HTTP / localhost
+BACKEND --> WAHA : HTTP / localhost
+BACKEND --> SMSGATE : HTTP / localhost
+N8N --> POSTGRES : connexion locale
+N8N --> QDRANT : HTTP / localhost
+N8N --> VERTEX : HTTPS / API IA
+N8N --> WAHA : API locale
+N8N --> SMSGATE : API locale
 
 note right of SERVER
-Tous les composants déployés ici sont sur
-le même serveur physique/VM.
+Un seul serveur héberge les services
+principaux de JeryMotro.
 Les communications internes utilisent
 localhost et les ports locaux.
 end note
 
-note bottom of SMSGATE
-Service SMS local utilisé lorsque
-SMSGate est sélectionné dans .env.
+note bottom of NGINX
+Nginx assure le routage des sous-domaines
+vers les services locaux.
 end note
 
-note bottom of HTTPSMS
-Alternative : service HTTPSMS si
-configuré dans .env.
+note bottom of SMSGATE
+Alternative à HTTPSMS.
+Le service SMS utilisé dépend de la
+configuration définie dans .env.
+end note
+
+note bottom of QDRANT
+RAG : recherche vectorielle.
+end note
+
+note bottom of VERTEX
+Chat IA : modèle / génération.
 end note
 
 @enduml
