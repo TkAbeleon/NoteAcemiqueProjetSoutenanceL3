@@ -7,15 +7,28 @@ skinparam shadowing false
 actor "Utilisateur" as U
 participant "Frontend" as F
 participant "Backend (proxy)" as B
-participant "n8n — Gestion du Chat IA" as N8N
+participant "n8n — Gestion du Chat IA / RAG" as N8N
+participant "Base de données" as DB
+participant "Qdrant" as Q
 
 loop Tant que l'utilisateur poursuit la conversation
+
     U -> F : Saisir une question
     F -> B : Envoyer la demande
     B -> N8N : Relayer la demande
+
+    N8N -> DB : Consulter les données utiles
+    DB --> N8N : Données pertinentes
+
+    N8N -> Q : Recherche vectorielle
+    Q --> N8N : Documents / contextes pertinents
+
+    N8N -> N8N : Traiter le contexte\net générer la réponse
+
     N8N --> B : Réponse du Chat IA
     B --> F : Relayer la réponse
     F --> U : Afficher la réponse
+
 end
 
 @enduml
