@@ -1,0 +1,21 @@
+@startuml
+
+title DA05 — Consulter les statistiques
+skinparam shadowing false
+
+start
+:Demander les statistiques;
+:Vérifier l'authentification;
+:Charger les données statistiques;
+:Calculer les agrégats;
+:Afficher les statistiques;
+
+while (Modifier la période ?) is (oui)
+  :Choisir une nouvelle période;
+  :Recharger les données;
+  :Recalculer les agrégats;
+  :Actualiser l'affichage;
+endwhile (non)
+
+stop
+@enduml
