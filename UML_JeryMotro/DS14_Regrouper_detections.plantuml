@@ -4,19 +4,13 @@ title DS14 — Regrouper les détections
 hide footbox
 skinparam shadowing false
 
-actor "Administrateur" as A
-participant "Frontend" as F
 participant "Backend" as B
-database "Base de données" as DB
+participant "Base de données" as DB
 
-A -> F : Lance le regroupement
-F -> B : Demander le regroupement
-B -> DB : Lire les détections à regrouper
+B -> DB : Sélectionner les détections non regroupées
 DB --> B : Détections
 B -> B : Regrouper les détections
-B -> DB : Enregistrer les regroupements
+B -> DB : Enregistrer les événements de feu
 DB --> B : Confirmation
-B --> F : Résultat
-F --> A : Afficher le résultat
 
 @enduml
