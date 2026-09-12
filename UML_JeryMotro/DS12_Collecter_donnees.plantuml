@@ -4,19 +4,16 @@ title DS12 — Collecter les données
 hide footbox
 skinparam shadowing false
 
-actor "Administrateur" as A
-participant "Frontend" as F
+actor "Planificateur (cron)" as C
 participant "Backend" as B
 participant "NASA FIRMS" as N
-database "Base de données" as DB
+participant "Base de données" as DB
 
-A -> F : Lance la collecte
-F -> B : Demander la collecte
-B -> N : Récupérer les données manquantes
-N --> B : Détections
+C -> B : Déclencher la collecte selon le cron
+B -> N : Récupérer les données FIRMS manquantes
+N --> B : Détections NASA FIRMS
 B -> DB : Enregistrer les nouvelles détections
 DB --> B : Confirmation
-B --> F : Résultat de la collecte
-F --> A : Afficher le résultat
+B --> C : Collecte terminée
 
 @enduml
