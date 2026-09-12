@@ -1,74 +1,62 @@
 @startuml
 skinparam monochrome true
-left to right direction
-
 skinparam shadowing false
+left to right direction
 skinparam linetype ortho
 
-actor "Utilisateur" as U
+node "Poste utilisateur" <<device>> as CLIENT {
+    artifact "Navigateur Web" as BROWSER
+}
 
-cloud "NASA FIRMS" as FIRMS
-cloud "Vertex AI" as VERTEX
-cloud "HTTPSMS" as HTTPSMS
+node "Serveur JeryMotro" <<device>> as SERVER {
 
-node "Serveur JeryMotro\nMachine physique ou VM" as SERVER {
-
-    node "Nginx\nReverse Proxy / TLS" as NGINX {
-        artifact "Frontend Web\n(build statique)" as FRONTEND
+    node "Nginx" <<executionEnvironment>> as NGINX {
+        artifact "Frontend Web\nBuild statique" as FRONTEND
     }
 
-    node "Services applicatifs" as APPS {
-        artifact "Backend FastAPI\nlocalhost:8200" as BACKEND
-        artifact "n8n\nlocalhost:5678" as N8N
-        artifact "WAHA\nlocalhost:3001" as WAHA
-        artifact "SMSGate\nlocalhost:3030\n(si sélectionné)" as SMSGATE
+    node "Backend / services applicatifs" <<executionEnvironment>> as APPS {
+        artifact "Backend FastAPI" as BACKEND
+        artifact "n8n" as N8N
+        artifact "WAHA" as WAHA
+        artifact "HTTPSMS / SMSGate\nSelon .env" as SMS
     }
 
-    node "Services de données" as DATA {
+    node "Services de données" <<executionEnvironment>> as DATA {
         artifact "PostgreSQL" as POSTGRES
-        artifact "Qdrant\nlocalhost:6333" as QDRANT
+        artifact "Qdrant" as QDRANT
     }
 }
 
-U --> SERVER : HTTPS
-FIRMS --> SERVER : HTTPS / API FIRMS
-SERVER --> VERTEX : HTTPS / API IA
-SERVER --> HTTPSMS : HTTPS / API SMS
+node "NASA FIRMS" <<external system>> as FIRMS
+node "Vertex AI" <<external system>> as VERTEX
+node "Service SMS" <<external system>> as SMS_EXT
 
-BACKEND --> POSTGRES : TCP / local
-BACKEND --> N8N : HTTP / localhost
-BACKEND --> WAHA : HTTP / localhost
-BACKEND --> SMSGATE : HTTP / localhost
-N8N --> POSTGRES : connexion locale
-N8N --> QDRANT : HTTP / localhost
-N8N --> VERTEX : HTTPS / API IA
-N8N --> WAHA : API locale
-N8N --> SMSGATE : API locale
+CLIENT -- SERVER : <<HTTPS>>
+SERVER -- FIRMS : <<HTTPS / API>>
+SERVER -- VERTEX : <<HTTPS / API>>
+SERVER -- SMS_EXT : <<HTTPS / API>>
+
+BACKEND -- N8N : <<HTTP / localhost>>
+BACKEND -- WAHA : <<HTTP / localhost>>
+BACKEND -- SMS : <<HTTP / localhost>>
+BACKEND -- POSTGRES : <<TCP / local>>
+
+N8N -- POSTGRES : <<connexion locale>>
+N8N -- QDRANT : <<HTTP / localhost>>
+N8N -- VERTEX : <<HTTPS / API>>
+N8N -- WAHA : <<API locale>>
+N8N -- SMS : <<API locale>>
 
 note right of SERVER
-Un seul serveur héberge les services
-principaux de JeryMotro.
-Les communications internes utilisent
-localhost et les ports locaux.
+Un seul nœud matériel héberge
+les services principaux de JeryMotro.
+Les services internes communiquent
+localement.
 end note
 
-note bottom of NGINX
-Nginx assure le routage des sous-domaines
-vers les services locaux.
-end note
-
-note bottom of SMSGATE
-Alternative à HTTPSMS.
-Le service SMS utilisé dépend de la
-configuration définie dans .env.
-end note
-
-note bottom of QDRANT
-RAG : recherche vectorielle.
-end note
-
-note bottom of VERTEX
-Chat IA : modèle / génération.
+note bottom of SMS
+Service réellement sélectionné
+par la configuration .env.
 end note
 
 @enduml
