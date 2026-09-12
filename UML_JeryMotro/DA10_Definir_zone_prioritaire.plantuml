@@ -1,0 +1,20 @@
+@startuml
+
+title DA10 — Définir une zone prioritaire
+skinparam shadowing false
+
+start
+:Ouvrir la gestion des zones;
+:Afficher les zones existantes;
+:Définir ou modifier une zone;
+:Enregistrer la zone;
+:Confirmer l'enregistrement;
+
+while (Ajouter ou modifier une autre zone ?) is (oui)
+  :Définir / modifier la zone;
+  :Enregistrer la modification;
+  :Confirmer;
+endwhile (non)
+
+stop
+@enduml
