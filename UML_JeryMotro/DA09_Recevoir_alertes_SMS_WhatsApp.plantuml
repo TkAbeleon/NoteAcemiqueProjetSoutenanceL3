@@ -1,0 +1,21 @@
+@startuml
+
+title DA09 — Recevoir les alertes SMS et WhatsApp
+skinparam shadowing false
+
+start
+:Une condition d'alerte est détectée;
+:Rechercher l'abonnement concerné;
+if (Abonnement actif et vérifié ?) then (oui)
+  :Préparer la notification;
+  if (Canal SMS ?) then (oui)
+    :Envoyer le SMS;
+  else (WhatsApp)
+    :Envoyer le message WhatsApp;
+  endif
+  :Enregistrer le résultat de l'alerte;
+else (non)
+  :Ne pas envoyer;
+endif
+stop
+@enduml
