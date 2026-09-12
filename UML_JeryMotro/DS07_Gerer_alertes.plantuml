@@ -9,65 +9,41 @@ participant "Frontend" as F
 participant "Backend" as B
 participant "Base de données" as DB
 
-U -> F : Ouvrir la gestion des alertes
-F -> B : Consulter les abonnements
-B -> DB : Rechercher les abonnements
-DB --> B : Abonnements
-B --> F : Afficher la configuration
-
 U -> F : Configurer une alerte
-F -> B : Créer / modifier l'abonnement
+F -> B : Enregistrer la configuration
 
-alt SMS ou WhatsApp avec un compte Standard
+alt SMS / WhatsApp pour Standard
     B --> F : Accès refusé
-    F --> U : Canal réservé au Premium/Admin
-else E-mail ou compte Premium/Admin
-    B -> DB : Enregistrer la configuration
-    B -> B : Vérifier les règles de canal et de seuils
+else Configuration acceptée
+    B -> DB : Créer / modifier l'abonnement
 
-    alt Nouveau canal ou nouvelle destination
+    alt Nouveau canal ou destination
         B -> B : Générer un OTP
         B --> F : Demander la vérification
-        F --> U : Saisir le code OTP
-
-        loop Jusqu'à validation
-            U -> F : Saisir le code OTP
-            F -> B : Vérifier le code
-            B -> DB : Contrôler le code
-            DB --> B : Résultat
-
-            alt Code valide
-                B -> DB : Valider l'abonnement
-                B --> F : Configuration validée
-                F --> U : Confirmer l'activation
-            else Code incorrect ou expiré
-                B --> F : Vérification refusée
-                F --> U : Afficher l'erreur
-            end
+        U -> F : Saisir le code OTP
+        F -> B : Vérifier le code
+        alt Code valide
+            B -> DB : Valider l'abonnement
+        else Code incorrect / expiré
+            B --> F : Vérification refusée
         end
     else Destination existante
-        B -> DB : Mettre à jour les seuils
         B --> F : Configuration enregistrée
-        F --> U : Confirmer la modification
     end
 end
 
-loop Gestion ultérieure
-    alt Renvoyer le code OTP
+opt Gestion ultérieure
+    alt Renvoyer OTP
         U -> F : Demander un nouveau code
         F -> B : Renvoyer le code
-        B --> F : Nouveau code envoyé
     else Modifier les seuils
         U -> F : Modifier les seuils
-        F -> B : Enregistrer les nouveaux seuils
-        B -> DB : Mettre à jour l'abonnement
-        B --> F : Modification confirmée
-    else Supprimer l'abonnement
+        F -> B : Enregistrer
+        B -> DB : Mettre à jour
+    else Supprimer
         U -> F : Supprimer l'abonnement
-        F -> B : Supprimer l'abonnement
-        B -> DB : Supprimer l'abonnement
-        B --> F : Suppression confirmée
-        F --> U : Abonnement supprimé
+        F -> B : Supprimer
+        B -> DB : Supprimer
     end
 end
 
