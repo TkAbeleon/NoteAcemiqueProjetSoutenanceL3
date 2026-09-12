@@ -8,10 +8,31 @@ actor "Utilisateur Standard" as U
 participant "Frontend" as F
 participant "Backend" as B
 participant "n8n" as N8N
+participant "Base de données" as DB
+participant "Qdrant / RAG" as RAG
 
 U -> F : Saisit une question
 F -> B : Envoyer la question
-B -> N8N : Transmettre la demande
+B -> N8N : Transmettre la question
+
+N8N -> N8N : Identifier le type de question
+
+alt Question historique
+    N8N -> DB : Consulter les données historiques
+    DB --> N8N : Données historiques
+
+else Question de cause / contexte documentaire
+    N8N -> RAG : Rechercher les informations pertinentes
+    RAG --> N8N : Contexte documentaire
+
+else Question nécessitant les deux sources
+    N8N -> DB : Consulter les données historiques
+    DB --> N8N : Données historiques
+    N8N -> RAG : Rechercher les informations pertinentes
+    RAG --> N8N : Contexte documentaire
+end
+
+N8N -> N8N : Construire la réponse
 N8N --> B : Réponse
 B --> F : Réponse du Chat IA
 F --> U : Afficher la réponse
@@ -19,7 +40,23 @@ F --> U : Afficher la réponse
 loop Poursuite de la conversation
     U -> F : Nouvelle question
     F -> B : Envoyer la question
-    B -> N8N : Transmettre la demande
+    B -> N8N : Transmettre la question
+    N8N -> N8N : Identifier le type de question
+
+    alt Question historique
+        N8N -> DB : Consulter les données historiques
+        DB --> N8N : Données historiques
+    else Question de cause / contexte documentaire
+        N8N -> RAG : Rechercher les informations pertinentes
+        RAG --> N8N : Contexte documentaire
+    else Question nécessitant les deux sources
+        N8N -> DB : Consulter les données historiques
+        DB --> N8N : Données historiques
+        N8N -> RAG : Rechercher les informations pertinentes
+        RAG --> N8N : Contexte documentaire
+    end
+
+    N8N -> N8N : Construire la réponse
     N8N --> B : Réponse
     B --> F : Réponse
     F --> U : Afficher la réponse
