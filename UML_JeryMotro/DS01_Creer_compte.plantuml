@@ -1,5 +1,4 @@
 @startuml
-left to right direction
 
 title DS01 — Créer un compte
 hide footbox
@@ -8,7 +7,7 @@ skinparam shadowing false
 actor "Visiteur" as V
 participant "Frontend" as F
 participant "Backend" as B
-database "Base de données" as DB
+participant "Base de données" as DB
 
 V -> F : Remplit le formulaire d'inscription
 F -> B : Envoyer les données
