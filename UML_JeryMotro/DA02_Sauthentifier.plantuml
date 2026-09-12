@@ -1,0 +1,36 @@
+@startuml
+
+title DA02 — S'authentifier
+skinparam shadowing false
+
+start
+:Choisir le mode d'authentification;
+if (E-mail + mot de passe ?) then (oui)
+  :Saisir les identifiants;
+  :Vérifier le compte et le mot de passe;
+  if (Identifiants valides et compte actif ?) then (oui)
+    :Générer le JWT;
+    stop
+  else (non)
+    :Afficher l'erreur;
+    :Corriger les identifiants;
+    :Reprendre l'authentification;
+  endif
+else (OTP)
+  :Choisir le canal OTP;
+  :E-mail / SMS / WhatsApp;
+  :Vérifier le compte;
+  :Générer et envoyer le code OTP;
+  :Saisir le code;
+  :Vérifier le code et son expiration;
+  if (Code valide ?) then (oui)
+    :Générer le JWT;
+    stop
+  else (non)
+    :Afficher l'erreur;
+    :Ressaisir le code;
+    :Vérifier à nouveau;
+  endif
+endif
+
+@enduml
