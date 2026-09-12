@@ -1,0 +1,20 @@
+@startuml
+
+title DA16 — Déclencher les alertes
+skinparam shadowing false
+
+start
+:Recevoir un événement de feu éligible;
+:Rechercher les abonnements actifs et vérifiés;
+:Comparer le risque et le FRP aux seuils;
+
+if (Au moins un seuil atteint ?) then (oui)
+  :Sélectionner les abonnements éligibles;
+  :Router les notifications vers les canaux configurés;
+  :Enregistrer les résultats des alertes;
+else (non)
+  :Ne pas envoyer d'alerte;
+endif
+
+stop
+@enduml
