@@ -1,0 +1,23 @@
+@startuml
+
+title DA01 — Créer un compte
+skinparam shadowing false
+
+start
+:Afficher le formulaire d'inscription;
+:Remplir les informations;
+:Valider le formulaire;
+:Vérifier les informations;
+
+if (E-mail déjà utilisé ?) then (oui)
+  :Afficher l'erreur;
+  :Corriger les informations;
+  :Revenir à la validation;
+else (non)
+  :Créer le compte Standard;
+  :Générer le JWT;
+  :Confirmer la création;
+  stop
+endif
+
+@enduml
