@@ -1,0 +1,22 @@
+@startuml
+
+title DA15 — Mettre à jour le statut des feux
+skinparam shadowing false
+
+start
+:Lire les événements de feu;
+:Évaluer le temps depuis la dernière détection;
+if (Pipeline sain ?) then (non)
+  :Statut = UNKNOWN;
+else (oui)
+  if (Dernière détection ≤ 9 h ?) then (oui)
+    :Statut = ACTIVE;
+  elseif (Dernière détection ≤ 72 h)
+    :Statut = COOLING;
+  else (plus de 72 h)
+    :Statut = LIKELY_OUT;
+  endif
+endif
+:Enregistrer le statut;
+stop
+@enduml
