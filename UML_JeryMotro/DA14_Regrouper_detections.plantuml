@@ -1,0 +1,23 @@
+@startuml
+
+title DA14 — Regrouper les détections
+skinparam shadowing false
+
+start
+:Sélectionner les détections non regroupées;
+if (Détections disponibles ?) then (non)
+  :Aucun regroupement à effectuer;
+  stop
+else (oui)
+  :Appliquer HDBSCAN;
+  if (HDBSCAN disponible ?) then (oui)
+    :Conserver les groupes obtenus;
+  else (non)
+    :Appliquer le regroupement par grille;
+  endif
+  :Ignorer les points considérés comme bruit;
+  :Agréger les groupes en événements de feu;
+  :Enregistrer ou mettre à jour les événements;
+endif
+stop
+@enduml
