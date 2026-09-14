@@ -11,10 +11,15 @@ participant "Backend" as B
 database "Base de données" as DB
 
 U -> F : Ouvre l'export
+activate F
 F -> B : Demander les détections de la période
+activate B
 B -> DB : Rechercher les détections
+activate DB
 DB --> B : Détections
+deactivate DB
 B --> F : Données
+deactivate B
 
 alt Export CSV
     F -> F : Générer le fichier CSV
@@ -25,15 +30,22 @@ else Export PDF
 end
 
 F --> U : Télécharger le fichier
+deactivate F
 
 loop Modification de la période
     U -> F : Modifier les dates
+    activate F
     F -> B : Demander les nouvelles données
+    activate B
     B -> DB : Rechercher les détections
+    activate DB
     DB --> B : Détections
+    deactivate DB
     B --> F : Données
+    deactivate B
     F -> F : Générer le fichier
     F --> U : Télécharger le fichier
+    deactivate F
 end
 
 @enduml

@@ -11,19 +11,31 @@ participant "Backend" as B
 database "Base de données" as DB
 
 U -> F : Ouvre les statistiques
+activate F
 F -> B : Demander les statistiques
+activate B
 B -> DB : Calculer les statistiques
+activate DB
 DB --> B : Résultats
+deactivate DB
 B --> F : Données statistiques
+deactivate B
 F --> U : Afficher les indicateurs
+deactivate F
 
 loop Modification de la période
     U -> F : Changer la période
+    activate F
     F -> B : Nouvelle demande
+    activate B
     B -> DB : Recalculer les statistiques
+    activate DB
     DB --> B : Résultats
+    deactivate DB
     B --> F : Mise à jour
+    deactivate B
     F --> U : Afficher les indicateurs
+    deactivate F
 end
 
 @enduml

@@ -11,57 +11,88 @@ participant "Backend" as B
 participant "Base de données" as DB
 
 U -> F : Demande l'authentification
+activate F
 
 alt E-mail et mot de passe
     U -> F : Saisit l'e-mail et le mot de passe
+    activate F
     F -> B : Envoyer les identifiants
+    activate B
     B -> DB : Rechercher le compte
+    activate DB
     DB --> B : Compte
+    deactivate DB
 
     alt Identifiants valides
         B --> F : JWT
+        deactivate B
         F --> U : Authentification réussie
+        deactivate F
     else Identifiants incorrects
         B --> F : Erreur d'authentification
+        deactivate B
         F --> U : Afficher l'erreur
+        deactivate F
         loop Nouvelle tentative
             U -> F : Corriger les identifiants
+            activate F
             F -> B : Nouvelle authentification
+            activate B
             B -> DB : Vérifier le compte
+            activate DB
             DB --> B : Résultat
+            deactivate DB
         end
     end
 
 else OTP
     U -> F : Choisir le canal OTP
+    activate F
 
     alt E-mail
         U -> F : Saisir l'adresse e-mail
+        activate F
     else SMS
         U -> F : Saisir le numéro de téléphone
+        activate F
     else WhatsApp
         U -> F : Saisir le numéro WhatsApp
+        activate F
     end
 
     F -> B : Demander l'envoi du code OTP
+    activate B
     B -> DB : Vérifier l'identifiant
+    activate DB
     DB --> B : Compte
+    deactivate DB
     B --> F : Code OTP envoyé
+    deactivate B
     F --> U : Demander le code OTP
+    deactivate F
 
     loop Jusqu'à validation du code
         U -> F : Saisir le code OTP
+        activate F
         F -> B : Vérifier le code OTP
+        activate B
         B -> DB : Vérifier le compte et le code
+        activate DB
         DB --> B : Résultat
+        deactivate DB
 
         alt Code valide
             B --> F : JWT
+            deactivate B
             F --> U : Authentification réussie
+            deactivate F
         else Code incorrect ou expiré
             B --> F : Code refusé
+            deactivate B
             F --> U : Afficher l'erreur
+            deactivate F
             U -> F : Ressaisir le code OTP
+            activate F
         end
     end
 end

@@ -11,10 +11,16 @@ participant "NASA FIRMS" as N
 participant "Base de données" as DB
 
 C -> B : Déclencher la collecte selon le cron
+activate B
 B -> N : Récupérer les données FIRMS manquantes
+activate N
 N --> B : Détections NASA FIRMS
+deactivate N
 B -> DB : Enregistrer les nouvelles détections
+activate DB
 DB --> B : Confirmation
+deactivate DB
 B --> C : Collecte terminée
+deactivate B
 
 @enduml

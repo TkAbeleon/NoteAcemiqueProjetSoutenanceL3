@@ -11,10 +11,16 @@ database "Base de données" as DB
 participant "n8n / Service e-mail" as N
 
 B -> DB : Rechercher les abonnements e-mail actifs
+activate DB
 DB --> B : Abonnements vérifiés
+deactivate DB
 B -> N : Envoyer l'alerte e-mail
+activate N
 N --> U : Notification e-mail
+deactivate N
 B -> DB : Enregistrer l'alerte
+activate DB
 DB --> B : Confirmation
+deactivate DB
 
 @enduml

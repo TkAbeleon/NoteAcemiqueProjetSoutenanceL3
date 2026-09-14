@@ -9,9 +9,13 @@ participant "Backend" as B
 participant "Base de données" as DB
 
 B -> DB : Lire les événements de feu
+activate DB
 DB --> B : Événements
+deactivate DB
 B -> B : Calculer le statut de chaque feu
 B -> DB : Mettre à jour les événements
+activate DB
 DB --> B : Confirmation
+deactivate DB
 
 @enduml

@@ -11,16 +11,23 @@ database "Base de données" as DB
 participant "Service de notification" as N
 
 B -> DB : Rechercher les abonnements actifs
+activate DB
 DB --> B : Abonnements vérifiés
+deactivate DB
 B -> N : Envoyer l'alerte
+activate N
 
 alt SMS
     N --> U : Notification SMS
+    deactivate N
 else WhatsApp
     N --> U : Notification WhatsApp
+    deactivate N
 end
 
 B -> DB : Enregistrer l'alerte
+activate DB
 DB --> B : Confirmation
+deactivate DB
 
 @enduml

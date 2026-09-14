@@ -10,10 +10,16 @@ participant "Base de données" as DB
 participant "JeryMotroNet" as ML
 
 B -> DB : Sélectionner les nouvelles détections non scorées
+activate DB
 DB --> B : Détections
+deactivate DB
 B -> ML : Calculer les scores de risque
+activate ML
 ML --> B : Scores de risque
+deactivate ML
 B -> DB : Enregistrer les scores de risque
+activate DB
 DB --> B : Confirmation
+deactivate DB
 
 @enduml

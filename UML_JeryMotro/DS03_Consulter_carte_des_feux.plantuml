@@ -11,19 +11,31 @@ participant "Backend" as B
 database "Base de données" as DB
 
 V -> F : Ouvre la carte
+activate F
 F -> B : Demander les détections
+activate B
 B -> DB : Rechercher les détections
+activate DB
 DB --> B : Détections
+deactivate DB
 B --> F : Résultats
+deactivate B
 F --> V : Afficher la carte
+deactivate F
 
 loop Modification des critères
     V -> F : Modifier période, risque, région ou source
+    activate F
     F -> B : Nouvelle demande
+    activate B
     B -> DB : Rechercher selon les critères
+    activate DB
     DB --> B : Résultats
+    deactivate DB
     B --> F : Détections filtrées
+    deactivate B
     F --> V : Actualiser la carte
+    deactivate F
 end
 
 @enduml

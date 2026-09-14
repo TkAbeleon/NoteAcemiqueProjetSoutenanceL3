@@ -12,14 +12,24 @@ database "Base de données" as DB
 participant "Services de notification" as N
 
 A -> F : Lance le déclenchement
+activate F
 F -> B : Demander les alertes
+activate B
 B -> DB : Rechercher les abonnements éligibles
+activate DB
 DB --> B : Abonnements
+deactivate DB
 B -> N : Envoyer les notifications
+activate N
 N --> B : Résultats des envois
+deactivate N
 B -> DB : Enregistrer les alertes
+activate DB
 DB --> B : Confirmation
+deactivate DB
 B --> F : Résultat
+deactivate B
 F --> A : Afficher le résultat
+deactivate F
 
 @enduml

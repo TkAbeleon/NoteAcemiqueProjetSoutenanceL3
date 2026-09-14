@@ -11,26 +11,44 @@ participant "Backend" as B
 database "Base de données" as DB
 
 U -> F : Ouvre les zones
+activate F
 F -> B : Consulter les zones
+activate B
 B -> DB : Lire les zones
+activate DB
 DB --> B : Zones
+deactivate DB
 B --> F : Zones
+deactivate B
 F --> U : Afficher les zones
+deactivate F
 
 U -> F : Définit une zone
+activate F
 F -> B : Enregistrer la zone
+activate B
 B -> DB : Créer la zone
+activate DB
 DB --> B : Zone créée
+deactivate DB
 B --> F : Confirmation
+deactivate B
 F --> U : Afficher la zone
+deactivate F
 
 loop Modification ou nouvelle zone
     U -> F : Modifier / ajouter une zone
+    activate F
     F -> B : Enregistrer
+    activate B
     B -> DB : Mettre à jour
+    activate DB
     DB --> B : Confirmation
+    deactivate DB
     B --> F : Mise à jour
+    deactivate B
     F --> U : Afficher la zone
+    deactivate F
 end
 
 @enduml

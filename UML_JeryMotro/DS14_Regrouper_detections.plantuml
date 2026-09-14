@@ -9,9 +9,13 @@ participant "Backend" as B
 participant "Base de données" as DB
 
 B -> DB : Sélectionner les détections non regroupées
+activate DB
 DB --> B : Détections
+deactivate DB
 B -> B : Regrouper les détections
 B -> DB : Enregistrer les événements de feu
+activate DB
 DB --> B : Confirmation
+deactivate DB
 
 @enduml

@@ -11,19 +11,31 @@ participant "Backend" as B
 database "Base de données" as DB
 
 V -> F : Demande les feux actifs
+activate F
 F -> B : Rechercher les feux actifs
+activate B
 B -> DB : Lire les événements actifs
+activate DB
 DB --> B : Feux actifs
+deactivate DB
 B --> F : Résultats
+deactivate B
 F --> V : Afficher les feux actifs
+deactivate F
 
 loop Actualisation de la consultation
     V -> F : Actualiser
+    activate F
     F -> B : Nouvelle demande
+    activate B
     B -> DB : Rechercher les feux actifs
+    activate DB
     DB --> B : Résultats
+    deactivate DB
     B --> F : Mise à jour
+    deactivate B
     F --> V : Afficher les résultats
+    deactivate F
 end
 
 @enduml

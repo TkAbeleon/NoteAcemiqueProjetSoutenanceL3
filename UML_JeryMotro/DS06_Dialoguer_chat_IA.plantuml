@@ -15,20 +15,30 @@ participant "Qdrant" as Q
 loop Tant que l'utilisateur poursuit la conversation
 
     U -> F : Saisir une question
+    activate F
     F -> B : Envoyer la demande
+    activate B
     B -> N8N : Relayer la demande
+    activate N8N
 
     N8N -> DB : Consulter les données utiles
+    activate DB
     DB --> N8N : Données pertinentes
+    deactivate DB
 
     N8N -> Q : Recherche vectorielle
+    activate Q
     Q --> N8N : Documents / contextes pertinents
+    deactivate Q
 
     N8N -> N8N : Traiter le contexte\net générer la réponse
 
     N8N --> B : Réponse du Chat IA
+    deactivate N8N
     B --> F : Relayer la réponse
+    deactivate B
     F --> U : Afficher la réponse
+    deactivate F
 
 end
 
