@@ -5,7 +5,7 @@ title DS12 — Collecter les données
 hide footbox
 skinparam shadowing false
 
-actor "Planificateur (cron)" as C
+participant "Planificateur (cron)" as C
 participant "Backend" as B
 participant "NASA FIRMS" as N
 participant "Base de données" as DB
