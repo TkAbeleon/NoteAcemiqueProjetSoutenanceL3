@@ -11,6 +11,7 @@ participant "Backend" as B
 database "Base de données" as DB
 participant "Services de notification" as N
 
+activate A
 A -> F : Lance le déclenchement
 activate F
 F -> B : Demander les alertes

@@ -8,6 +8,7 @@ skinparam shadowing false
 participant "Backend" as B
 participant "Base de données" as DB
 
+activate B
 B -> DB : Lire les événements de feu
 activate DB
 DB --> B : Événements

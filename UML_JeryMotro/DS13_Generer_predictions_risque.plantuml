@@ -9,6 +9,7 @@ participant "Backend" as B
 participant "Base de données" as DB
 participant "JeryMotroNet" as ML
 
+activate B
 B -> DB : Sélectionner les nouvelles détections non scorées
 activate DB
 DB --> B : Détections

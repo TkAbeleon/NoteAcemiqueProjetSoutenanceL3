@@ -10,6 +10,8 @@ participant "Backend" as B
 database "Base de données" as DB
 participant "n8n / Service e-mail" as N
 
+activate U
+activate B
 B -> DB : Rechercher les abonnements e-mail actifs
 activate DB
 DB --> B : Abonnements vérifiés

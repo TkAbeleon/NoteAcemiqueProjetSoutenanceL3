@@ -10,6 +10,7 @@ participant "Backend" as B
 participant "NASA FIRMS" as N
 participant "Base de données" as DB
 
+activate C
 C -> B : Déclencher la collecte selon le cron
 activate B
 B -> N : Récupérer les données FIRMS manquantes

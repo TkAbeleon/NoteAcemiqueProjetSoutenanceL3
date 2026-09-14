@@ -10,6 +10,7 @@ participant "Frontend" as F
 participant "Backend" as B
 participant "Base de données" as DB
 
+activate U
 U -> F : Configurer une alerte
 activate F
 F -> B : Enregistrer la configuration

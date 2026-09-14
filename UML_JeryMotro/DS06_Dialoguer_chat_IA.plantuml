@@ -14,6 +14,7 @@ participant "Qdrant" as Q
 
 loop Tant que l'utilisateur poursuit la conversation
 
+activate U
     U -> F : Saisir une question
     activate F
     F -> B : Envoyer la demande

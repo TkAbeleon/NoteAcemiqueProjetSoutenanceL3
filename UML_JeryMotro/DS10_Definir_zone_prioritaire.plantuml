@@ -10,6 +10,7 @@ participant "Frontend" as F
 participant "Backend" as B
 database "Base de données" as DB
 
+activate U
 U -> F : Ouvre les zones
 activate F
 F -> B : Consulter les zones

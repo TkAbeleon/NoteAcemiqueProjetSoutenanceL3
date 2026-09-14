@@ -10,6 +10,7 @@ participant "Frontend" as F
 participant "Backend" as B
 database "Base de données" as DB
 
+activate V
 V -> F : Demande les feux actifs
 activate F
 F -> B : Rechercher les feux actifs
