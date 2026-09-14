@@ -1,0 +1,70 @@
+name: Temporary fix sequence diagrams
+
+on:
+  push:
+    paths:
+      - ".tmp-fix-ds-trigger"
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Corriger acteurs et activations
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          root = Path("UML_JeryMotro")
+          human_re = re.compile(r"Utilisateur|Visiteur|Administrateur|Admin|Opérateur|Operateur|Client|Usager", re.I)
+          actor_re = re.compile(r'^(\s*)actor\s+("[^"]+"|[^ ]+)\s+as\s+(\w+)\s*$')
+
+          for path in sorted(root.glob("DS*.plantuml")):
+              text = path.read_text(encoding="utf-8")
+              lines = text.splitlines()
+
+              # PlantUML doit générer les spécifications d'exécution autour des messages.
+              if not any(line.strip() == "autoactivate on" for line in lines):
+                  for i, line in enumerate(lines):
+                      if line.strip().startswith("@startuml"):
+                          lines.insert(i + 1, "autoactivate on")
+                          break
+
+              human_actors = []
+              for i, line in enumerate(lines):
+                  m = actor_re.match(line)
+                  if not m:
+                      continue
+                  indent, label, alias = m.groups()
+                  label_text = label.strip('"')
+                  if human_re.search(label_text):
+                      human_actors.append((i, alias))
+                  else:
+                      lines[i] = f'{indent}participant {label} as {alias}'
+
+              # Tout premier acteur humain : son activité commence avant son premier message.
+              if human_actors:
+                  first_idx, first_alias = human_actors[0]
+                  already = any(l.strip() == f"activate {first_alias}" for l in lines[:first_idx + 3])
+                  if not already:
+                      insert_at = first_idx + 1
+                      while insert_at < len(lines) and not lines[insert_at].strip().startswith("participant ") and not lines[insert_at].strip().startswith("database ") and not lines[insert_at].strip().startswith("actor "):
+                          insert_at += 1
+                      lines.insert(insert_at, f"activate {first_alias}")
+
+              path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+      - name: Commit et nettoyage
+        shell: bash
+        run: |
+          rm -f .tmp-fix-ds-trigger
+          rm -f .github/workflows/tmp-fix-ds-uml.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add UML_JeryMotro/DS*.plantuml
+          git add -u .tmp-fix-ds-trigger .github/workflows/tmp-fix-ds-uml.yml || true
+          git commit -m "fix(DS): corriger acteurs et activations UML" || exit 0
+          git push
