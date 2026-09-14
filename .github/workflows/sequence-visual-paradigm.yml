@@ -1,0 +1,44 @@
+name: Standardize sequence diagrams
+
+on:
+  push:
+    paths:
+      - ".sequence-diagram-trigger"
+
+permissions:
+  contents: write
+
+jobs:
+  standardize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add UML execution specifications
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path("UML_JeryMotro")
+          for path in sorted(root.glob("DS*.plantuml")):
+              text = path.read_text(encoding="utf-8")
+              if "autoactivate on" in text:
+                  continue
+              lines = text.splitlines()
+              try:
+                  start = next(i for i, line in enumerate(lines) if line.strip() == "@startuml")
+              except StopIteration:
+                  continue
+              lines[start + 1:start + 1] = ["autoactivate on"]
+              path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+      - name: Commit and remove temporary files
+        shell: bash
+        run: |
+          rm -f .sequence-diagram-trigger .github/workflows/sequence-visual-paradigm.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add UML_JeryMotro/DS*.plantuml .sequence-diagram-trigger .github/workflows/sequence-visual-paradigm.yml
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "style(DS): standardize UML sequence execution specifications"
+          git push
