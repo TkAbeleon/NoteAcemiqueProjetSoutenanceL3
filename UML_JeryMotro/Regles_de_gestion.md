@@ -88,8 +88,8 @@ Un événement synthétise notamment le centroïde, le nombre de détections, le
 
 ## Risque
 
-### RG25 — Normalisation
-Le score de risque valide est normalisé entre `0.0` et `1.0`. Une valeur absente ou négative représente un score indisponible.
+### RG25 — Valeur du score
+Un score de risque négatif est traité comme indisponible lors de la détermination du niveau de risque. Le calcul heuristique de secours borne son score entre `0.0` et `1.0`.
 
 ### RG26 — Niveau de risque
 Le niveau est déterminé par les règles suivantes :
@@ -147,8 +147,8 @@ Chaque exécution de collecte possède un `run_id` unique et est enregistrée da
 ### RG38 — Résultat de collecte
 Une collecte conserve sa source, ses dates, son état, les volumes brut/valides/dédoublonnés et une éventuelle erreur.
 
-### RG39 — Collecte automatique
-La collecte automatique est périodique et alimente ensuite le pipeline de traitement des détections.
+### RG39 — Collecte automatique et pipeline
+La collecte automatique est périodique. Après la collecte, le pipeline enchaîne l'étiquetage des régions, le calcul du risque, le regroupement des détections puis, lorsque les conditions sont remplies et que les alertes automatiques sont activées, le routage des alertes.
 
 ## Prédictions
 
