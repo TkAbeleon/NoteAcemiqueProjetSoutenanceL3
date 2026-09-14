@@ -1,0 +1,62 @@
+@startuml sequence_alerte_critique_jerymotro
+skinparam monochrome true
+skinparam shadowing false
+skinparam SequenceMessageAlign center
+skinparam DefaultFontSize 15
+skinparam ParticipantFontSize 15
+skinparam ArrowFontSize 14
+skinparam ParticipantPadding 8
+skinparam BoxPadding 4
+skinparam WrapWidth 120
+
+participant "Planif." as Scheduler
+participant "FIRMS" as FirmsService
+participant "NASA" as NASA_API
+participant "Cluster" as ClusterService
+participant "ML" as ML_Service
+participant "Alertes" as AlertService
+database "DB" as Database
+participant "WAHA" as WAHA_Gateway
+
+Scheduler -> FirmsService : trigger_ingestion()
+activate FirmsService
+
+FirmsService -> NASA_API : GET /area/csv\n(BBox Madagascar)
+activate NASA_API
+NASA_API --> FirmsService : raw_detections[]
+deactivate NASA_API
+
+FirmsService -> ClusterService : process(raw_detections)
+activate ClusterService
+ClusterService -> ClusterService : HDBSCAN
+ClusterService --> FirmsService : FireEvent
+deactivate ClusterService
+
+FirmsService -> ML_Service : POST /predict/batch\n(features)
+activate ML_Service
+ML_Service --> FirmsService : risk_score
+deactivate ML_Service
+
+alt risk_score >= 0.60
+    FirmsService -> AlertService : route_alert(FireEvent, risk_score)
+    activate AlertService
+
+    AlertService -> Database : SELECT abonnés\n(zone + PREMIUM)
+    activate Database
+    Database --> AlertService : AlertSubscription[]
+    deactivate Database
+
+    AlertService -> WAHA_Gateway : POST /sendMessage\n(notification)
+    activate WAHA_Gateway
+    WAHA_Gateway --> AlertService : 200 OK (message_id)
+    deactivate WAHA_Gateway
+
+    AlertService --> FirmsService : alert_routed
+    deactivate AlertService
+else risk_score < 0.60
+    FirmsService -> FirmsService : skip_alert()
+end
+
+deactivate FirmsService
+
+@enduml

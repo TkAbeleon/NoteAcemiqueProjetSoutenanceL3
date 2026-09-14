@@ -1,0 +1,55 @@
+@startuml sequence_chatbot_rag_jerymotro
+skinparam monochrome true
+skinparam shadowing false
+skinparam SequenceMessageAlign center
+skinparam DefaultFontSize 15
+skinparam ParticipantFontSize 15
+skinparam ArrowFontSize 14
+skinparam ParticipantPadding 10
+skinparam BoxPadding 4
+skinparam WrapWidth 120
+
+actor "Utilisateur" as User
+participant "Front" as Frontend
+participant "API" as Backend
+database "DB" as DB
+participant "n8n" as n8n
+participant "Vertex AI" as VertexAI
+
+User -> Frontend : "Où sont les foyers actifs près\ndu parc d'Ankarafantsika ?"
+activate Frontend
+
+Frontend -> Backend : POST /chat\n(message, JWT)
+activate Backend
+
+Backend -> Backend : valider rôle JWT
+
+Backend -> DB : recherche vectorielle + spatiale\n(contexte zone)
+activate DB
+DB --> Backend : fragments +\nFireEvent récents
+deactivate DB
+
+Backend -> n8n : POST /webhook\n(message, contexte)
+activate n8n
+
+n8n -> n8n : préparer prompt\nsécurisé
+
+n8n -> VertexAI : generateContent(prompt)
+activate VertexAI
+VertexAI --> n8n : texte explicatif (FR)
+deactivate VertexAI
+
+n8n -> n8n : normaliser réponse\net sources
+
+n8n --> Backend : payload normalisé
+deactivate n8n
+
+Backend -> Backend : structurer la réponse JSON
+
+Backend --> Frontend : 200 OK\n(réponse, sources)
+deactivate Backend
+
+Frontend -> User : afficher la réponse enrichie\navec ses sources
+deactivate Frontend
+
+@enduml
