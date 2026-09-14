@@ -1,0 +1,68 @@
+name: Fix UML sequence notation
+on:
+  push:
+    paths: [".fix-sequence-notation"]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Corriger acteurs et activations
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          root = Path('UML_JeryMotro')
+          technical = ('cron', 'NASA FIRMS', 'n8n', 'JeryMotroNet', 'ML', 'Vertex AI', 'Qdrant', 'WAHA', 'SMSGate', 'Service de notification')
+          msg = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)\s+(?:->|-->)(?:[+]?)([A-Za-z_][A-Za-z0-9_]*)\s*:')
+          for p in sorted(root.glob('DS*.plantuml')):
+              lines = p.read_text(encoding='utf-8').splitlines()
+              # remove implicit activation directive
+              lines = [x for x in lines if x.strip() != 'autoactivate on']
+              actors = []
+              out=[]
+              for x in lines:
+                  m=re.match(r'^(actor)\s+"([^"]+)"\s+as\s+(\w+)\s*$', x.strip())
+                  if m:
+                      if any(t.lower() in m.group(2).lower() for t in technical):
+                          x=f'participant "{m.group(2)}" as {m.group(3)}'
+                      else:
+                          actors.append(m.group(3))
+                  out.append(x)
+              # Find first interaction and first sender/receiver.
+              first_idx=None; first_sender=None
+              for i,x in enumerate(out):
+                  m=msg.match(x)
+                  if m:
+                      first_idx=i; first_sender=m.group(1); break
+              # Human actors stay activated for the interaction sequence so no message touches a bare lifeline.
+              if first_idx is not None:
+                  prefix=[]
+                  for a in actors:
+                      if not any(y.strip()==f'activate {a}' for y in out[:first_idx]):
+                          prefix.append(f'activate {a}')
+                  if prefix:
+                      out[first_idx:first_idx]=prefix
+                      first_idx += len(prefix)
+                  # First technical/system participant must also have an execution specification before its first message.
+                  if first_sender and first_sender not in actors and not any(y.strip()==f'activate {first_sender}' for y in out[:first_idx]):
+                      out.insert(first_idx, f'activate {first_sender}')
+              # Close the top-level activations at the end. Existing inner deactivate lines are preserved.
+              closing=[]
+              for a in actors + ([first_sender] if first_sender and first_sender not in actors else []):
+                  if any(y.strip()==f'activate {a}' for y in out) and not any(y.strip()==f'deactivate {a}' for y in out[-8:]):
+                      closing.append(f'deactivate {a}')
+              end=next((i for i,x in enumerate(out) if x.strip()=='@enduml'), len(out))
+              out[end:end]=closing
+              p.write_text('\n'.join(out)+'\n',encoding='utf-8')
+      - name: Commit
+        shell: bash
+        run: |
+          rm -f .fix-sequence-notation .github/workflows/fix-sequence-notation.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add UML_JeryMotro/DS*.plantuml
+          git commit -m 'fix(DS): corriger acteurs et spécifications dexécution UML' || exit 0
+          git push
