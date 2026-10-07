@@ -1,0 +1,20 @@
+@startuml
+title JeryMotro — Ingestion FIRMS
+actor "Collecteur interne" as C
+cloud "NASA FIRMS" as F
+component "firms_service.py" as S
+component "Validation géographique" as G
+database "firms_fire_detections" as D
+C --> S
+S --> F : GET CSV
+F --> S : données
+S --> S : normalisation
+S --> G
+G --> S : valide + région
+S --> D : INSERT / déduplication
+note right of D
+Unique :
+lat + lon + date + heure
++ satellite + instrument
+end note
+@enduml
