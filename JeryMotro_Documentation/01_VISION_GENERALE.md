@@ -25,3 +25,7 @@ JeryMotro ne constitue pas à lui seul une preuve terrain d'un feu, de son extin
 
 ## Formulation de soutenance
 > JeryMotro transforme des observations satellitaires en informations cartographiques et analytiques, avec des couches de Machine Learning, de regroupement spatial, de suivi temporel et de notification.
+
+---
+
+**Navigation :** [[00_INDEX|← Index]] | [[02_FONCTIONNEMENT_REEL|Suivant →]]
