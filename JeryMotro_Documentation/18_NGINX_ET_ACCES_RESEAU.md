@@ -161,3 +161,7 @@ La configuration ne permet pas à elle seule de connaître :
 - le modèle IA réellement choisi dans chaque workflow.
 
 Nginx documente la **topologie réseau**, pas le détail fonctionnel de tous les traitements.
+
+---
+
+**Navigation :** [[17_HUGGING_FACE_DATA_ET_SCRIPTS|← Précédent]] | [[00_INDEX|Index]] | [[19_SECURITE_SECRETS_ET_CONFIGURATION|Suivant →]]
