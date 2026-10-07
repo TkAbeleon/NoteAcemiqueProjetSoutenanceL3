@@ -184,7 +184,28 @@ Ils créent des géométries de points, interrogent les collections GEE et récu
 
 Ce traitement est séparé de l'API HTTP principale.
 
-## 14. Nginx → services locaux
+## 14. FastAPI → PostgreSQL local
+
+**Protocole :** PostgreSQL / connexion SQL  
+**Driver :** `asyncpg`  
+**ORM :** SQLAlchemy 2.x  
+**Hébergement :** PostgreSQL local sur la VM Debian 13.
+
+Le flux est :
+
+```text
+FastAPI
+   ↓
+SQLAlchemy AsyncEngine
+   ↓
+asyncpg
+   ↓
+PostgreSQL local
+```
+
+Cette liaison est interne à l'infrastructure de production. Elle ne passe pas par Nginx.
+
+## 31. Nginx → services locaux
 
 Le reverse proxy utilise des connexions HTTP locales :
 
