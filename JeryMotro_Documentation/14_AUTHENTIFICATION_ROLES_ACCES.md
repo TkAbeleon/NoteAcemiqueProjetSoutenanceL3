@@ -29,3 +29,7 @@ Le backend contient une logique de protection du dernier administrateur actif.
 
 ## Principe
 > L'authentification établit l'identité ; le rôle détermine les capacités ; les routes backend appliquent le contrôle final.
+
+---
+
+**Navigation :** [[13_FRONTEND_ET_INTERFACE|← Précédent]] | [[00_INDEX|Index]] | [[15_PREDICTIONS_J_PLUS_1|Suivant →]]
