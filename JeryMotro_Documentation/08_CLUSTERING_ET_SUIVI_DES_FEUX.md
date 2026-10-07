@@ -42,3 +42,7 @@ Cela ne suffit pas à prouver un workflow métier plus complexe.
 
 ## Limite
 Un cluster informatique est une agrégation ; ce n'est pas une preuve physique qu'il n'existe qu'un seul incendie.
+
+---
+
+**Navigation :** [[07_ML_SCORING_RISQUE|← Précédent]] | [[00_INDEX|Index]] | [[09_ENRICHISSEMENT_GEE_ENVIRONNEMENT|Suivant →]]
