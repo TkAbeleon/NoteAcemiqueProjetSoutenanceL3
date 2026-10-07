@@ -1,21 +1,55 @@
 @startuml
 title JeryMotro — Déploiement GCP Debian 13
+
 cloud Internet as I
-node "VM GCP\nDebian 13" as V
-node "Nginx" as N
-node "Frontend" as FE
-node "FastAPI :8200" as BE
-node "Qdrant :6333" as Q
-node "n8n :5678" as N8N
-node "WAHA :3001" as W
-node "Mattermost :8065" as MM
-node "SMSGate :3030/:3031" as SMS
+node "VM GCP
+Debian 13" as V
+
+node "Nginx
+HTTPS / TLS / Reverse Proxy" as N
+node "Frontend
+React/Vite build" as FE
+node "FastAPI
+:8200" as BE
+database "Base SQL
+cible via DATABASE_URL" as DB
+node "n8n
+:5678" as N8N
+database "Qdrant
+:6333" as Q
+node "WAHA
+:3001" as W
+node "Mattermost
+:8065" as MM
+node "SMSGate API
+:3030" as SA
+node "SMSGate Web
+:3031" as SW
+
 I --> N
-N --> FE
-N --> BE
-N --> Q
-N --> N8N
-N --> W
-N --> MM
-N --> SMS
+N --> FE : jerymotro.duckdns.org
+N --> BE : api.jerymotro.duckdns.org
+N --> Q : rag.jerymotro.duckdns.org
+N --> W : waha.jerymotro.duckdns.org
+N --> MM : chat.jerymotro.duckdns.org
+N --> N8N : n8n.jerymotro.duckdns.org
+N --> SA : api.smsgate.jerymotro.duckdns.org
+N --> SW : smsgate.jerymotro.duckdns.org
+
+BE --> DB : SQLAlchemy async
+BE --> N8N : HTTP(S) webhooks
+BE --> W : HTTP API
+BE --> SA : provider SMS
+
+N8N --> DB : accès données feux
+N8N --> Q : RAG / connaissance
+N8N --> N8N : workflows
+
+note bottom of V
+La VM est déclarée sous Debian 13
+pour le déploiement de production.
+Les ports et domaines ci-dessus
+proviennent de conf.ngnix.
+end note
+
 @enduml
