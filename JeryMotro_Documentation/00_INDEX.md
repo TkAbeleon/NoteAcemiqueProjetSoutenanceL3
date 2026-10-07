@@ -1,6 +1,6 @@
 # Documentation JeryMotro — fonctionnement réel et architecture technique
 
-> Référence : 7 octobre 2026. Cette documentation privilégie le code actuel, puis la configuration et les workflows. Les anciennes notes servent uniquement de contexte.
+> Référence : 7 octobre 2026. Les descriptions privilégient le code, les configurations et les workflows vérifiables. Pour le **déploiement présenté dans cette documentation**, la référence réseau demandée est la variante **DuckDNS + Nginx**.
 
 ## Navigation fonctionnelle
 - [01 Vision générale](01_VISION_GENERALE.md)
@@ -20,43 +20,35 @@
 
 ## Navigation technique
 - [03 Architecture technique](03_ARCHITECTURE_TECHNIQUE.md)
-- [16 Déploiement GCP Debian 13](16_DEPLOIEMENT_GCP_DEBIAN13.md)
+- [16 Déploiement GCP / DuckDNS](16_DEPLOIEMENT_GCP_DEBIAN13.md)
 - [17 Hugging Face](17_HUGGING_FACE_DATA_ET_SCRIPTS.md)
 - [18 Nginx et routage](18_NGINX_ET_ACCES_RESEAU.md)
-- [19 Sécurité et configuration](19_SECURITE_SECRETS_ET_CONFIGURATION.md)
-- [21 Stack technologique](21_STACK_TECHNIQUE.md)
-- [22 Protocoles et interfaces](22_PROTOCOLLES_ET_INTERFACES.md)
+- [19 Sécurité](19_SECURITE_SECRETS_ET_CONFIGURATION.md)
 - [20 Limites et état réel](20_LIMITES_ET_ETAT_REEL.md)
+- [21 Stack technique](21_STACK_TECHNIQUE.md)
+- [22 Protocoles et interfaces](22_PROTOCOLLES_ET_INTERFACES.md)
+- [23 Stratégie de déploiement DuckDNS](23_STRATEGIE_DEPLOIEMENT_DUCKDNS.md)
+- [24 SEO, prerender, sitemap et robots](24_SEO_PRERENDER_SITEMAP_ROBOTS.md)
 
 ## Diagrammes
-Les schémas techniques sont dans [plantuml/](plantuml/), notamment :
-- architecture globale ;
-- pipeline opérationnel ;
-- ingestion FIRMS ;
-- scoring ML ;
-- clustering ;
-- enrichissement GEE ;
-- alertes ;
-- Chat IA/RAG ;
-- frontend/backend ;
-- déploiement ;
-- routage Nginx.
+Les PlantUML se trouvent dans [plantuml/](plantuml/) :
+architecture globale, pipeline opérationnel, ingestion FIRMS, scoring ML, clustering, enrichissement GEE, alertes, Chat RAG, frontend/backend, déploiement et Nginx.
 
 ## Hiérarchie des preuves
-1. Code actuel.
-2. Configuration actuelle/versionnée.
-3. Workflows de déploiement.
-4. UML et documentation de travail.
-5. Notes historiques.
+1. Code d'exécution.
+2. Configuration versionnée réellement utilisée comme référence.
+3. Scripts/workflows de déploiement.
+4. UML et documentation technique.
+5. Notes de conception historiques.
 
 ## Classes d'affirmation
-- **Réel** : comportement visible directement dans le code/configuration.
-- **Intégration** : code présent, dépend d'un service externe ou d'un secret.
-- **Déploiement confirmé** : architecture fournie/confirmée pour la production.
-- **Séparé** : script existant mais hors pipeline principal.
-- **Conception** : objectif ou architecture non démontrée comme exécutée.
-- **Historique** : ancienne configuration.
+- **Réel** : visible directement dans le code.
+- **Intégration** : code présent et dépendant d'un service externe/secret.
+- **Déploiement de référence** : topologie explicitement retenue pour cette documentation.
+- **Séparé** : traitement existant hors pipeline principal.
+- **Conception** : intention sans preuve suffisante d'exécution.
+- **Historique/variante** : autre chaîne présente dans le dépôt, mais non retenue ici.
 
-> **Règle anti-hallucination :** un composant mentionné dans une architecture n'est pas automatiquement une preuve d'exécution de chaque scénario. Les sections signalent donc explicitement les limites de preuve.
+> **Anti-hallucination :** une présence dans un fichier de configuration ne prouve pas à elle seule l'activité de tout le service. Les responsabilités sont documentées avec leur niveau de preuve.
 
-> **Règle de sécurité :** ne jamais écrire une valeur réelle de secret ; uniquement le nom de la variable ou un placeholder.
+> **Sécurité :** ne jamais écrire les valeurs réelles des secrets.
