@@ -50,7 +50,23 @@ Une contrainte protège les doublons logiques : latitude + longitude + date + he
 L'entité Prediction est distincte. Ne pas inventer une FK avec User, FireEvent ou FirmsFireDetection si elle n'existe pas.
 
 ## Base de production
-La localisation actuelle de la base doit venir de `DATABASE_URL`. L'ancienne documentation qui parlait d'un PostgreSQL local ne doit pas être reprise comme fait actuel.
+
+PostgreSQL est **installé localement sur la VM GCP Debian 13** et constitue la base relationnelle de production du backend.
+
+```text
+GCP / Debian 13
+     |
+     +-- PostgreSQL (local)
+     +-- FastAPI / Uvicorn
+     +-- Nginx
+     +-- n8n
+     +-- Qdrant
+     +-- WAHA
+```
+
+Le backend y accède par SQLAlchemy + `asyncpg`, avec une URL de connexion fournie par `DATABASE_URL`.
+
+La configuration Nginx ne publie pas PostgreSQL sur un sous-domaine HTTP : le port SQL reste distinct du trafic Web. Les valeurs exactes d'hôte, utilisateur, mot de passe et base ne sont pas reproduites dans la documentation.
 
 ---
 
