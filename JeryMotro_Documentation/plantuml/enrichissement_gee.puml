@@ -1,0 +1,22 @@
+@startuml
+title JeryMotro — Enrichissement GEE séparé
+database "Dataset FIRMS" as F
+component "Script Colab / GEE" as S
+cloud "NASADEM" as DEM
+cloud "ESA WorldCover" as LC
+cloud "Hansen Forest Loss 2025" as HA
+cloud "ERA5-Land" as ER
+cloud "MODIS MOD13A2" as ND
+database "CSV / dataset enrichi" as O
+F --> S
+S --> DEM
+S --> LC
+S --> HA
+S --> ER
+S --> ND
+S --> O
+note right of S
+Traitement séparé du pipeline
+FastAPI principal.
+end note
+@enduml
