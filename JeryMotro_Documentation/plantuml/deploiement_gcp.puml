@@ -1,0 +1,21 @@
+@startuml
+title JeryMotro — Déploiement GCP Debian 13
+cloud Internet as I
+node "VM GCP\nDebian 13" as V
+node "Nginx" as N
+node "Frontend" as FE
+node "FastAPI :8200" as BE
+node "Qdrant :6333" as Q
+node "n8n :5678" as N8N
+node "WAHA :3001" as W
+node "Mattermost :8065" as MM
+node "SMSGate :3030/:3031" as SMS
+I --> N
+N --> FE
+N --> BE
+N --> Q
+N --> N8N
+N --> W
+N --> MM
+N --> SMS
+@enduml
