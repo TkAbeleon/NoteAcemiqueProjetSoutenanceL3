@@ -1,0 +1,24 @@
+@startuml
+title JeryMotro — Pipeline opérationnel
+start
+:Collecte NASA FIRMS;
+:Normalisation;
+:Validation géographique;
+:Étiquetage région;
+:Scoring ML;
+if (Service ML disponible ?) then (oui)
+  :Recevoir risk_score / fire_label;
+else (non)
+  :Heuristique interne;
+endif
+:Clustering HDBSCAN;
+if (HDBSCAN disponible ?) then (oui)
+  :Clusters HDBSCAN;
+else (non)
+  :Fallback grille 0.05°;
+endif
+:Créer / mettre à jour FireEvent;
+:Calculer statut;
+:Évaluer les alertes;
+stop
+@enduml
