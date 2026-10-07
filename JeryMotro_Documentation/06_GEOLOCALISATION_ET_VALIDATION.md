@@ -21,3 +21,7 @@ Les routes de région permettent de contrôler et de traiter les détections san
 
 ## Interprétation
 Les coordonnées sont celles des observations satellitaires et le rattachement régional est informatique. Cela ne remplace pas une vérification terrain.
+
+---
+
+**Navigation :** [[05_DONNEES_FIRMS_ET_BDD|← Précédent]] | [[00_INDEX|Index]] | [[07_ML_SCORING_RISQUE|Suivant →]]
