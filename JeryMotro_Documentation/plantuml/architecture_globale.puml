@@ -1,28 +1,60 @@
 @startuml
-title JeryMotro — Architecture globale
-actor Utilisateur
+title JeryMotro — Architecture globale technique
+
+actor Utilisateur as U
+cloud "Internet" as I
 node "Nginx / HTTPS" as N
 node "Frontend React/Vite" as FE
 node "Backend FastAPI" as BE
-database "Base SQL" as DB
+database "Base SQL
+Données JeryMotro" as DB
 cloud "NASA FIRMS" as FIRMS
 cloud "Service ML externe" as ML
 node "n8n" as N8N
-node "Qdrant" as Q
-Utilisateur --> N
+database "Qdrant
+Base de connaissances" as Q
+node "WAHA" as WAHA
+node "SMSGate / HTTPSMS" as SMS
+
+U --> I
+I --> N : HTTPS/443
 N --> FE
-N --> BE
-BE --> DB
-BE --> FIRMS : collecte
-BE --> ML : scoring
-BE --> N8N : Chat / workflows
-N8N --> Q : selon workflow RAG
+N --> BE : api.jerymotro...
+→ localhost:8200
+
+BE --> DB : SQL / SQLAlchemy
+BE --> FIRMS : HTTPS / CSV API
+BE --> ML : HTTPS / JSON
+BE --> N8N : HTTPS webhook
+BE --> WAHA : HTTP API
+BE --> SMS : HTTP API
+
+N --> Q : HTTPS
+→ localhost:6333
+N --> N8N : HTTPS
+→ localhost:5678
+
+N8N --> DB : données structurées des feux
+N8N --> Q : recherche vectorielle
+si nécessaire
+N8N --> ML : génération / service
+selon workflow
+
 note right of BE
 Pipeline principal :
-collecte
-région
-scoring
-clustering
-alertes
+FIRMS
+→ validation
+→ région
+→ scoring
+→ clustering
+→ FireEvent
+→ alertes
 end note
+
+note bottom of N
+Nginx termine TLS et route
+les sous-domaines vers
+les services locaux.
+end note
+
 @enduml
