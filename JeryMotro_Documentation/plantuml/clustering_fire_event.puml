@@ -1,0 +1,19 @@
+@startuml
+title JeryMotro — Clustering et FireEvent
+database "Détections scorées" as D
+component "cluster_service.py" as C
+component "HDBSCAN" as H
+component "Fallback grille" as G
+database "FireEvent" as E
+D --> C
+C --> H : si disponible
+C --> G : sinon
+H --> C
+G --> C
+C --> C : séparer bruit / clusters
+C --> E : créer / mettre à jour
+note right of H
+min_cluster_size=3
+min_samples=1
+end note
+@enduml
