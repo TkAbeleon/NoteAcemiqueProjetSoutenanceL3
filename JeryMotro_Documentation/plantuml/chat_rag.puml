@@ -1,25 +1,53 @@
 @startuml
 title JeryMotro — Chat IA / RAG
+
 actor Utilisateur as U
-component Frontend as FE
-component "POST /chat" as API
+component "Frontend React/Vite" as FE
+component "FastAPI /chat" as API
 component "rag_service.py" as R
-node "n8n workflow" as N
-database "Qdrant / données" as Q
+node "n8n" as N
+database "Base SQL des feux" as DB
+database "Qdrant
+Base de connaissances" as Q
 cloud "Modèle IA" as AI
-U --> FE
-FE --> API
-API --> R
-R --> N
-N --> Q : selon workflow
-N --> AI
-AI --> N
-N --> R
+
+U --> FE : HTTPS
+FE --> API : POST /chat
+JSON
+API --> R : appel interne
+R --> N : HTTP(S) webhook
+JSON
+
+N --> DB : questions sur
+données des feux
+N --> Q : recherche vectorielle
+si connaissance requise
+N --> AI : contexte + question
+AI --> N : réponse
+
+N --> R : réponse normalisée
 R --> API
 API --> FE
 FE --> U
-note right of R
-Pas de client Qdrant/Vertex
-instancié directement ici.
+
+note right of DB
+Données structurées :
+détections, événements,
+indicateurs accessibles
+au workflow.
 end note
+
+note right of Q
+Base de connaissances :
+documents / contenu vectorisé.
+Utilisée lorsque la question
+nécessite une recherche sémantique.
+end note
+
+note bottom of R
+Le backend relaie la requête.
+La logique RAG est orchestrée
+dans n8n.
+end note
+
 @enduml
