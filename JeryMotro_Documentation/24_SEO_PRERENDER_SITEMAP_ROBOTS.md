@@ -351,3 +351,7 @@ dist/public/
             ↓
 https://jerymotro.duckdns.org
 ```
+
+---
+
+**Navigation :** [[23_STRATEGIE_DEPLOIEMENT_DUCKDNS|← Précédent]] | [[00_INDEX|Index]] | [[25_CAHIER_DES_CHARGES|Suivant →]]
