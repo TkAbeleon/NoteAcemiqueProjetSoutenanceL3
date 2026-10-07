@@ -1,0 +1,15 @@
+@startuml
+title JeryMotro — Scoring ML
+component "run_scoring()" as R
+component "jerymotronet_service.py" as C
+cloud "Microservice ML" as M
+database "FIRMS detections" as D
+D --> R : non scorées
+R --> C : instances
+C --> M : POST /predict
+M --> C : risk_score + fire_label
+C --> R : résultats
+R --> D : mise à jour
+R --> R : fallback heuristique
+si erreur ou score négatif
+@enduml
