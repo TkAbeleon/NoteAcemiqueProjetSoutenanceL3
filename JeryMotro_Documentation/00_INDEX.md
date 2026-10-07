@@ -62,3 +62,5 @@ architecture globale, pipeline opérationnel, ingestion FIRMS, scoring ML, clust
 La série technique est navigable linéairement avec les liens `← Précédent | Index | Suivant →` placés en bas de chaque note. Le [[25_CAHIER_DES_CHARGES|cahier des charges]] clôt la série et renvoie vers le [[Glossaire_Tags|glossaire des tags]].
 
 **Entrée recommandée :** [[01_VISION_GENERALE]] → [[02_FONCTIONNEMENT_REEL]] → [[03_ARCHITECTURE_TECHNIQUE]] → … → [[25_CAHIER_DES_CHARGES]].
+
+- [26 Bibliographie et webographie APA](26_BIBLIOGRAPHIE_WEBOGRAPHIE_APA.md)
