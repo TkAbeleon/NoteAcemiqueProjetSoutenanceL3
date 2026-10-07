@@ -181,3 +181,7 @@ Frontend
 ```
 
 > Le Chat IA n'est pas le système de détection des feux. Il exploite les données et la connaissance mises à sa disposition pour répondre aux questions.
+
+---
+
+**Navigation :** [[11_ALERTES_ET_NOTIFICATIONS|← Précédent]] | [[00_INDEX|Index]] | [[13_FRONTEND_ET_INTERFACE|Suivant →]]
