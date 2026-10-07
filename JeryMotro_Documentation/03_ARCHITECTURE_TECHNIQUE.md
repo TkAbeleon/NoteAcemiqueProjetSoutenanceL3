@@ -192,3 +192,7 @@ Nginx termine TLS et route les requêtes par nom de domaine.
 Un composant logiciel peut exister dans les dépendances sans être utilisé dans tous les scénarios. Par exemple, `chromadb` apparaît dans les requirements historiques du backend, alors que le `rag_service.py` actuel n'instancie pas de client ChromaDB.
 
 La documentation utilise donc les rôles réellement observés dans le code d'exécution plutôt que les seules dépendances installées.
+
+---
+
+**Navigation :** [[02_FONCTIONNEMENT_REEL|← Précédent]] | [[00_INDEX|Index]] | [[04_PIPELINE_DONNEES|Suivant →]]
