@@ -1,163 +1,288 @@
-# Déploiement actuel — GCP Debian 13
+# Déploiement GCP Debian 13 — référence DuckDNS
 
-> Le serveur de production actuel est une VM Google Cloud exécutant Debian 13. Cette information vient de l'environnement de production du projet. La configuration `UML_JeryMotro/conf.ngnix` sert de référence pour la topologie réseau.
+> **Architecture retenue pour cette documentation : GCP + Debian 13 + Nginx + DuckDNS.**
+>
+> Le domaine de référence est **`jerymotro.duckdns.org`**. Les autres chaînes de publication présentes dans certains fichiers du frontend ne remplacent pas cette architecture dans cette documentation.
 
-## 1. Vue physique/logique
+## 1. Vue d'ensemble
+
+La VM GCP héberge les services JeryMotro et utilise Nginx comme point d'entrée HTTP/HTTPS.
 
 ```
 Internet
    |
-   | HTTPS :443
-   v
-VM Google Cloud
-Debian 13
+HTTPS :443
    |
    v
 Nginx
    |
-   +--> Frontend
+   +--> Frontend statique pré-rendu
    +--> FastAPI :8200
    +--> Qdrant :6333
+   +--> n8n :5678
    +--> WAHA :3001
    +--> Mattermost :8065
-   +--> n8n :5678
-   +--> SMSGate :3030/:3031
+   +--> SMSGate :3030 / :3031
 ```
 
-La topologie ci-dessus suit les destinations locales réellement écrites dans `conf.ngnix`.
+Le système d'exploitation de production est Debian 13.
 
-## 2. Frontend
+## 2. Frontend statique
 
-Domaine :
-`jerymotro.duckdns.org`
+Le build final est servi depuis :
 
-Racine Nginx :
-`/mnt/jerymotro/JeryMotro_WEB/artifacts/jerymotro/dist/public`
+```
+/mnt/jerymotro/JeryMotro_WEB/artifacts/jerymotro/dist/public
+```
 
-La configuration contient :
-- `index index.html` ;
-- fallback SPA ;
-- routes publiques prerenderisées ;
-- variantes fr/mg/en ;
-- cache long pour `/assets/` ;
-- certificat TLS Certbot.
+Nginx ne compile pas React. La compilation est réalisée avant la mise en production.
 
-## 3. API FastAPI
+Chaîne :
 
-Domaine :
-`api.jerymotro.duckdns.org`
+```
+Git
+ ↓
+pnpm install --frozen-lockfile
+ ↓
+pnpm run build
+ ↓
+Vite
+ ↓
+SSR + prerender
+ ↓
+dist/public
+ ↓
+Nginx
+```
 
-Proxy :
-`http://localhost:8200`
+## 3. Prerendering
 
-FastAPI/Uvicorn écoute avec la configuration de `api.config.settings`, dont la valeur de port par défaut est 8200.
+Le script `scripts/prerender.mjs` utilise une stratégie hybride :
 
-## 4. Qdrant
+- SSR React avec `react-dom/server` pour les pages simples ;
+- HTML statique pour `/map` et `/dashboard` afin de ne pas exécuter Leaflet dans Node.
 
-Domaine :
-`rag.jerymotro.duckdns.org`
+Le résultat existe dans `dist/public/fr`, `dist/public/mg` et `dist/public/en`.
 
-Proxy :
-`http://localhost:6333`
+## 4. Domaine public principal
 
-Qdrant joue le rôle de **base vectorielle de la connaissance du Chat** dans l'architecture déployée.
+```
+https://jerymotro.duckdns.org
+```
 
-Il est distinct de la base SQL des détections.
+Ce domaine sert le frontend.
 
-## 5. n8n
+## 5. API
 
-Domaine :
-`n8n.jerymotro.duckdns.org`
+```
+https://api.jerymotro.duckdns.org
+          ↓
+http://localhost:8200
+```
 
-Proxy :
-`http://localhost:5678`
+FastAPI/Uvicorn reste donc derrière Nginx.
 
-n8n est la couche d'orchestration du Chat et de plusieurs workflows d'intégration.
+## 6. Qdrant
 
-Dans le workflow Chat confirmé pour le projet :
-- n8n peut accéder à la base de données des feux pour les questions de données métier ;
-- n8n utilise Qdrant pour les questions nécessitant la base de connaissances ;
-- n8n transmet le contexte utile au modèle IA puis renvoie le résultat à FastAPI.
+```
+https://rag.jerymotro.duckdns.org
+          ↓
+http://localhost:6333
+```
 
-## 6. WAHA
+Qdrant est la base vectorielle utilisée par le workflow Chat pour les recherches dans la base de connaissances.
 
-Domaine :
-`waha.jerymotro.duckdns.org`
+## 7. n8n et Chat
 
-Proxy :
-`http://localhost:3001`
+```
+https://n8n.jerymotro.duckdns.org
+          ↓
+http://localhost:5678
+```
 
-Le backend utilise WAHA pour le canal WhatsApp lorsque le provider est disponible/configuré.
+n8n orchestre le workflow conversationnel.
 
-## 7. Mattermost
+Pour le Chat :
+- question portant sur les données métier → n8n accède à la base relationnelle des feux ;
+- question nécessitant des documents/connaissances → n8n utilise Qdrant ;
+- besoin combiné → n8n peut réunir les contextes avant la génération.
 
-Domaine :
-`chat.jerymotro.duckdns.org`
+## 8. WAHA
 
-Proxy :
-`http://localhost:8065`
+```
+https://waha.jerymotro.duckdns.org
+          ↓
+http://localhost:3001
+```
 
-Nginx configure explicitement les WebSockets et des timeouts de 600 s.
+Utilisé pour WhatsApp.
 
-## 8. SMSGate
+## 9. Mattermost
 
-API :
-`api.smsgate.jerymotro.duckdns.org → localhost:3030`
+```
+https://chat.jerymotro.duckdns.org
+          ↓
+http://localhost:8065
+```
 
-Web :
-`smsgate.jerymotro.duckdns.org → localhost:3031`
+Nginx transmet les en-têtes nécessaires aux WebSockets et configure des timeouts adaptés.
 
-Le backend peut sélectionner SMSGate comme provider SMS.
+## 10. SMSGate
 
-## 9. TLS et reverse proxy
+```
+https://api.smsgate.jerymotro.duckdns.org
+          ↓
+localhost:3030
 
-Les blocs `listen 443 ssl` utilisent les certificats Certbot.
+https://smsgate.jerymotro.duckdns.org
+          ↓
+localhost:3031
+```
 
-Les en-têtes de reverse proxy transmettent notamment :
-- Host ;
-- X-Real-IP ;
-- X-Forwarded-For ;
-- X-Forwarded-Proto.
+L'API est utilisée par le backend lorsque le provider SMS sélectionné est SMSGate.
 
-Nginx gère aussi les en-têtes Upgrade/Connection lorsque les services requièrent WebSocket.
+## 11. TLS / Certbot
 
-## 10. Limites de cette preuve
+Nginx termine TLS sur 443 avec des certificats gérés par Certbot.
 
-Nginx permet de connaître la topologie HTTP/HTTPS et les ports configurés. Il ne permet pas à lui seul de connaître :
-- le contenu de PostgreSQL ;
-- les collections Qdrant ;
-- les credentials ;
-- le modèle IA effectivement sélectionné dans chaque workflow n8n.
-
-## 11. Base de données
-
-Le backend utilise `DATABASE_URL` pour déterminer la cible de PostgreSQL.
-
-L'ancienne documentation `Backend/DEPLOYMENT.md` décrit une architecture Ubuntu 22.04 avec PostgreSQL local et l'ancienne IP `35.192.27.164`. Elle est classée historique et ne remplace pas la configuration actuelle du GCP Debian 13.
-
-## 12. Résumé réseau
-
-| Domaine | Port local | Rôle |
-|---|---:|---|
-| jerymotro.duckdns.org | fichiers statiques | Frontend |
-| api.jerymotro.duckdns.org | 8200 | FastAPI |
-| rag.jerymotro.duckdns.org | 6333 | Qdrant |
-| waha.jerymotro.duckdns.org | 3001 | WAHA |
-| chat.jerymotro.duckdns.org | 8065 | Mattermost |
-| n8n.jerymotro.duckdns.org | 5678 | n8n |
-| api.smsgate.jerymotro.duckdns.org | 3030 | SMSGate API |
-| smsgate.jerymotro.duckdns.org | 3031 | SMSGate Web |
-
-## 13. Processus
+Flux externe :
 
 ```
 Client
-  ↓ HTTPS
+  ↓ HTTPS / 443
 Nginx
-  ↓ reverse proxy
-Service local
-  ↓
-traitement / accès données
+  ↓ HTTP localhost
+Service
 ```
 
-L'architecture garde donc un point d'entrée public unique au niveau HTTP(S), malgré plusieurs processus locaux.
+## 12. Routage linguistique
+
+La configuration Nginx utilise :
+
+```nginx
+map $http_accept_language $prerender_lang {
+    default                 fr;
+    ~*(^|,\s*)(mg)         mg;
+    ~*(^|,\s*)(en)         en;
+    ~*(^|,\s*)(fr)         fr;
+}
+```
+
+Ainsi une requête à `/` peut recevoir :
+- `/fr/index.html` ;
+- `/mg/index.html` ;
+- `/en/index.html`.
+
+## 13. Sitemap et robots
+
+Le build produit `sitemap.xml` à partir des routes pré-rendues.
+
+Dans la version DuckDNS de référence :
+
+```
+https://jerymotro.duckdns.org/sitemap.xml
+https://jerymotro.duckdns.org/robots.txt
+```
+
+Voir [24 — SEO, prerender, sitemap et robots](24_SEO_PRERENDER_SITEMAP_ROBOTS.md).
+
+## 14. Cache
+
+Nginx applique sur les assets :
+
+```nginx
+location /assets/ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+}
+```
+
+Les bundles compilés peuvent donc être mis en cache longuement.
+
+## 15. Validation avant reload
+
+La procédure de production frontend vérifie notamment que le build a produit `dist/` et des fichiers prerenderisés.
+
+Le reload Nginx est précédé de :
+
+```bash
+sudo nginx -t
+```
+
+puis :
+
+```bash
+sudo systemctl reload nginx
+```
+
+## 16. Déploiement du backend
+
+Le dépôt backend possède son propre script `deploy.sh`.
+
+Il décrit :
+
+```
+git pull --ff-only
+ ↓
+installation
+ ↓
+contrôle du port 8200
+ ↓
+PM2 reload jerymotro-backend --update-env
+ ↓
+logs PM2
+```
+
+Cette procédure est séparée de la publication statique du frontend.
+
+## 17. Stratégie frontend de production
+
+Le script `deploy_prod.sh` est la référence du déploiement statique :
+
+1. vérifier Node/pnpm/Git ;
+2. `pnpm install --frozen-lockfile` ;
+3. `pnpm run build` ;
+4. vérifier le prerender ;
+5. nettoyer les anciennes instances frontend PM2 ;
+6. tester Nginx ;
+7. recharger Nginx ;
+8. éventuellement commit/push Git.
+
+Le script précise explicitement que Nginx sert directement `dist/public/`.
+
+## 18. Pourquoi PM2 n'est pas le serveur frontend final ?
+
+Une ancienne stratégie `scripts/deploy.sh` lance `pnpm dev` avec PM2.
+
+La stratégie de production statique décrite ici est différente : le build est figé dans `dist/public` et Nginx sert ces fichiers.
+
+PM2 reste surtout pertinent pour le backend dans la procédure de déploiement correspondante.
+
+## 19. Ports internes
+
+| Service | Port |
+|---|---:|
+| FastAPI | 8200 |
+| Qdrant | 6333 |
+| WAHA | 3001 |
+| Mattermost | 8065 |
+| n8n | 5678 |
+| SMSGate API | 3030 |
+| SMSGate Web | 3031 |
+
+## 20. Ce qui n'est pas déduit de Nginx
+
+Cette configuration ne révèle pas :
+- le mot de passe PostgreSQL ;
+- les collections Qdrant ;
+- les credentials n8n ;
+- le modèle IA sélectionné ;
+- les clés d'API.
+
+Ces éléments restent des secrets ou des paramètres runtime.
+
+## 21. Documentation associée
+
+- `23_STRATEGIE_DEPLOIEMENT_DUCKDNS.md` : stratégie détaillée.
+- `24_SEO_PRERENDER_SITEMAP_ROBOTS.md` : SEO et fichiers robots/sitemap.
+- `18_NGINX_ET_ACCES_RESEAU.md` : routage réseau détaillé.
