@@ -51,3 +51,7 @@ L'entité Prediction est distincte. Ne pas inventer une FK avec User, FireEvent 
 
 ## Base de production
 La localisation actuelle de la base doit venir de `DATABASE_URL`. L'ancienne documentation qui parlait d'un PostgreSQL local ne doit pas être reprise comme fait actuel.
+
+---
+
+**Navigation :** [[04_PIPELINE_DONNEES|← Précédent]] | [[00_INDEX|Index]] | [[06_GEOLOCALISATION_ET_VALIDATION|Suivant →]]
