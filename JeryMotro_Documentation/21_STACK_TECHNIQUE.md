@@ -98,9 +98,17 @@ Le backend initialise un `AsyncEngine` et une `async_sessionmaker`.
 
 ### PostgreSQL / asyncpg
 
-Pour PostgreSQL, le driver utilisé par l'application est asyncpg.
+**PostgreSQL est installé localement sur la VM Debian 13 de production.**
+
+Pour PostgreSQL, le driver utilisé par l'application est `asyncpg` via SQLAlchemy asynchrone.
+
+```text
+FastAPI → SQLAlchemy AsyncEngine → asyncpg → PostgreSQL local
+```
 
 Le backend normalise l'URL PostgreSQL et convertit `sslmode` en `connect_args["ssl"]` pour la compatibilité asyncpg.
+
+Cette base SQL est différente de Qdrant : PostgreSQL porte les données relationnelles métier des feux, tandis que Qdrant porte la recherche vectorielle de la base de connaissances utilisée par n8n.
 
 ### Alembic
 
