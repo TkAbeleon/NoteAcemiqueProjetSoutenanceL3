@@ -29,6 +29,8 @@
 - [22 Protocoles et interfaces](22_PROTOCOLLES_ET_INTERFACES.md)
 - [23 Stratégie de déploiement DuckDNS](23_STRATEGIE_DEPLOIEMENT_DUCKDNS.md)
 - [24 SEO, prerender, sitemap et robots](24_SEO_PRERENDER_SITEMAP_ROBOTS.md)
+- [25 Cahier des charges fonctionnel et technique](25_CAHIER_DES_CHARGES.md)
+- [Glossaire des tags](Glossaire_Tags.md)
 
 ## Diagrammes
 Les PlantUML se trouvent dans [plantuml/](plantuml/) :
@@ -52,3 +54,11 @@ architecture globale, pipeline opérationnel, ingestion FIRMS, scoring ML, clust
 > **Anti-hallucination :** une présence dans un fichier de configuration ne prouve pas à elle seule l'activité de tout le service. Les responsabilités sont documentées avec leur niveau de preuve.
 
 > **Sécurité :** ne jamais écrire les valeurs réelles des secrets.
+
+---
+
+## Navigation Obsidian
+
+La série technique est navigable linéairement avec les liens `← Précédent | Index | Suivant →` placés en bas de chaque note. Le [[25_CAHIER_DES_CHARGES|cahier des charges]] clôt la série et renvoie vers le [[Glossaire_Tags|glossaire des tags]].
+
+**Entrée recommandée :** [[01_VISION_GENERALE]] → [[02_FONCTIONNEMENT_REEL]] → [[03_ARCHITECTURE_TECHNIQUE]] → … → [[25_CAHIER_DES_CHARGES]].
