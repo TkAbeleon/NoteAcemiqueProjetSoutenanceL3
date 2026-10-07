@@ -25,3 +25,7 @@ Les notes historiques décrivent une ambition ConvLSTM/J+1. Elles doivent rester
 
 ## Pour prouver une chaîne J+1 complète
 Il faudrait montrer modèle, préparation des séquences, endpoint de production, planification, stockage des sorties et évaluation reproductible.
+
+---
+
+**Navigation :** [[14_AUTHENTIFICATION_ROLES_ACCES|← Précédent]] | [[00_INDEX|Index]] | [[16_DEPLOIEMENT_GCP_DEBIAN13|Suivant →]]
