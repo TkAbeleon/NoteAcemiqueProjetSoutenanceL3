@@ -48,3 +48,7 @@ Les prochaines validations utiles portent sur couverture, faux positifs, faux n�
 
 ## Formulation
 > JeryMotro démontre plusieurs briques techniques de bout en bout, mais la validation scientifique, terrain et institutionnelle reste nécessaire avant de conclure à une performance opérationnelle généralisée.
+
+---
+
+**Navigation :** [[19_SECURITE_SECRETS_ET_CONFIGURATION|← Précédent]] | [[00_INDEX|Index]] | [[21_STACK_TECHNIQUE|Suivant →]]
