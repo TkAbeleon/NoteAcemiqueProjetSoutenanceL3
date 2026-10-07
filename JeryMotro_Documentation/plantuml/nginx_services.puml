@@ -1,0 +1,22 @@
+@startuml
+title JeryMotro — Routage Nginx
+rectangle "Internet" as I
+rectangle "Nginx / HTTPS" as N
+rectangle "jerymotro.duckdns.org" as FE
+rectangle "api.jerymotro.duckdns.org" as BE
+rectangle "rag.jerymotro.duckdns.org" as Q
+rectangle "waha.jerymotro.duckdns.org" as W
+rectangle "chat.jerymotro.duckdns.org" as MM
+rectangle "n8n.jerymotro.duckdns.org" as N8N
+rectangle "api.smsgate.jerymotro.duckdns.org" as SA
+rectangle "smsgate.jerymotro.duckdns.org" as SW
+I --> N
+N --> FE : frontend
+N --> BE : :8200
+N --> Q : :6333
+N --> W : :3001
+N --> MM : :8065
+N --> N8N : :5678
+N --> SA : :3030
+N --> SW : :3031
+@enduml
