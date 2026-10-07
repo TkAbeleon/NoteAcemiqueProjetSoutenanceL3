@@ -1,0 +1,25 @@
+@startuml
+title JeryMotro — Chat IA / RAG
+actor Utilisateur as U
+component Frontend as FE
+component "POST /chat" as API
+component "rag_service.py" as R
+node "n8n workflow" as N
+database "Qdrant / données" as Q
+cloud "Modèle IA" as AI
+U --> FE
+FE --> API
+API --> R
+R --> N
+N --> Q : selon workflow
+N --> AI
+AI --> N
+N --> R
+R --> API
+API --> FE
+FE --> U
+note right of R
+Pas de client Qdrant/Vertex
+instancié directement ici.
+end note
+@enduml
