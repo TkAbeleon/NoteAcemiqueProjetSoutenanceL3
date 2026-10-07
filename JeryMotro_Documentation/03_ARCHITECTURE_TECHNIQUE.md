@@ -93,20 +93,34 @@ Le backend est donc à la fois :
 - couche d'accès aux données ;
 - passerelle vers plusieurs services.
 
-## 5. Persistance SQL
+## 5. Persistance SQL — PostgreSQL local sur Debian 13
 
-SQLAlchemy 2.x est utilisé avec une session asynchrone.
+La base relationnelle de production est **PostgreSQL installé localement sur la VM GCP Debian 13**.
 
-Le driver PostgreSQL principal est `asyncpg`.
+Le chemin applicatif est :
+
+```text
+FastAPI
+  ↓
+SQLAlchemy 2.x
+  ↓
+asyncpg
+  ↓
+PostgreSQL local (Debian 13)
+```
+
+Le backend initialise un `AsyncEngine` et une `async_sessionmaker`.
 
 Le code normalise `postgresql://` / `postgres://` vers `postgresql+asyncpg://` et convertit `sslmode` en paramètre de connexion compatible asyncpg.
 
-Le moteur utilise :
+Le moteur utilise notamment :
 - `pool_pre_ping=True` ;
 - `pool_recycle=300` ;
 - sessions asynchrones.
 
-La cible réelle de production est déterminée par `DATABASE_URL`.
+La cible logique de connexion reste fournie par `DATABASE_URL`, mais dans la topologie de production décrite ici cette base est hébergée **sur la VM Debian 13 elle-même**, et non dans Supabase.
+
+PostgreSQL n'est pas routé par Nginx : le proxy inverse expose les services HTTP/HTTPS, tandis que PostgreSQL reste un service de données interne à l'hôte.
 
 ## 6. Accès au Chat
 
