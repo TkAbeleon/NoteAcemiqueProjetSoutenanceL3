@@ -286,3 +286,7 @@ Ces éléments restent des secrets ou des paramètres runtime.
 - `23_STRATEGIE_DEPLOIEMENT_DUCKDNS.md` : stratégie détaillée.
 - `24_SEO_PRERENDER_SITEMAP_ROBOTS.md` : SEO et fichiers robots/sitemap.
 - `18_NGINX_ET_ACCES_RESEAU.md` : routage réseau détaillé.
+
+---
+
+**Navigation :** [[15_PREDICTIONS_J_PLUS_1|← Précédent]] | [[00_INDEX|Index]] | [[17_HUGGING_FACE_DATA_ET_SCRIPTS|Suivant →]]
