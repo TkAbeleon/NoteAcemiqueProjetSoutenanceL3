@@ -32,3 +32,7 @@ Le dépôt backend inspecté ne contient pas le protocole complet d'entraînemen
 
 ## Deep Learning
 Le contrat `/predict-grid` existe côté client ML et les notes de conception parlent de ConvLSTM/J+1. Cela ne prouve pas une génération automatique J+1 complète en production.
+
+---
+
+**Navigation :** [[06_GEOLOCALISATION_ET_VALIDATION|← Précédent]] | [[00_INDEX|Index]] | [[08_CLUSTERING_ET_SUIVI_DES_FEUX|Suivant →]]
