@@ -28,6 +28,7 @@
 | **Reverse proxy de référence** | Nginx |
 | **Domaine Web de référence** | https://jerymotro.duckdns.org |
 | **Infrastructure documentée** | GCP / Debian 13 / Nginx / services locaux |
+| **Base relationnelle** | PostgreSQL installé localement sur la VM Debian 13 |
 | **Référentiel du code** | GitHub |
 | **Données/scripts complémentaires** | Hugging Face |
 
@@ -337,6 +338,11 @@ Un FireEvent regroupe notamment :
 ---
 
 ## 9. ARCHITECTURE TECHNIQUE DE RÉFÉRENCE
+
+### PostgreSQL local
+
+La base relationnelle de production est PostgreSQL, installé localement sur la VM GCP Debian 13. FastAPI y accède via SQLAlchemy et `asyncpg`. PostgreSQL n'est pas exposé par Nginx : il reste un service de données interne à l'hôte.
+
 
 ~~~text
 Utilisateur
