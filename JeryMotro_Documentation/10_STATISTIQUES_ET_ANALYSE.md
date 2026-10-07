@@ -31,3 +31,7 @@ Une corrélation ne prouve pas une causalité.
 
 ## Utilité
 La plateforme ne se limite donc pas à une carte : les données peuvent être étudiées quantitativement.
+
+---
+
+**Navigation :** [[09_ENRICHISSEMENT_GEE_ENVIRONNEMENT|← Précédent]] | [[00_INDEX|Index]] | [[11_ALERTES_ET_NOTIFICATIONS|Suivant →]]
