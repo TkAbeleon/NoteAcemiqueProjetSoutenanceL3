@@ -398,3 +398,7 @@ PRERENDER_BASE_URL=https://jerymotro.duckdns.org pnpm run build
 ```
 
 Cela évite de générer des canonical, sitemap et métadonnées Open Graph pointant vers une autre plateforme.
+
+---
+
+**Navigation :** [[22_PROTOCOLLES_ET_INTERFACES|← Précédent]] | [[00_INDEX|Index]] | [[24_SEO_PRERENDER_SITEMAP_ROBOTS|Suivant →]]
