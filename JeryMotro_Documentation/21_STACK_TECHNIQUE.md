@@ -190,3 +190,7 @@ Le backend `requirements.txt` mentionne également `chromadb` et `google-cloud-a
 Dans le `rag_service.py` actuel, aucun client ChromaDB ou Vertex AI n'est instancié directement.
 
 La technologie installée et la technologie effectivement appelée dans un chemin d'exécution ne doivent donc pas être confondues.
+
+---
+
+**Navigation :** [[20_LIMITES_ET_ETAT_REEL|← Précédent]] | [[00_INDEX|Index]] | [[22_PROTOCOLLES_ET_INTERFACES|Suivant →]]
