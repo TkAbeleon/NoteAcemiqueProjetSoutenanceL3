@@ -258,7 +258,45 @@ La stratégie de production statique décrite ici est différente : le build est
 
 PM2 reste surtout pertinent pour le backend dans la procédure de déploiement correspondante.
 
-## 19. Ports internes
+## 19. PostgreSQL local sur Debian 13
+
+PostgreSQL est installé et exécuté **localement sur la VM Debian 13**. Il constitue la persistance relationnelle du backend.
+
+```text
+FastAPI / SQLAlchemy
+        |
+      asyncpg
+        |
+        v
+PostgreSQL local
+        |
+        +--> firms_fire_detections
+        +--> fire_events
+        +--> alerts / subscriptions
+        +--> users / zones
+        +--> predictions
+```
+
+PostgreSQL n'est pas exposé par Nginx comme les services HTTP. Le trafic SQL reste séparé du routage Web.
+
+La chaîne exacte d'authentification SQL est fournie au runtime par `DATABASE_URL` et n'est pas reproduite ici.
+
+## 20. Ports internes
+
+| Service | Port |
+|---|---:|
+| PostgreSQL | 5432 |
+| FastAPI | 8200 |
+| Qdrant | 6333 |
+| WAHA | 3001 |
+| Mattermost | 8065 |
+| n8n | 5678 |
+| SMSGate API | 3030 |
+| SMSGate Web | 3031 |
+
+Le port PostgreSQL est indiqué comme **port de service interne**, pas comme port publié par Nginx.
+
+## 21. Ports internes
 
 | Service | Port |
 |---|---:|
@@ -270,7 +308,7 @@ PM2 reste surtout pertinent pour le backend dans la procédure de déploiement c
 | SMSGate API | 3030 |
 | SMSGate Web | 3031 |
 
-## 20. Ce qui n'est pas déduit de Nginx
+## 22. Ce qui n'est pas déduit de Nginx
 
 Cette configuration ne révèle pas :
 - le mot de passe PostgreSQL ;
@@ -281,7 +319,7 @@ Cette configuration ne révèle pas :
 
 Ces éléments restent des secrets ou des paramètres runtime.
 
-## 21. Documentation associée
+## 23. Documentation associée
 
 - `23_STRATEGIE_DEPLOIEMENT_DUCKDNS.md` : stratégie détaillée.
 - `24_SEO_PRERENDER_SITEMAP_ROBOTS.md` : SEO et fichiers robots/sitemap.
