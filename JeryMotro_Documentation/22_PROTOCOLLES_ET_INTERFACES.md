@@ -227,3 +227,7 @@ Exemples :
 - service SMS absent → envoi considéré échoué.
 
 Cette stratégie réduit le couplage strict entre tous les composants.
+
+---
+
+**Navigation :** [[21_STACK_TECHNIQUE|← Précédent]] | [[00_INDEX|Index]] | [[23_STRATEGIE_DEPLOIEMENT_DUCKDNS|Suivant →]]
