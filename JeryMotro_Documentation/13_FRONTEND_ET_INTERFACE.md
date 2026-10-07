@@ -33,3 +33,7 @@ Le projet prend en charge français, malgache et anglais dans les interfaces con
 
 ## Authentification côté client
 Le frontend conserve le JWT et les informations utilisateur dans localStorage et vérifie notamment l'expiration côté client. L'autorisation finale reste du ressort du backend.
+
+---
+
+**Navigation :** [[12_CHAT_IA_RAG|← Précédent]] | [[00_INDEX|Index]] | [[14_AUTHENTIFICATION_ROLES_ACCES|Suivant →]]
