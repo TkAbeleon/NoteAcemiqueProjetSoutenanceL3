@@ -1,0 +1,17 @@
+@startuml
+title JeryMotro — Frontend / Backend
+actor Utilisateur as U
+component "React/Vite" as FE
+component "FastAPI" as BE
+database "SQL" as DB
+U --> FE
+FE --> BE : REST/JSON
+BE --> DB
+DB --> BE
+BE --> FE
+FE --> U
+note bottom of FE
+Carte active :
+Leaflet / react-leaflet
+end note
+@enduml
