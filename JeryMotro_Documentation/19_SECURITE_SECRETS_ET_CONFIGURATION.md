@@ -37,3 +37,7 @@ HTTPS/TLS, API keys, webhooks, credentials GEE, authentification SMSGate, etc.
 
 ## Règle absolue
 > Ne jamais écrire une valeur réelle de secret dans une note, un commit, un diagramme ou une capture. Utiliser uniquement les noms de variables ou des placeholders.
+
+---
+
+**Navigation :** [[18_NGINX_ET_ACCES_RESEAU|← Précédent]] | [[00_INDEX|Index]] | [[20_LIMITES_ET_ETAT_REEL|Suivant →]]
