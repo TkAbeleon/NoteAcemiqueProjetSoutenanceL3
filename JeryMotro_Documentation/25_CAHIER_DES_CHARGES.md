@@ -724,3 +724,5 @@ Les points suivants nécessitent une preuve indépendante avant d'être présent
 ---
 
 **Navigation :** [[24_SEO_PRERENDER_SITEMAP_ROBOTS|← Précédent]] | [[00_INDEX|Index]] | [[Glossaire_Tags|Glossaire →]]
+
+- [[26_BIBLIOGRAPHIE_WEBOGRAPHIE_APA|Bibliographie et webographie APA]]
