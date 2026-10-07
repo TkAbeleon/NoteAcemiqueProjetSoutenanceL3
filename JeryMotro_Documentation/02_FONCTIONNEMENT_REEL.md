@@ -42,3 +42,7 @@ Les scripts GEE existent séparément. `run_automatic_pipeline()` ne les appelle
 
 ## Chat
 Le frontend appelle `POST /chat`. Le backend transmet ensuite la demande au webhook n8n et normalise la réponse.
+
+---
+
+**Navigation :** [[01_VISION_GENERALE|← Précédent]] | [[00_INDEX|Index]] | [[03_ARCHITECTURE_TECHNIQUE|Suivant →]]
