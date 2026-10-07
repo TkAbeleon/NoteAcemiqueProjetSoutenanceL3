@@ -96,3 +96,7 @@ GCP
 ## 10. Règle de preuve
 
 La présence d'un dataset sur HF ne prouve pas qu'il est branché directement à la collecte FIRMS de production. La source d'une donnée doit être déterminée par le code du traitement concerné.
+
+---
+
+**Navigation :** [[16_DEPLOIEMENT_GCP_DEBIAN13|← Précédent]] | [[00_INDEX|Index]] | [[18_NGINX_ET_ACCES_RESEAU|Suivant →]]
