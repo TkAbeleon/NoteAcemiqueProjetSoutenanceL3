@@ -33,3 +33,7 @@ Le script Colab traite par lots de 500 lignes par défaut et permet une reprise 
 
 ## Déforestation
 `is_recent_loss` est un contexte de perte forestière récente. Il ne faut pas le transformer en affirmation de détection autonome complète de la déforestation.
+
+---
+
+**Navigation :** [[08_CLUSTERING_ET_SUIVI_DES_FEUX|← Précédent]] | [[00_INDEX|Index]] | [[10_STATISTIQUES_ET_ANALYSE|Suivant →]]
