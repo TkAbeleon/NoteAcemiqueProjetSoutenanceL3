@@ -1,0 +1,19 @@
+@startuml
+title JeryMotro — Alertes
+component "FireEvent / pipeline" as E
+component "Évaluation abonnements" as A
+database "AlertSubscription" as S
+component "AlertService" as AS
+cloud "n8n Email" as EMAIL
+cloud "WAHA" as WAHA
+cloud "HTTPSMS / SMSGate" as SMS
+database "Alert" as H
+E --> A
+A --> S : actifs + vérifiés
+S --> A : seuils
+A --> AS
+AS --> EMAIL : email
+AS --> WAHA : WhatsApp
+AS --> SMS : SMS
+AS --> H : journaliser résultat
+@enduml
