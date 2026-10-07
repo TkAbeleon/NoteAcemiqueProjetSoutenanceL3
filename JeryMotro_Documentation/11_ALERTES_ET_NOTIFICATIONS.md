@@ -34,3 +34,7 @@ Une route administrateur `/alerts/trigger` existe séparément.
 
 ## Limite
 Le succès réel dépend des abonnements vérifiés, des seuils, des credentials et de la disponibilité des services externes.
+
+---
+
+**Navigation :** [[10_STATISTIQUES_ET_ANALYSE|← Précédent]] | [[00_INDEX|Index]] | [[12_CHAT_IA_RAG|Suivant →]]
