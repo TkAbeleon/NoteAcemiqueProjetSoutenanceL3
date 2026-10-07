@@ -1,47 +1,98 @@
 # Hugging Face, scripts et données
 
-## Rôle
-Hugging Face est utilisé dans le projet pour :
-- des datasets ;
-- un Docker Space de déploiement ;
-- des environnements de service/ML selon la configuration.
+## 1. Rôle technique
 
-## GitHub → Hugging Face
-Le workflow :
-`.github/workflows/sync-to-huggingface.yml`
+Hugging Face intervient comme plateforme d'hébergement de datasets et comme cible de déploiement Docker pour certaines briques du projet.
 
-se déclenche sur `main` ou manuellement.
+Il faut distinguer :
+- **Dataset Hub** : données ;
+- **Space** : application/service ;
+- **GitHub** : source du code.
 
-Il vérifie notamment Dockerfile, `docker-entrypoint.py`, requirements, le mode Docker et le port 7860.
+## 2. Déploiement Space
 
-## Secrets du workflow
-Le workflow utilise :
-- `HF_SPACE_ID` comme variable de repository ;
-- `HF_TOKEN` comme secret GitHub.
+Le workflow `.github/workflows/sync-to-huggingface.yml` :
+1. se déclenche sur `main` ou manuellement ;
+2. vérifie le Docker Space ;
+3. vérifie `HF_SPACE_ID` ;
+4. vérifie `HF_TOKEN` ;
+5. installe `huggingface_hub` ;
+6. crée/actualise le Space ;
+7. upload le dépôt en excluant les secrets et fichiers locaux.
 
-**Le scope exact de HF_TOKEN n'est pas visible dans le dépôt**. Il ne faut pas l'inventer.
+## 3. Port du Space
 
-## Exclusions
-L'upload exclut notamment :
+Le workflow vérifie que le README du Space déclare :
+`sdk: docker`
+et
+`app_port: 7860`.
+
+Le port 7860 est donc le port d'exposition du conteneur HF pour cette cible.
+
+## 4. Secret HF_TOKEN
+
+Le secret GitHub s'appelle `HF_TOKEN`.
+
+Le dépôt ne révèle pas son scope exact. Il ne faut donc pas documenter un niveau de permission qui n'est pas observable dans le code.
+
+## 5. Doppler
+
+`HF_DEPLOY.md` documente un `DOPPLER_TOKEN` dans les secrets du Space.
+
+Le démarrage peut passer par :
+
+```
+doppler run -- python /app/docker-entrypoint.py
+```
+
+Les credentials Google/GEE peuvent être reconstruits temporairement dans `/tmp`.
+
+## 6. Exclusions de l'upload
+
+Le workflow exclut notamment :
 - `.env` ;
-- bases SQLite/DB ;
+- `.env.*` ;
+- bases de données ;
+- SQLite ;
 - logs ;
-- métadonnées Git.
+- .git ;
+- certains artefacts de données.
 
-## Doppler
-`HF_DEPLOY.md` indique l'utilisation de `DOPPLER_TOKEN` dans le Space et un démarrage via Doppler. Les credentials Google/GEE peuvent être reconstruits à l'exécution dans `/tmp`.
+## 7. Datasets
 
-## Dataset
 Le projet utilise notamment :
 `rtsikynyantsa/MADAGASCAR_GEE_FIMRS`
 
-La page Hugging Face correspond à un dataset tabulaire FIRMS enrichi de variables environnementales.
+Ce dataset contient des observations FIRMS accompagnées de variables de contexte environnemental.
 
-## Distinctions
-- GitHub : code et documentation.
-- Hugging Face Dataset : jeux de données.
-- Hugging Face Space : application/service Docker.
-- GCP : infrastructure d'exécution et reverse proxy.
+Le dépôt contient aussi des jeux associés aux frontières et aux expérimentations de segmentation/UNet.
 
-## Attention
-Un dataset présent sur Hugging Face n'est pas automatiquement une preuve qu'il alimente directement le pipeline FastAPI actuel.
+## 8. Scripts de calcul
+
+Les scripts GEE utilisent notamment :
+- pandas ;
+- Earth Engine ;
+- KaggleHub ;
+- tqdm.
+
+Ils fonctionnent par lots et écrivent des sorties enrichies.
+
+## 9. Architecture de stockage
+
+```
+GitHub
+  └─ code + scripts + docs
+
+Hugging Face Dataset
+  └─ données tabulaires / datasets
+
+Hugging Face Space
+  └─ service Docker
+
+GCP
+  └─ production multi-services + Nginx
+```
+
+## 10. Règle de preuve
+
+La présence d'un dataset sur HF ne prouve pas qu'il est branché directement à la collecte FIRMS de production. La source d'une donnée doit être déterminée par le code du traitement concerné.
