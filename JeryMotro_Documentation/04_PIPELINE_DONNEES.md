@@ -37,3 +37,7 @@ L'enrichissement environnemental n'est pas une étape synchronisée dans `run_au
 
 ## Limite
 Un pipeline automatique disponible dans le code ne signifie pas qu'il est toujours exécuté avec succès : il dépend des services, secrets, réseau et base.
+
+---
+
+**Navigation :** [[03_ARCHITECTURE_TECHNIQUE|← Précédent]] | [[00_INDEX|Index]] | [[05_DONNEES_FIRMS_ET_BDD|Suivant →]]
