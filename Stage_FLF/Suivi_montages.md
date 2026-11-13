@@ -33,6 +33,10 @@ tags:
   - **À faire :** traitement / montage audio
   - **Statut :** à traiter
 
+- [ ] **Un dessert TA** — Production d'émission
+  - **À faire :** traitement / montage audio
+  - **Statut :** à traiter
+
 ### Diffusions suivantes
 
 - [ ] **TOP 10** — Production d'émission
