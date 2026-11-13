@@ -19,17 +19,21 @@ tags:
 
 ## Productions à réaliser
 
+### Diffusion du 14 novembre 2026
+
 - [ ] **Feon'ny Fifohazana** — Production d'émission
-  - **Date de diffusion :** 2026-11-14
   - **À faire :** traitement / montage audio
-  - **Échéance :** avant la diffusion
   - **Statut :** à traiter
 
 - [ ] **Vavolombelona koa aho** — Production d'émission
-  - **Date de diffusion :** 2026-11-14
   - **À faire :** traitement / montage audio
-  - **Échéance :** avant la diffusion
   - **Statut :** à traiter
+
+- [ ] **Tari-dalana perikiopa** — Production d'émission
+  - **À faire :** traitement / montage audio
+  - **Statut :** à traiter
+
+### Diffusions suivantes
 
 - [ ] **TOP 10** — Production d'émission
   - **Date de diffusion :** 2026-11-15
