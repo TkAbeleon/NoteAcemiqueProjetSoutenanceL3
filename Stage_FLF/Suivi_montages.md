@@ -25,6 +25,12 @@ tags:
   - **Échéance :** avant la diffusion
   - **Statut :** à traiter
 
+- [ ] **Vavolombelona koa aho** — Production d'émission
+  - **Date de diffusion :** 2026-11-14
+  - **À faire :** traitement / montage audio
+  - **Échéance :** avant la diffusion
+  - **Statut :** à traiter
+
 - [ ] **TOP 10** — Production d'émission
   - **Date de diffusion :** 2026-11-15
   - **À faire :** montage audio
