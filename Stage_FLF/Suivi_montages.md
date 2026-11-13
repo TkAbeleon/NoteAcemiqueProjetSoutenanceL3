@@ -11,14 +11,21 @@ tags:
 
 ## Productions à réaliser
 
-- [ ] **Hanitry ny Literatiora** — Production d'émission
-  - **Date prévue :** lundi 16 novembre 2026
+- [ ] **TOP 10** — Production d'émission
+  - **Date de diffusion :** 2026-11-15
   - **À faire :** montage audio
-  - **Échéance :** terminer avant le 16 novembre 2026
+  - **Échéance :** terminer avant la diffusion
+  - **Statut :** à monter
+
+- [ ] **Hanitry ny Literatiora** — Production d'émission
+  - **Date de diffusion :** 2026-11-16
+  - **À faire :** montage audio
+  - **Échéance :** terminer avant la diffusion
   - **Statut :** à monter
 
 ## Consignes de suivi
 
 - Cocher la production une fois le montage terminé et contrôlé.
 - Vérifier l'export final avant de considérer le travail comme terminé.
-- Ajouter chaque nouvelle émission avec son titre, sa date prévue et son échéance de montage.
+- Ajouter chaque nouvelle émission avec son titre, sa date de diffusion et son échéance de montage.
+- Utiliser le format de date `AAAA-MM-JJ` dans les noms de dossiers et de fichiers afin de faciliter le classement chronologique.
