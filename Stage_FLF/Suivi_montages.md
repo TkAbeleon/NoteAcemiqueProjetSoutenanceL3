@@ -9,13 +9,15 @@ tags:
 
 # Suivi des montages — FLF
 
-## Productions à réaliser
+## Productions terminées
 
-- [ ] **Kristy no torianay** — Production d'émission
+- [x] **Kristy no torianay** — Production d'émission
   - **Date de diffusion :** 2026-11-14
-  - **À faire :** montage audio
-  - **Échéance :** terminer avant la diffusion
-  - **Statut :** à monter
+  - **Travail réalisé :** montage audio
+  - **Livraison :** effectuée
+  - **Statut :** monté et livré
+
+## Productions à réaliser
 
 - [ ] **TOP 10** — Production d'émission
   - **Date de diffusion :** 2026-11-15
@@ -37,6 +39,7 @@ tags:
 ## Consignes de suivi
 
 - Cocher la production une fois le montage terminé et contrôlé.
+- Déplacer les productions terminées dans la section correspondante et noter leur livraison.
 - Vérifier l'export final avant de considérer le travail comme terminé.
 - Ajouter chaque nouvelle émission avec son titre, sa date de diffusion et son échéance de montage.
 - Utiliser le format de date `AAAA-MM-JJ` dans les noms de dossiers et de fichiers afin de faciliter le classement chronologique.
